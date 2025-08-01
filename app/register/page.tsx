@@ -26,6 +26,7 @@ import {
   Zap
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
+import { pricingPlans, calculateMonthlyCost } from '@/lib/pricing-plans';
 
 interface OrganizationForm {
   name: string;
@@ -81,98 +82,12 @@ export default function OrganizationRegistrationPage() {
     '1000+ employees'
   ];
 
-  const pricingPlans = [
-    {
-      id: 'free',
-      name: 'Free',
-      price: 0,
-      description: 'Perfect for individuals and small teams',
-                                             features: [
-                   'Up to 5 users',
-                   'Up to 2 organizational units', 
-                   'Up to 10 hosts',
-                   'Basic features',
-                   'Community support',
-                   'Standard security'
-                 ],
-                      maxUsers: 5,
-                maxOrganizationalUnits: 2,
-                maxHosts: 10,
-      popular: false,
-      hasTrial: false
-    },
-    {
-      id: 'starter',
-      name: 'Starter',
-      price: 19,
-      description: 'Perfect for small teams getting started',
-                                             features: [
-                   'Up to 50 users',
-                   'Up to 10 organizational units',
-                   'Up to 50 hosts',
-                   'Basic SSO integration',
-                   'Email support',
-                   'Standard security',
-                   'Basic analytics'
-                 ],
-                      maxUsers: 50,
-                maxOrganizationalUnits: 10,
-                maxHosts: 50,
-      popular: false,
-      hasTrial: true
-    },
-    {
-      id: 'professional',
-      name: 'Professional',
-      price: 29,
-      description: 'Ideal for growing organizations',
-                                             features: [
-                   'Up to 500 users',
-                   'Up to 50 organizational units',
-                   'Up to 200 hosts',
-                   'Advanced SSO integration',
-                   'Priority support',
-                   'Enhanced security',
-                   'Advanced analytics',
-                   'Custom branding',
-                   'API access'
-                 ],
-                      maxUsers: 500,
-                maxOrganizationalUnits: 50,
-                maxHosts: 200,
-      popular: true,
-      hasTrial: true
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: 49,
-      description: 'For large organizations with complex needs',
-                                             features: [
-                   'Unlimited users',
-                   'Unlimited organizational units',
-                   'Unlimited hosts',
-                   'Full SSO integration',
-                   '24/7 dedicated support',
-                   'Enterprise security',
-                   'Advanced analytics',
-                   'Custom branding',
-                   'API access',
-                   'Custom integrations',
-                   'SLA guarantee'
-                 ],
-                      maxUsers: -1, // Unlimited
-                maxOrganizationalUnits: -1, // Unlimited
-                maxHosts: -1, // Unlimited
-      popular: false,
-      hasTrial: true
-    }
-  ];
+
 
   const selectedPlan = pricingPlans.find(plan => plan.id === formData.selectedPlan) || pricingPlans[0];
   const isUnlimited = selectedPlan.maxUsers === -1;
   const adjustedUsers = isUnlimited ? formData.expectedUsers : Math.min(formData.expectedUsers, selectedPlan.maxUsers);
-  const totalMonthly = adjustedUsers * selectedPlan.price;
+  const totalMonthly = calculateMonthlyCost(formData.selectedPlan, formData.expectedUsers);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof OrganizationForm, string>> = {};

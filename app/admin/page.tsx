@@ -36,6 +36,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
+import { pricingPlans } from '@/lib/pricing-plans';
 
 export default function TenantPage() {
   const router = useRouter();
@@ -220,9 +221,11 @@ export default function TenantPage() {
                         <SelectValue placeholder="Select plan" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="starter">Starter - $29/month</SelectItem>
-                        <SelectItem value="professional">Professional - $299/month</SelectItem>
-                        <SelectItem value="enterprise">Enterprise - $2599/month</SelectItem>
+                        {pricingPlans.map((plan) => (
+                          <SelectItem key={plan.id} value={plan.id}>
+                            {plan.name} - {plan.price === 0 ? 'Free' : `$${plan.price}/user/month`}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

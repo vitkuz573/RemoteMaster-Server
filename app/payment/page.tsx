@@ -24,6 +24,7 @@ import {
   Check
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
+import { pricingPlans, calculateMonthlyCost } from '@/lib/pricing-plans';
 
 interface PaymentForm {
   cardNumber: string;
@@ -230,46 +231,11 @@ export default function PaymentPage() {
     );
   }
 
-          const pricingPlans = [
-          {
-            id: 'free',
-            name: 'Free',
-            price: 0,
-            maxUsers: 5,
-            maxOrganizationalUnits: 2,
-            maxHosts: 10
-          },
-          {
-            id: 'starter',
-            name: 'Starter',
-            price: 19,
-            maxUsers: 50,
-            maxOrganizationalUnits: 10,
-            maxHosts: 50
-          },
-          {
-            id: 'professional',
-            name: 'Professional',
-            price: 29,
-            maxUsers: 500,
-            maxOrganizationalUnits: 50,
-            maxHosts: 200
-          },
-          {
-            id: 'enterprise',
-            name: 'Enterprise',
-            price: 49,
-            maxUsers: -1, // Unlimited
-            maxOrganizationalUnits: -1, // Unlimited
-            maxHosts: -1 // Unlimited
-          }
-        ];
-
         const selectedPlan = pricingPlans.find(plan => plan.id === organizationData.selectedPlan) || pricingPlans[1];
         const isUnlimited = selectedPlan.maxUsers === -1;
         const maxUsersForPlan = isUnlimited ? 1000 : selectedPlan.maxUsers;
         const adjustedUsers = Math.min(organizationData.expectedUsers, maxUsersForPlan);
-        const totalMonthly = adjustedUsers * selectedPlan.price;
+        const totalMonthly = calculateMonthlyCost(organizationData.selectedPlan, organizationData.expectedUsers);
 
   return (
     <div className="bg-gradient-to-br from-background via-background to-muted/30 min-h-screen">
