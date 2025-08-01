@@ -30,10 +30,6 @@ if (typeof window === 'undefined') {
   initializeCustomHealthChecks();
 }
 
-function LayoutFooter() {
-  return <Footer />;
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -50,7 +46,7 @@ export default function RootLayout({
               <div className="flex-1">
                 {children}
               </div>
-              <LayoutFooter />
+              <Footer />
             </FooterProvider>
           </ApiProvider>
         </TooltipProvider>

@@ -10,6 +10,7 @@ import { ApiStatus } from '@/components/ui/api-status';
 import { DynamicData, DataRenderers } from '@/components/ui/dynamic-data';
 import { useApiContext } from '@/contexts/api-context';
 import { dynamicApiClient } from '@/lib/dynamic-api-client';
+import { appConfig } from '@/lib/app-config';
 import { 
   Activity, 
   Server, 
@@ -25,8 +26,11 @@ import {
 
 export default function ApiDemoPage() {
   const { state, setConnected, setConnecting, setApiUrl, clearErrors } = useApiContext();
-  const [apiUrlInput, setApiUrlInput] = React.useState(state.apiUrl);
+  const [apiUrlInput, setApiUrlInput] = React.useState(state.apiUrl || '');
   const [testingConnection, setTestingConnection] = React.useState(false);
+  
+  // Get the effective API URL (user input or default config)
+  const effectiveApiUrl = state.apiUrl || appConfig.endpoints.api;
 
   // Example API configurations with mock data for demo
   const apiConfigs = [
@@ -99,7 +103,7 @@ export default function ApiDemoPage() {
   ];
 
   const handleTestConnection = async () => {
-    if (!state.apiUrl) {
+    if (!effectiveApiUrl) {
       console.error('No API URL configured');
       return;
     }
@@ -110,7 +114,7 @@ export default function ApiDemoPage() {
     
     try {
       // Test connection to the configured API
-      const response = await dynamicApiClient.testConnection(state.apiUrl, '/health');
+      const response = await dynamicApiClient.testConnection(effectiveApiUrl, '/health');
       
       if (response.success) {
         // Connection successful
@@ -154,7 +158,7 @@ export default function ApiDemoPage() {
 
   // Test with unavailable endpoint for demo purposes
   const handleTestUnavailable = async () => {
-    if (!state.apiUrl) {
+    if (!effectiveApiUrl) {
       console.error('No API URL configured');
       return;
     }
@@ -162,7 +166,7 @@ export default function ApiDemoPage() {
     setConnecting(true);
     
     try {
-      const response = await dynamicApiClient.get(state.apiUrl, '/non-existent-endpoint');
+      const response = await dynamicApiClient.get(effectiveApiUrl, '/non-existent-endpoint');
       setConnected(false);
     } catch (error) {
       setConnected(false);
@@ -172,10 +176,10 @@ export default function ApiDemoPage() {
 
   // Auto-test connection on page load
   React.useEffect(() => {
-    if (!state.isConnected && !state.isConnecting && state.apiUrl) {
+    if (!state.isConnected && !state.isConnecting && effectiveApiUrl) {
       handleTestConnection();
     }
-  }, [state.apiUrl]); // Run when API URL changes
+  }, [effectiveApiUrl]); // Run when effective API URL changes
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
@@ -224,13 +228,13 @@ export default function ApiDemoPage() {
                      External API URL
                    </Label>
                    <div className="flex gap-2 mt-1">
-                     <Input
-                       id="api-url"
-                       type="url"
-                       placeholder="https://api.example.com"
-                       value={apiUrlInput}
-                       onChange={(e) => setApiUrlInput(e.target.value)}
-                     />
+                                           <Input
+                        id="api-url"
+                        type="url"
+                        placeholder={appConfig.endpoints.api}
+                        value={apiUrlInput}
+                        onChange={(e) => setApiUrlInput(e.target.value)}
+                      />
                      <Button
                        onClick={handleUpdateApiUrl}
                        disabled={!apiUrlInput.trim()}
@@ -246,16 +250,16 @@ export default function ApiDemoPage() {
                  </div>
                </div>
                
-               <div className="flex items-center gap-2">
-                 <span className="text-sm font-medium">Current API URL:</span>
-                 {state.apiUrl ? (
-                   <Badge variant="outline" className="font-mono text-xs">
-                     {state.apiUrl}
-                   </Badge>
-                 ) : (
-                   <span className="text-sm text-muted-foreground">Not configured</span>
-                 )}
-               </div>
+                                               <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Current API URL:</span>
+                  {effectiveApiUrl ? (
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {effectiveApiUrl}
+                    </Badge>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Not configured</span>
+                  )}
+                </div>
              </div>
            </CardContent>
          </Card>
@@ -270,22 +274,22 @@ export default function ApiDemoPage() {
            </CardHeader>
            <CardContent>
              <div className="flex items-center gap-4">
-               <div className="flex items-center gap-2">
-                 <span className="text-sm font-medium">API Connection:</span>
-                 <Badge variant={
-                   state.isConnecting ? 'secondary' :
-                   state.isConnected ? 'default' : 'destructive'
-                 }>
-                   {state.isConnecting ? 'Connecting...' :
-                    state.isConnected ? 'Connected' : 'Disconnected'}
-                 </Badge>
-               </div>
-               <Button
-                 variant="outline"
-                 size="sm"
-                 onClick={handleToggleConnection}
-                 disabled={state.isConnecting || !state.apiUrl}
-               >
+                               <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">API Connection:</span>
+                  <Badge variant={
+                    state.isConnecting ? 'secondary' :
+                    state.isConnected ? 'default' : 'destructive'
+                  }>
+                    {state.isConnecting ? 'Connecting...' :
+                     state.isConnected ? 'Connected' : 'Disconnected'}
+                  </Badge>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleToggleConnection}
+                  disabled={state.isConnecting || !effectiveApiUrl}
+                >
                  {state.isConnecting ? (
                    <>
                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -312,12 +316,12 @@ export default function ApiDemoPage() {
                    Clear Errors ({state.errors.length})
                  </Button>
                )}
-               <Button
-                 variant="outline"
-                 size="sm"
-                 onClick={handleTestUnavailable}
-                 disabled={state.isConnecting || !state.apiUrl}
-               >
+                               <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleTestUnavailable}
+                  disabled={state.isConnecting || !effectiveApiUrl}
+                >
                  Test Unavailable
                </Button>
              </div>
@@ -385,14 +389,14 @@ export default function ApiDemoPage() {
 
                  {/* Dynamic Data Grid */}
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-           {apiConfigs.map((config) => (
-             <DynamicData
-               key={config.endpoint}
-               config={config}
-               baseUrl={state.apiUrl}
-               showRefreshButton={true}
-             />
-           ))}
+                                   {apiConfigs.map((config) => (
+              <DynamicData
+                key={config.endpoint}
+                config={config}
+                baseUrl={effectiveApiUrl}
+                showRefreshButton={true}
+              />
+            ))}
          </div>
 
         {/* Error Display */}

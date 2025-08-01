@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 interface FooterContextType {
   isFooterVisible: boolean;
@@ -28,12 +28,12 @@ export function FooterProvider({ children }: FooterProviderProps) {
     showDevBadge: true,
   });
 
-  const hideFooter = () => setIsFooterVisible(false);
-  const showFooter = () => setIsFooterVisible(true);
+  const hideFooter = useCallback(() => setIsFooterVisible(false), []);
+  const showFooter = useCallback(() => setIsFooterVisible(true), []);
   
-  const updateFooterConfig = (config: Partial<FooterContextType['footerConfig']>) => {
+  const updateFooterConfig = useCallback((config: Partial<FooterContextType['footerConfig']>) => {
     setFooterConfig(prev => ({ ...prev, ...config }));
-  };
+  }, []);
 
   return (
     <FooterContext.Provider 

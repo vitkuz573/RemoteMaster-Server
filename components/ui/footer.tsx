@@ -22,8 +22,6 @@ export function Footer({
   const [systemStatus, setSystemStatus] = React.useState<SystemStatus | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   
-  if (!isFooterVisible) return null;
-
   const { showSystemStatus, showBuildDate, showDevBadge } = footerConfig;
   
   // Load system status on mount
@@ -95,6 +93,8 @@ export function Footer({
         return 'Unknown';
     }
   };
+
+  if (!isFooterVisible) return null;
 
   return (
     <footer className={`border-t bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50 ${className}`}>
