@@ -50,10 +50,22 @@ export default function BYOIDSetupCompletePage() {
   }
 
   const getProviderName = (providerId: string) => {
-    const providers: { [key: string]: string } = {
-      'keycloak': 'Keycloak'
+    // If it's a known provider, return the formatted name
+    const knownProviders: { [key: string]: string } = {
+      'keycloak': 'Keycloak',
+      'azure-ad': 'Microsoft Azure AD',
+      'okta': 'Okta',
+      'google-workspace': 'Google Workspace',
+      'auth0': 'Auth0'
     };
-    return providers[providerId] || providerId;
+    
+    // If it's a known provider, return the formatted name
+    if (knownProviders[providerId.toLowerCase()]) {
+      return knownProviders[providerId.toLowerCase()];
+    }
+    
+    // Otherwise, return the user-provided name as-is
+    return providerId;
   };
 
   return (
@@ -79,9 +91,9 @@ export default function BYOIDSetupCompletePage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full mb-4">
             <CheckCircle className="w-8 h-8 text-blue-600" />
           </div>
-                     <h1 className="text-3xl font-bold mb-2">Keycloak Setup Submitted!</h1>
+                     <h1 className="text-3xl font-bold mb-2">OpenID Connect Setup Submitted!</h1>
            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-             Your Keycloak OpenID Connect configuration has been submitted successfully. Our team will review and configure your SSO setup.
+             Your OpenID Connect configuration has been submitted successfully. Our team will review and configure your SSO setup.
            </p>
         </div>
 
@@ -93,10 +105,10 @@ export default function BYOIDSetupCompletePage() {
               <CardHeader>
                                  <CardTitle className="flex items-center gap-2">
                    <Shield className="w-5 h-5 text-blue-600" />
-                   Keycloak Configuration Summary
+                   OpenID Connect Configuration Summary
                  </CardTitle>
                  <CardDescription>
-                   Your submitted Keycloak OpenID Connect configuration details
+                   Your submitted OpenID Connect configuration details
                  </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -133,7 +145,7 @@ export default function BYOIDSetupCompletePage() {
               <CardHeader>
                                  <CardTitle>What Happens Next?</CardTitle>
                  <CardDescription>
-                   Here's what to expect during the Keycloak setup process
+                   Here's what to expect during the OpenID Connect setup process
                  </CardDescription>
               </CardHeader>
               <CardContent>
@@ -145,7 +157,7 @@ export default function BYOIDSetupCompletePage() {
                     <div>
                                              <h4 className="font-medium">Review Period (24-48 hours)</h4>
                        <p className="text-sm text-muted-foreground">
-                         Our team will review your Keycloak configuration and validate the provided details.
+                         Our team will review your OpenID Connect configuration and validate the provided details.
                        </p>
                     </div>
                   </div>
@@ -169,7 +181,7 @@ export default function BYOIDSetupCompletePage() {
                     <div>
                                              <h4 className="font-medium">Configuration & Testing</h4>
                        <p className="text-sm text-muted-foreground">
-                         Our team will configure your Keycloak OpenID Connect integration and perform thorough testing.
+                         Our team will configure your OpenID Connect integration and perform thorough testing.
                        </p>
                     </div>
                   </div>

@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 interface BYOIDSetupRequest {
-  provider: string;
   issuerUrl: string;
   clientId: string;
   clientSecret: string;
-  additionalNotes: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
   organizationId: string;
   organizationName: string;
   organizationDomain: string;
@@ -28,11 +23,10 @@ export async function POST(request: NextRequest) {
   try {
     const body: BYOIDSetupRequest = await request.json();
 
-    // Validate required fields
-    const requiredFields = [
-      'provider', 'issuerUrl', 'clientId', 'clientSecret', 
-      'contactName', 'contactEmail', 'organizationId'
-    ];
+         // Validate required fields
+     const requiredFields = [
+       'issuerUrl', 'clientId', 'clientSecret', 'organizationId'
+     ];
 
     for (const field of requiredFields) {
       if (!body[field as keyof BYOIDSetupRequest]) {
@@ -53,13 +47,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate that provider is keycloak
-    if (body.provider !== 'keycloak') {
-      return NextResponse.json(
-        { error: 'Only Keycloak provider is currently supported' },
-        { status: 400 }
-      );
-    }
+    
 
     // Add timestamp and status
     const byoidRequest: BYOIDSetupRequest = {
@@ -81,20 +69,18 @@ export async function POST(request: NextRequest) {
     // 3. Send confirmation email to the customer
     // 4. Update the organization's IdP configuration
 
-    console.log('BYOID Setup Request:', {
-      organization: byoidRequest.organizationName,
-      provider: byoidRequest.provider,
-      issuerUrl: byoidRequest.issuerUrl,
-      contact: byoidRequest.contactEmail,
-      submittedAt: byoidRequest.submittedAt
-    });
+         console.log('BYOID Setup Request:', {
+       organization: byoidRequest.organizationName,
+       issuerUrl: byoidRequest.issuerUrl,
+       submittedAt: byoidRequest.submittedAt
+     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Keycloak OpenID Connect setup request submitted successfully',
-      requestId: byoidRequest.id,
-      estimatedReviewTime: '24-48 hours'
-    });
+         return NextResponse.json({
+       success: true,
+       message: 'OpenID Connect setup request submitted successfully',
+       requestId: byoidRequest.id,
+       estimatedReviewTime: '24-48 hours'
+     });
 
   } catch (error) {
     console.error('BYOID setup error:', error);
@@ -121,19 +107,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ request });
     }
 
-    // Return all requests (for admin purposes)
-    return NextResponse.json({ 
-      requests: byoidRequests.map(req => ({
-        id: req.id,
-        organizationName: req.organizationName,
-        organizationDomain: req.organizationDomain,
-        provider: req.provider,
-        issuerUrl: req.issuerUrl,
-        status: req.status,
-        submittedAt: req.submittedAt,
-        contactEmail: req.contactEmail
-      }))
-    });
+         // Return all requests (for admin purposes)
+     return NextResponse.json({ 
+       requests: byoidRequests.map(req => ({
+         id: req.id,
+         organizationName: req.organizationName,
+         organizationDomain: req.organizationDomain,
+         issuerUrl: req.issuerUrl,
+         status: req.status,
+         submittedAt: req.submittedAt
+       }))
+     });
 
   } catch (error) {
     console.error('Get BYOID requests error:', error);

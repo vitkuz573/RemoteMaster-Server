@@ -24,31 +24,21 @@ import {
 import { appConfig } from '@/lib/app-config';
 
 interface BYOIDForm {
-  provider: string;
   issuerUrl: string;
   clientId: string;
   clientSecret: string;
-  additionalNotes: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
 }
 
 const supportedProviders = [
-  { id: 'keycloak', name: 'Keycloak', description: 'Keycloak Identity Provider' }
+  { id: 'openid-connect', name: 'OpenID Connect', description: 'Standard OpenID Connect Protocol' }
 ];
 
 export default function BYOIDSetupPage() {
   const router = useRouter();
   const [formData, setFormData] = React.useState<BYOIDForm>({
-    provider: '',
     issuerUrl: '',
     clientId: '',
-    clientSecret: '',
-    additionalNotes: '',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: ''
+    clientSecret: ''
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [organizationData, setOrganizationData] = React.useState<any>(null);
@@ -61,13 +51,7 @@ export default function BYOIDSetupPage() {
         const data = JSON.parse(stored);
         setOrganizationData(data);
         
-        // Pre-fill contact information
-        setFormData(prev => ({
-          ...prev,
-          contactName: data.contactName || '',
-          contactEmail: data.contactEmail || '',
-          contactPhone: data.contactPhone || ''
-        }));
+
       }
     }
   }, []);
@@ -160,9 +144,9 @@ export default function BYOIDSetupPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full mb-4">
             <Shield className="w-8 h-8 text-blue-600" />
           </div>
-                     <h1 className="text-3xl font-bold mb-2">Configure Your Keycloak Identity Provider</h1>
+                     <h1 className="text-3xl font-bold mb-2">Configure Your OpenID Connect Identity Provider</h1>
            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-             Set up OpenID Connect with your Keycloak instance for enhanced security
+             Set up OpenID Connect with your Identity Provider for enhanced security
            </p>
         </div>
 
@@ -194,24 +178,14 @@ export default function BYOIDSetupPage() {
             <CardHeader>
                              <CardTitle className="flex items-center gap-2">
                  <Settings className="w-5 h-5" />
-                 Keycloak OpenID Connect Configuration
+                 OpenID Connect Configuration
                </CardTitle>
                <CardDescription>
-                 Provide your Keycloak OpenID Connect configuration details
+                 Provide your OpenID Connect configuration details
                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                             <div className="space-y-2">
-                 <Label htmlFor="provider">Identity Provider</Label>
-                 <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                   <Shield className="w-4 h-4 text-muted-foreground" />
-                   <span className="font-medium">Keycloak</span>
-                   <Badge variant="secondary" className="ml-auto">OpenID Connect</Badge>
-                 </div>
-                 <p className="text-xs text-muted-foreground">
-                   Currently supporting Keycloak OpenID Connect integration
-                 </p>
-               </div>
+                             
 
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div className="space-y-2">
@@ -220,11 +194,11 @@ export default function BYOIDSetupPage() {
                      id="issuerUrl"
                      value={formData.issuerUrl}
                      onChange={(e) => handleInputChange('issuerUrl', e.target.value)}
-                     placeholder="https://your-keycloak.com/auth/realms/your-realm"
+                                           placeholder="https://your-idp.com"
                      required
                    />
                    <p className="text-xs text-muted-foreground">
-                     The OpenID Connect issuer URL (usually your Keycloak realm URL)
+                                           The OpenID Connect issuer URL
                    </p>
                  </div>
 
@@ -238,7 +212,7 @@ export default function BYOIDSetupPage() {
                      required
                    />
                    <p className="text-xs text-muted-foreground">
-                     The client ID configured in your Keycloak realm
+                                           The client ID configured in your IdP
                    </p>
                  </div>
                </div>
@@ -253,90 +227,14 @@ export default function BYOIDSetupPage() {
                    placeholder="your-client-secret"
                    required
                  />
-                 <p className="text-xs text-muted-foreground">
-                   The client secret configured in your Keycloak realm
-                 </p>
+                                    <p className="text-xs text-muted-foreground">
+                                           The client secret configured in your IdP
+                   </p>
                </div>
             </CardContent>
           </Card>
 
-          {/* Contact Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Contact Information
-              </CardTitle>
-              <CardDescription>
-                Provide contact details for our team to assist with the IdP configuration
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="contactName">Contact Name</Label>
-                  <Input
-                    id="contactName"
-                    value={formData.contactName}
-                    onChange={(e) => handleInputChange('contactName', e.target.value)}
-                    placeholder="John Doe"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="contactEmail">Contact Email</Label>
-                  <Input
-                    id="contactEmail"
-                    type="email"
-                    value={formData.contactEmail}
-                    onChange={(e) => handleInputChange('contactEmail', e.target.value)}
-                    placeholder="john@company.com"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="contactPhone">Contact Phone (Optional)</Label>
-                <Input
-                  id="contactPhone"
-                  value={formData.contactPhone}
-                  onChange={(e) => handleInputChange('contactPhone', e.target.value)}
-                  placeholder="+1 (555) 123-4567"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="additionalNotes">Additional Notes</Label>
-                <Textarea
-                  id="additionalNotes"
-                  value={formData.additionalNotes}
-                  onChange={(e) => handleInputChange('additionalNotes', e.target.value)}
-                  placeholder="Any additional information or special requirements..."
-                  rows={4}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Information Card */}
-          <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="space-y-2">
-                                     <h4 className="font-medium text-blue-900 dark:text-blue-100">What happens next?</h4>
-                   <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                     <li>• Our team will review your Keycloak configuration within 24-48 hours</li>
-                     <li>• We'll contact you to confirm the setup and provide next steps</li>
-                     <li>• Once configured, you'll receive detailed setup instructions</li>
-                     <li>• Your organization will be able to use OpenID Connect for authentication</li>
-                   </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                     
 
           {/* Submit Button */}
           <div className="flex justify-center">
@@ -354,7 +252,7 @@ export default function BYOIDSetupPage() {
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4 mr-2" />
-                                     Submit Keycloak Configuration
+                                     Submit OpenID Connect Configuration
                 </>
               )}
             </Button>

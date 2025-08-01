@@ -250,12 +250,12 @@ export default function SetupCompletePage() {
                        </div>
                        <div>
                          <h4 className="font-medium">
-                           {registrationData.selectedPlan === 'free' ? 'Configure SSO (Optional)' : 'Configure Keycloak (Recommended)'}
+                           {registrationData.selectedPlan === 'free' ? 'Configure SSO (Optional)' : 'Configure OpenID Connect (Recommended)'}
                          </h4>
                          <p className="text-sm text-muted-foreground">
                            {registrationData.selectedPlan === 'free' 
                              ? 'Set up Single Sign-On with your identity provider for enhanced security.'
-                             : 'Configure your Keycloak instance for enterprise-grade OpenID Connect integration.'
+                             : 'Configure your Identity Provider for enterprise-grade OpenID Connect integration.'
                            }
                          </p>
                        </div>
@@ -302,7 +302,7 @@ export default function SetupCompletePage() {
                         size="lg"
                       >
                         <Shield className="w-4 h-4 mr-2 flex-shrink-0" />
-                        <span className="truncate">Configure Keycloak</span>
+                        <span className="truncate">Configure OpenID Connect</span>
                       </Button>
                     )}
                    
