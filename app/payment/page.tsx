@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
 import { pricingPlans, calculateMonthlyCost } from '@/lib/pricing-plans';
+import { useRegistrationGuard } from '@/hooks/use-registration-guard';
 
 interface PaymentForm {
   cardNumber: string;
@@ -57,7 +58,7 @@ interface OrganizationData {
 
 export default function PaymentPage() {
   const router = useRouter();
-  const [organizationData, setOrganizationData] = React.useState<OrganizationData | null>(null);
+  const { registrationData: organizationData, isLoading: isLoadingData, isValidAccess } = useRegistrationGuard();
   const [paymentForm, setPaymentForm] = React.useState<PaymentForm>({
     cardNumber: '',
     expiryMonth: '',
@@ -74,24 +75,6 @@ export default function PaymentPage() {
   });
   const [isLoading, setIsLoading] = React.useState(false);
   const [errors, setErrors] = React.useState<Partial<PaymentForm>>({});
-
-  // Load organization data from localStorage
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedData = localStorage.getItem("organizationRegistration");
-      if (savedData) {
-        try {
-          const data = JSON.parse(savedData);
-          setOrganizationData(data);
-        } catch (error) {
-          console.error('Error parsing organization data:', error);
-          router.push('/register');
-        }
-      } else {
-        router.push('/register');
-      }
-    }
-  }, [router]);
 
   const months = Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
@@ -204,9 +187,15 @@ export default function PaymentPage() {
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Clear localStorage
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("organizationRegistration");
+      // Update registration data with payment information and redirect to setup-complete
+      if (typeof window !== "undefined" && organizationData) {
+        const updatedRegistrationData = {
+          ...organizationData,
+          paymentCompleted: true,
+          paymentTimestamp: new Date().toISOString(),
+          paymentId: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        };
+        localStorage.setItem("organizationRegistration", JSON.stringify(updatedRegistrationData));
       }
 
       // Redirect to success page
@@ -220,7 +209,7 @@ export default function PaymentPage() {
     }
   };
 
-  if (!organizationData) {
+  if (isLoadingData || !organizationData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -231,7 +220,12 @@ export default function PaymentPage() {
     );
   }
 
-        const selectedPlan = pricingPlans.find(plan => plan.id === organizationData.selectedPlan) || pricingPlans[1];
+  // Check if this is a free plan - redirect to setup-complete
+  const selectedPlan = pricingPlans.find(plan => plan.id === organizationData.selectedPlan);
+  if (selectedPlan?.price === 0) {
+    router.push('/setup-complete');
+    return null;
+  }
         const isUnlimited = selectedPlan.maxUsers === -1;
         const maxUsersForPlan = isUnlimited ? 1000 : selectedPlan.maxUsers;
         const adjustedUsers = Math.min(organizationData.expectedUsers, maxUsersForPlan);

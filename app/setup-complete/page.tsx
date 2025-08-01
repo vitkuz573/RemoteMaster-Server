@@ -17,12 +17,56 @@ import {
   ExternalLink,
   Building2,
   Calendar,
-  Clock
+  Clock,
+  AlertCircle,
+  CreditCard
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
+import { pricingPlans, getPlanById } from '@/lib/pricing-plans';
+import { useRegistrationGuard } from '@/hooks/use-registration-guard';
+
+interface OrganizationForm {
+  name: string;
+  domain: string;
+  industry: string;
+  size: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  address: string;
+  description: string;
+  expectedUsers: number;
+  selectedPlan: string;
+  registrationTimestamp?: string;
+  registrationId?: string;
+  paymentCompleted?: boolean;
+  paymentTimestamp?: string;
+  paymentId?: string;
+}
 
 export default function SetupCompletePage() {
   const router = useRouter();
+  const { registrationData, isLoading, isValidAccess } = useRegistrationGuard();
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="bg-gradient-to-br from-background via-background to-muted/30 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not valid access (will redirect)
+  if (!isValidAccess || !registrationData) {
+    return null;
+  }
+
+  const selectedPlan = getPlanById(registrationData.selectedPlan);
+  const isFreePlan = selectedPlan?.price === 0;
 
   const nextSteps = [
     {
@@ -82,6 +126,14 @@ export default function SetupCompletePage() {
     }
   ];
 
+  const handleGoToDashboard = () => {
+    // Clear registration data after successful setup
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("organizationRegistration");
+    }
+    router.push('/');
+  };
+
   return (
     <div className="bg-gradient-to-br from-background via-background to-muted/30 min-h-screen">
       {/* Header */}
@@ -110,14 +162,28 @@ export default function SetupCompletePage() {
             </div>
             <h1 className="text-4xl font-bold mb-4">Welcome to {appConfig.name}!</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-              Your organization has been successfully registered and your account is now active. 
-              You're ready to start using {appConfig.name} for your team.
+              {isFreePlan 
+                ? `Your free ${registrationData.name} account has been successfully created and is now active.`
+                : registrationData.paymentCompleted
+                ? `Your ${registrationData.name} account has been successfully registered and payment processed.`
+                : `Your ${registrationData.name} account has been successfully registered.`
+              }
             </p>
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-4 flex-wrap">
               <Badge variant="secondary" className="text-sm">
-                <Calendar className="w-3 h-3 mr-1" />
-                Free 30-day trial active
+                <Building2 className="w-3 h-3 mr-1" />
+                {registrationData.name}
               </Badge>
+              <Badge variant="outline" className="text-sm">
+                <CreditCard className="w-3 h-3 mr-1" />
+                {selectedPlan?.name} Plan
+              </Badge>
+              {!isFreePlan && registrationData.paymentCompleted && (
+                <Badge variant="secondary" className="text-sm">
+                  <Calendar className="w-3 h-3 mr-1" />
+                  Free 30-day trial active
+                </Badge>
+              )}
               <Badge variant="outline" className="text-sm">
                 <Clock className="w-3 h-3 mr-1" />
                 Setup completed
@@ -235,20 +301,92 @@ export default function SetupCompletePage() {
                       <CheckCircle className="w-4 h-4 text-green-500" />
                       <span className="text-sm">Account activated</span>
                     </div>
+                    {!isFreePlan && registrationData.paymentCompleted && (
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <span className="text-sm">Payment processed</span>
+                      </div>
+                    )}
+                    {!isFreePlan && registrationData.paymentCompleted && (
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <span className="text-sm">30-day trial started</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm">Payment processed</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm">30-day trial started</span>
+                      <span className="text-sm">Setup completed</span>
                     </div>
                   </div>
                   
-                  <Button onClick={() => router.push('/')} className="w-full">
+                  <Button onClick={handleGoToDashboard} className="w-full">
                     Go to Dashboard
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
+                </CardContent>
+              </Card>
+
+              {/* Plan Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Plan Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Plan:</span>
+                      <span className="font-medium">{selectedPlan?.name}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Users:</span>
+                      <span className="font-medium">
+                        {selectedPlan?.maxUsers === -1 ? 'Unlimited' : selectedPlan?.maxUsers}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Organizational Units:</span>
+                      <span className="font-medium">
+                        {selectedPlan?.maxOrganizationalUnits === -1 ? 'Unlimited' : selectedPlan?.maxOrganizationalUnits}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Hosts:</span>
+                      <span className="font-medium">
+                        {selectedPlan?.maxHosts === -1 ? 'Unlimited' : selectedPlan?.maxHosts}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Monthly cost:</span>
+                      <span className="font-medium">
+                        {isFreePlan ? 'Free' : `$${selectedPlan?.price}/user`}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {!isFreePlan && registrationData.paymentCompleted && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Trial period:</span>
+                          <span className="font-medium">30 days</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Full access:</span>
+                          <span className="font-medium">All features</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">No commitment:</span>
+                          <span className="font-medium">Cancel anytime</span>
+                        </div>
+                      </div>
+                      
+                      <p className="text-xs text-muted-foreground">
+                        Your trial will automatically convert to a paid plan after 30 days. 
+                        You can cancel or modify your plan at any time.
+                      </p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
@@ -316,36 +454,6 @@ export default function SetupCompletePage() {
                   </CardContent>
                 </Card>
               )}
-
-              {/* Trial Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Trial Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Trial period:</span>
-                      <span className="font-medium">30 days</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Full access:</span>
-                      <span className="font-medium">All features</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">No commitment:</span>
-                      <span className="font-medium">Cancel anytime</span>
-                    </div>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <p className="text-xs text-muted-foreground">
-                    Your trial will automatically convert to a paid plan after 30 days. 
-                    You can cancel or modify your plan at any time.
-                  </p>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>

@@ -172,9 +172,14 @@ export default function OrganizationRegistrationPage() {
       // Simulate API call to register organization
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Save organization data to localStorage
+      // Save organization data to localStorage with timestamp
       if (typeof window !== "undefined") {
-        localStorage.setItem("organizationRegistration", JSON.stringify(formData));
+        const registrationData = {
+          ...formData,
+          registrationTimestamp: new Date().toISOString(),
+          registrationId: `reg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        };
+        localStorage.setItem("organizationRegistration", JSON.stringify(registrationData));
       }
 
       // Redirect based on plan type
