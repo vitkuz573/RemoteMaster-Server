@@ -134,7 +134,13 @@ export default function BYOIDSetupPage() {
       // Add .well-known/openid-configuration
       const discoveryUrl = `${normalizedUrl}.well-known/openid-configuration`;
       
-      const response = await fetch(discoveryUrl);
+      const response = await fetch(discoveryUrl, {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
       
       if (!response.ok) {
         throw new Error(`Discovery failed: ${response.status} ${response.statusText}`);
@@ -147,7 +153,11 @@ export default function BYOIDSetupPage() {
       
     } catch (error) {
       console.error('Discovery error:', error);
-      setDiscoveryError(error instanceof Error ? error.message : 'Discovery failed');
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        setDiscoveryError('CORS error: Unable to access the discovery endpoint. Please check the URL or try a different IdP.');
+      } else {
+        setDiscoveryError(error instanceof Error ? error.message : 'Discovery failed');
+      }
     } finally {
       setIsDiscovering(false);
     }
