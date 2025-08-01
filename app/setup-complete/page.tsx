@@ -244,17 +244,22 @@ export default function SetupCompletePage() {
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-xs font-bold text-primary">2</span>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">Configure SSO (Optional)</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Set up Single Sign-On with your identity provider for enhanced security.
-                        </p>
-                      </div>
-                    </div>
+                                         <div className="flex items-start gap-3">
+                       <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                         <span className="text-xs font-bold text-primary">2</span>
+                       </div>
+                       <div>
+                         <h4 className="font-medium">
+                           {registrationData.selectedPlan === 'free' ? 'Configure SSO (Optional)' : 'Configure BYOID (Recommended)'}
+                         </h4>
+                         <p className="text-sm text-muted-foreground">
+                           {registrationData.selectedPlan === 'free' 
+                             ? 'Set up Single Sign-On with your identity provider for enhanced security.'
+                             : 'Configure your own Identity Provider for enterprise-grade SSO integration.'
+                           }
+                         </p>
+                       </div>
+                     </div>
 
                     <div className="flex items-start gap-3">
                       <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -280,16 +285,28 @@ export default function SetupCompletePage() {
                   <CardTitle className="text-lg">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button 
-                    onClick={() => router.push('/tenant')} 
-                    className="w-full justify-start"
-                    size="lg"
-                  >
-                    <Settings className="w-4 h-4 mr-2 flex-shrink-0" />
-                    <span className="truncate">Go to Dashboard</span>
-                  </Button>
-                  
                                      <Button 
+                     onClick={() => router.push('/tenant')} 
+                     className="w-full justify-start"
+                     size="lg"
+                   >
+                     <Settings className="w-4 h-4 mr-2 flex-shrink-0" />
+                     <span className="truncate">Go to Dashboard</span>
+                   </Button>
+                   
+                   {registrationData.selectedPlan !== 'free' && (
+                     <Button 
+                       variant="outline" 
+                       onClick={() => router.push('/byoid-setup')}
+                       className="w-full justify-start"
+                       size="lg"
+                     >
+                       <Shield className="w-4 h-4 mr-2 flex-shrink-0" />
+                       <span className="truncate">Configure BYOID</span>
+                     </Button>
+                   )}
+                   
+                   <Button 
                      variant="outline" 
                      onClick={() => router.push('/tenant')}
                      className="w-full justify-start"
