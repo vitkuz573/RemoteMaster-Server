@@ -42,6 +42,20 @@ export default function BYOIDSetupPage() {
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [organizationData, setOrganizationData] = React.useState<any>(null);
+  const [isDiscovering, setIsDiscovering] = React.useState(false);
+  const [discoveryResult, setDiscoveryResult] = React.useState<any>(null);
+  const [discoveryError, setDiscoveryError] = React.useState<string | null>(null);
+
+  // Check if form is valid and ready for submission
+  const isFormValid = React.useMemo(() => {
+    return (
+      formData.issuerUrl.trim() !== '' &&
+      formData.clientId.trim() !== '' &&
+      formData.clientSecret.trim() !== '' &&
+      discoveryResult !== null &&
+      !discoveryError
+    );
+  }, [formData, discoveryResult, discoveryError]);
 
   React.useEffect(() => {
     // Load organization data from localStorage
@@ -98,6 +112,45 @@ export default function BYOIDSetupPage() {
       ...prev,
       [field]: value
     }));
+
+    // Auto-discover when issuer URL changes
+    if (field === 'issuerUrl' && value.trim()) {
+      performDiscovery(value.trim());
+    }
+  };
+
+  const performDiscovery = async (issuerUrl: string) => {
+    setIsDiscovering(true);
+    setDiscoveryError(null);
+    setDiscoveryResult(null);
+
+    try {
+      // Normalize issuer URL
+      let normalizedUrl = issuerUrl;
+      if (!normalizedUrl.endsWith('/')) {
+        normalizedUrl += '/';
+      }
+      
+      // Add .well-known/openid-configuration
+      const discoveryUrl = `${normalizedUrl}.well-known/openid-configuration`;
+      
+      const response = await fetch(discoveryUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Discovery failed: ${response.status} ${response.statusText}`);
+      }
+      
+      const config = await response.json();
+      setDiscoveryResult(config);
+      
+      console.log('OpenID Connect Discovery Result:', config);
+      
+    } catch (error) {
+      console.error('Discovery error:', error);
+      setDiscoveryError(error instanceof Error ? error.message : 'Discovery failed');
+    } finally {
+      setIsDiscovering(false);
+    }
   };
 
   if (!organizationData) {
@@ -197,9 +250,25 @@ export default function BYOIDSetupPage() {
                                            placeholder="https://your-idp.com"
                      required
                    />
-                   <p className="text-xs text-muted-foreground">
-                                           The OpenID Connect issuer URL
-                   </p>
+                                       <p className="text-xs text-muted-foreground">
+                      The OpenID Connect issuer URL
+                    </p>
+                    {isDiscovering && (
+                      <div className="flex items-center gap-2 text-xs text-blue-600">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                        Discovering OpenID Connect configuration...
+                      </div>
+                    )}
+                    {discoveryError && (
+                      <div className="text-xs text-red-600">
+                        ⚠️ {discoveryError}
+                      </div>
+                    )}
+                    {discoveryResult && (
+                      <div className="text-xs text-green-600">
+                        ✅ Discovery successful
+                      </div>
+                    )}
                  </div>
 
                  <div className="space-y-2">
@@ -231,19 +300,57 @@ export default function BYOIDSetupPage() {
                                            The client secret configured in your IdP
                    </p>
                </div>
-            </CardContent>
-          </Card>
+                         </CardContent>
+           </Card>
 
-                     
+           {/* Discovery Results */}
+           {discoveryResult && (
+             <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20">
+               <CardHeader>
+                 <CardTitle className="flex items-center gap-2 text-green-800 dark:text-green-200">
+                   <CheckCircle className="w-5 h-5" />
+                   OpenID Connect Discovery Results
+                 </CardTitle>
+               </CardHeader>
+               <CardContent>
+                 <div className="space-y-3">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                     <div>
+                       <span className="font-medium text-green-800 dark:text-green-200">Issuer:</span>
+                       <div className="text-green-700 dark:text-green-300 break-all">{discoveryResult.issuer}</div>
+                     </div>
+                     <div>
+                       <span className="font-medium text-green-800 dark:text-green-200">Authorization Endpoint:</span>
+                       <div className="text-green-700 dark:text-green-300 break-all">{discoveryResult.authorization_endpoint}</div>
+                     </div>
+                     <div>
+                       <span className="font-medium text-green-800 dark:text-green-200">Token Endpoint:</span>
+                       <div className="text-green-700 dark:text-green-300 break-all">{discoveryResult.token_endpoint}</div>
+                     </div>
+                     <div>
+                       <span className="font-medium text-green-800 dark:text-green-200">Userinfo Endpoint:</span>
+                       <div className="text-green-700 dark:text-green-300 break-all">{discoveryResult.userinfo_endpoint}</div>
+                     </div>
+                   </div>
+                   {discoveryResult.scopes_supported && (
+                     <div>
+                       <span className="font-medium text-green-800 dark:text-green-200">Supported Scopes:</span>
+                       <div className="text-green-700 dark:text-green-300">{discoveryResult.scopes_supported.join(', ')}</div>
+                     </div>
+                   )}
+                 </div>
+               </CardContent>
+             </Card>
+           )}
 
-          {/* Submit Button */}
+           {/* Submit Button */}
           <div className="flex justify-center">
-            <Button 
-              type="submit" 
-              size="lg" 
-              disabled={isSubmitting}
-              className="px-8"
-            >
+                         <Button 
+               type="submit" 
+               size="lg" 
+               disabled={isSubmitting || !isFormValid}
+               className="px-8"
+             >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -254,9 +361,10 @@ export default function BYOIDSetupPage() {
                   <CheckCircle className="w-4 h-4 mr-2" />
                                      Submit OpenID Connect Configuration
                 </>
-              )}
-            </Button>
-          </div>
+                             )}
+             </Button>
+             
+           </div>
         </form>
       </div>
     </div>
