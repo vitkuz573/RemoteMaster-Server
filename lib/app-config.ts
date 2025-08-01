@@ -18,7 +18,7 @@ export const appConfig = {
   
   // Repository settings for commit links
   repository: {
-    url: process.env.NEXT_PUBLIC_REPO_URL || 'https://github.com/remotemaster/remotemaster-server',
+    url: process.env.NEXT_PUBLIC_REPO_URL || 'https://github.com/vitkuz573/RemoteMaster-Server',
     type: (process.env.NEXT_PUBLIC_REPO_TYPE as 'github' | 'gitlab' | 'bitbucket') || 'github',
     branch: process.env.NEXT_PUBLIC_REPO_BRANCH || 'main'
   },
