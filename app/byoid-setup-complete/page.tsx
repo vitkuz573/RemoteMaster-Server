@@ -51,13 +51,7 @@ export default function BYOIDSetupCompletePage() {
 
   const getProviderName = (providerId: string) => {
     const providers: { [key: string]: string } = {
-      'azure-ad': 'Microsoft Azure AD',
-      'okta': 'Okta',
-      'google-workspace': 'Google Workspace',
-      'onelogin': 'OneLogin',
-      'ping-identity': 'Ping Identity',
-      'adfs': 'ADFS',
-      'custom': 'Custom SAML'
+      'keycloak': 'Keycloak'
     };
     return providers[providerId] || providerId;
   };
@@ -85,10 +79,10 @@ export default function BYOIDSetupCompletePage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full mb-4">
             <CheckCircle className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold mb-2">BYOID Setup Submitted!</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Your Identity Provider configuration has been submitted successfully. Our team will review and configure your SSO setup.
-          </p>
+                     <h1 className="text-3xl font-bold mb-2">Keycloak Setup Submitted!</h1>
+           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+             Your Keycloak OpenID Connect configuration has been submitted successfully. Our team will review and configure your SSO setup.
+           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -97,33 +91,33 @@ export default function BYOIDSetupCompletePage() {
             {/* BYOID Configuration Summary */}
             <Card className="border-blue-200 dark:border-blue-800">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-blue-600" />
-                  BYOID Configuration Summary
-                </CardTitle>
-                <CardDescription>
-                  Your submitted Identity Provider configuration details
-                </CardDescription>
+                                 <CardTitle className="flex items-center gap-2">
+                   <Shield className="w-5 h-5 text-blue-600" />
+                   Keycloak Configuration Summary
+                 </CardTitle>
+                 <CardDescription>
+                   Your submitted Keycloak OpenID Connect configuration details
+                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Identity Provider</Label>
-                    <div className="font-medium">{getProviderName(byoidData.provider)}</div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Entity ID</Label>
-                    <div className="font-mono text-sm break-all">{byoidData.entityId}</div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">SSO URL</Label>
-                    <div className="font-mono text-sm break-all">{byoidData.ssoUrl}</div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Name ID Format</Label>
-                    <div className="font-mono text-sm">{byoidData.nameIdFormat}</div>
-                  </div>
-                </div>
+                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                     <Label className="text-sm text-muted-foreground">Identity Provider</Label>
+                     <div className="font-medium">{getProviderName(byoidData.provider)}</div>
+                   </div>
+                   <div className="space-y-2">
+                     <Label className="text-sm text-muted-foreground">Issuer URL</Label>
+                     <div className="font-mono text-sm break-all">{byoidData.issuerUrl}</div>
+                   </div>
+                   <div className="space-y-2">
+                     <Label className="text-sm text-muted-foreground">Client ID</Label>
+                     <div className="font-mono text-sm break-all">{byoidData.clientId}</div>
+                   </div>
+                   <div className="space-y-2">
+                     <Label className="text-sm text-muted-foreground">Client Secret</Label>
+                     <div className="font-mono text-sm">••••••••••••••••</div>
+                   </div>
+                 </div>
                 
                 {byoidData.additionalNotes && (
                   <div className="space-y-2">
@@ -137,10 +131,10 @@ export default function BYOIDSetupCompletePage() {
             {/* Next Steps */}
             <Card>
               <CardHeader>
-                <CardTitle>What Happens Next?</CardTitle>
-                <CardDescription>
-                  Here's what to expect during the BYOID setup process
-                </CardDescription>
+                                 <CardTitle>What Happens Next?</CardTitle>
+                 <CardDescription>
+                   Here's what to expect during the Keycloak setup process
+                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -149,10 +143,10 @@ export default function BYOIDSetupCompletePage() {
                       <Clock className="w-3 h-3 text-blue-600" />
                     </div>
                     <div>
-                      <h4 className="font-medium">Review Period (24-48 hours)</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Our team will review your IdP configuration and validate the provided details.
-                      </p>
+                                             <h4 className="font-medium">Review Period (24-48 hours)</h4>
+                       <p className="text-sm text-muted-foreground">
+                         Our team will review your Keycloak configuration and validate the provided details.
+                       </p>
                     </div>
                   </div>
 
@@ -173,10 +167,10 @@ export default function BYOIDSetupCompletePage() {
                       <Settings className="w-3 h-3 text-blue-600" />
                     </div>
                     <div>
-                      <h4 className="font-medium">Configuration & Testing</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Our team will configure your IdP integration and perform thorough testing.
-                      </p>
+                                             <h4 className="font-medium">Configuration & Testing</h4>
+                       <p className="text-sm text-muted-foreground">
+                         Our team will configure your Keycloak OpenID Connect integration and perform thorough testing.
+                       </p>
                     </div>
                   </div>
 
@@ -185,10 +179,10 @@ export default function BYOIDSetupCompletePage() {
                       <CheckCircle className="w-3 h-3 text-blue-600" />
                     </div>
                     <div>
-                      <h4 className="font-medium">Go Live & Documentation</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Once configured, you'll receive detailed setup instructions and can start using SSO.
-                      </p>
+                                             <h4 className="font-medium">Go Live & Documentation</h4>
+                       <p className="text-sm text-muted-foreground">
+                         Once configured, you'll receive detailed setup instructions and can start using OpenID Connect.
+                       </p>
                     </div>
                   </div>
                 </div>

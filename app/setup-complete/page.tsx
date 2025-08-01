@@ -250,12 +250,12 @@ export default function SetupCompletePage() {
                        </div>
                        <div>
                          <h4 className="font-medium">
-                           {registrationData.selectedPlan === 'free' ? 'Configure SSO (Optional)' : 'Configure BYOID (Recommended)'}
+                           {registrationData.selectedPlan === 'free' ? 'Configure SSO (Optional)' : 'Configure Keycloak (Recommended)'}
                          </h4>
                          <p className="text-sm text-muted-foreground">
                            {registrationData.selectedPlan === 'free' 
                              ? 'Set up Single Sign-On with your identity provider for enhanced security.'
-                             : 'Configure your own Identity Provider for enterprise-grade SSO integration.'
+                             : 'Configure your Keycloak instance for enterprise-grade OpenID Connect integration.'
                            }
                          </p>
                        </div>
@@ -294,17 +294,17 @@ export default function SetupCompletePage() {
                      <span className="truncate">Go to Dashboard</span>
                    </Button>
                    
-                   {registrationData.selectedPlan !== 'free' && (
-                     <Button 
-                       variant="outline" 
-                       onClick={() => router.push('/byoid-setup')}
-                       className="w-full justify-start"
-                       size="lg"
-                     >
-                       <Shield className="w-4 h-4 mr-2 flex-shrink-0" />
-                       <span className="truncate">Configure BYOID</span>
-                     </Button>
-                   )}
+                                       {registrationData.selectedPlan !== 'free' && (
+                      <Button 
+                        variant="outline" 
+                        onClick={() => router.push('/byoid-setup')}
+                        className="w-full justify-start"
+                        size="lg"
+                      >
+                        <Shield className="w-4 h-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">Configure Keycloak</span>
+                      </Button>
+                    )}
                    
                    <Button 
                      variant="outline" 

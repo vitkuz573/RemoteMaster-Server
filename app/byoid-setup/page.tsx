@@ -25,10 +25,9 @@ import { appConfig } from '@/lib/app-config';
 
 interface BYOIDForm {
   provider: string;
-  entityId: string;
-  ssoUrl: string;
-  x509Certificate: string;
-  nameIdFormat: string;
+  issuerUrl: string;
+  clientId: string;
+  clientSecret: string;
   additionalNotes: string;
   contactName: string;
   contactEmail: string;
@@ -36,30 +35,16 @@ interface BYOIDForm {
 }
 
 const supportedProviders = [
-  { id: 'azure-ad', name: 'Microsoft Azure AD', description: 'Azure Active Directory' },
-  { id: 'okta', name: 'Okta', description: 'Okta Identity Platform' },
-  { id: 'google-workspace', name: 'Google Workspace', description: 'Google Workspace SSO' },
-  { id: 'onelogin', name: 'OneLogin', description: 'OneLogin Identity Platform' },
-  { id: 'ping-identity', name: 'Ping Identity', description: 'Ping Identity Platform' },
-  { id: 'adfs', name: 'ADFS', description: 'Active Directory Federation Services' },
-  { id: 'custom', name: 'Custom SAML', description: 'Custom SAML 2.0 Provider' }
-];
-
-const nameIdFormats = [
-  { id: 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress', name: 'Email Address' },
-  { id: 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified', name: 'Unspecified' },
-  { id: 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent', name: 'Persistent' },
-  { id: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient', name: 'Transient' }
+  { id: 'keycloak', name: 'Keycloak', description: 'Keycloak Identity Provider' }
 ];
 
 export default function BYOIDSetupPage() {
   const router = useRouter();
   const [formData, setFormData] = React.useState<BYOIDForm>({
     provider: '',
-    entityId: '',
-    ssoUrl: '',
-    x509Certificate: '',
-    nameIdFormat: 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',
+    issuerUrl: '',
+    clientId: '',
+    clientSecret: '',
     additionalNotes: '',
     contactName: '',
     contactEmail: '',
@@ -175,10 +160,10 @@ export default function BYOIDSetupPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full mb-4">
             <Shield className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold mb-2">Configure Your Identity Provider</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Set up Single Sign-On (SSO) with your own Identity Provider for enhanced security
-          </p>
+                     <h1 className="text-3xl font-bold mb-2">Configure Your Keycloak Identity Provider</h1>
+           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+             Set up OpenID Connect with your Keycloak instance for enhanced security
+           </p>
         </div>
 
         {/* Organization Info */}
@@ -207,94 +192,71 @@ export default function BYOIDSetupPage() {
           {/* IdP Provider Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                Identity Provider Configuration
-              </CardTitle>
-              <CardDescription>
-                Select your Identity Provider and provide the required configuration details
-              </CardDescription>
+                             <CardTitle className="flex items-center gap-2">
+                 <Settings className="w-5 h-5" />
+                 Keycloak OpenID Connect Configuration
+               </CardTitle>
+               <CardDescription>
+                 Provide your Keycloak OpenID Connect configuration details
+               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="provider">Identity Provider</Label>
-                <Select value={formData.provider} onValueChange={(value) => handleInputChange('provider', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your Identity Provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {supportedProviders.map((provider) => (
-                      <SelectItem key={provider.id} value={provider.id}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{provider.name}</span>
-                          <span className="text-sm text-muted-foreground">{provider.description}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                             <div className="space-y-2">
+                 <Label htmlFor="provider">Identity Provider</Label>
+                 <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                   <Shield className="w-4 h-4 text-muted-foreground" />
+                   <span className="font-medium">Keycloak</span>
+                   <Badge variant="secondary" className="ml-auto">OpenID Connect</Badge>
+                 </div>
+                 <p className="text-xs text-muted-foreground">
+                   Currently supporting Keycloak OpenID Connect integration
+                 </p>
+               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="entityId">Entity ID (Issuer)</Label>
-                  <Input
-                    id="entityId"
-                    value={formData.entityId}
-                    onChange={(e) => handleInputChange('entityId', e.target.value)}
-                    placeholder="https://your-idp.com/saml/metadata"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    The unique identifier for your IdP (usually the metadata URL)
-                  </p>
-                </div>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                   <Label htmlFor="issuerUrl">Issuer URL</Label>
+                   <Input
+                     id="issuerUrl"
+                     value={formData.issuerUrl}
+                     onChange={(e) => handleInputChange('issuerUrl', e.target.value)}
+                     placeholder="https://your-keycloak.com/auth/realms/your-realm"
+                     required
+                   />
+                   <p className="text-xs text-muted-foreground">
+                     The OpenID Connect issuer URL (usually your Keycloak realm URL)
+                   </p>
+                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="ssoUrl">SSO URL (Single Sign-On URL)</Label>
-                  <Input
-                    id="ssoUrl"
-                    value={formData.ssoUrl}
-                    onChange={(e) => handleInputChange('ssoUrl', e.target.value)}
-                    placeholder="https://your-idp.com/saml/sso"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    The URL where users will be redirected for authentication
-                  </p>
-                </div>
-              </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="clientId">Client ID</Label>
+                   <Input
+                     id="clientId"
+                     value={formData.clientId}
+                     onChange={(e) => handleInputChange('clientId', e.target.value)}
+                     placeholder="your-client-id"
+                     required
+                   />
+                   <p className="text-xs text-muted-foreground">
+                     The client ID configured in your Keycloak realm
+                   </p>
+                 </div>
+               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="nameIdFormat">Name ID Format</Label>
-                <Select value={formData.nameIdFormat} onValueChange={(value) => handleInputChange('nameIdFormat', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {nameIdFormats.map((format) => (
-                      <SelectItem key={format.id} value={format.id}>
-                        {format.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="x509Certificate">X.509 Certificate</Label>
-                <Textarea
-                  id="x509Certificate"
-                  value={formData.x509Certificate}
-                  onChange={(e) => handleInputChange('x509Certificate', e.target.value)}
-                  placeholder="-----BEGIN CERTIFICATE-----&#10;Your X.509 certificate here...&#10;-----END CERTIFICATE-----"
-                  rows={8}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  The X.509 certificate used to verify SAML responses from your IdP
-                </p>
-              </div>
+               <div className="space-y-2">
+                 <Label htmlFor="clientSecret">Client Secret</Label>
+                 <Input
+                   id="clientSecret"
+                   type="password"
+                   value={formData.clientSecret}
+                   onChange={(e) => handleInputChange('clientSecret', e.target.value)}
+                   placeholder="your-client-secret"
+                   required
+                 />
+                 <p className="text-xs text-muted-foreground">
+                   The client secret configured in your Keycloak realm
+                 </p>
+               </div>
             </CardContent>
           </Card>
 
@@ -364,13 +326,13 @@ export default function BYOIDSetupPage() {
               <div className="flex items-start gap-3">
                 <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div className="space-y-2">
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100">What happens next?</h4>
-                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                    <li>• Our team will review your IdP configuration within 24-48 hours</li>
-                    <li>• We'll contact you to confirm the setup and provide next steps</li>
-                    <li>• Once configured, you'll receive detailed setup instructions</li>
-                    <li>• Your organization will be able to use SSO for authentication</li>
-                  </ul>
+                                     <h4 className="font-medium text-blue-900 dark:text-blue-100">What happens next?</h4>
+                   <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                     <li>• Our team will review your Keycloak configuration within 24-48 hours</li>
+                     <li>• We'll contact you to confirm the setup and provide next steps</li>
+                     <li>• Once configured, you'll receive detailed setup instructions</li>
+                     <li>• Your organization will be able to use OpenID Connect for authentication</li>
+                   </ul>
                 </div>
               </div>
             </CardContent>
@@ -392,7 +354,7 @@ export default function BYOIDSetupPage() {
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Submit BYOID Configuration
+                                     Submit Keycloak Configuration
                 </>
               )}
             </Button>
