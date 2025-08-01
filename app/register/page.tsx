@@ -114,11 +114,9 @@ export default function OrganizationRegistrationPage() {
       newErrors.selectedPlan = 'Please select a pricing plan';
     }
 
-    // Validate expected users against plan limits
+    // Validate expected users (organization size, not system users)
     if (formData.expectedUsers < 1) {
       newErrors.expectedUsers = 'Expected users must be at least 1';
-    } else if (selectedPlan.maxUsers !== -1 && formData.expectedUsers > selectedPlan.maxUsers) {
-      newErrors.expectedUsers = `Maximum ${selectedPlan.maxUsers} users allowed for ${selectedPlan.name} plan`;
     }
 
     if (!formData.contactName.trim()) {
@@ -169,18 +167,38 @@ export default function OrganizationRegistrationPage() {
     setIsLoading(true);
 
     try {
-      // Simulate API call to register organization
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Save organization data to localStorage with timestamp
+      // Call the registration API
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Registration failed');
+      }
+
+      // Save organization data to localStorage
       if (typeof window !== "undefined") {
         const registrationData = {
           ...formData,
+          ...result.organization,
           registrationTimestamp: new Date().toISOString(),
-          registrationId: `reg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         };
         localStorage.setItem("organizationRegistration", JSON.stringify(registrationData));
+        
+        // Also save the auth token if provided
+        if (result.token) {
+          localStorage.setItem("authToken", result.token);
+        }
       }
+
+      // Show success message
+      alert(result.message || 'Registration successful!');
 
       // Redirect based on plan type
       if (selectedPlan.price === 0) {
@@ -193,7 +211,7 @@ export default function OrganizationRegistrationPage() {
       
     } catch (err) {
       console.error('Registration error:', err);
-      // In a real app, you'd show an error message
+      alert(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -371,7 +389,7 @@ export default function OrganizationRegistrationPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="expectedUsers">Expected Users</Label>
+                          <Label htmlFor="expectedUsers">Organization Size (Employees)</Label>
                           <Input
                             id="expectedUsers"
                             type="number"
@@ -580,12 +598,12 @@ export default function OrganizationRegistrationPage() {
                       <span>Plan:</span>
                       <span className="font-medium">{selectedPlan.name}</span>
                     </div>
-                                         <div className="flex justify-between">
-                       <span>Users:</span>
-                       <span className="font-medium">
-                         {selectedPlan.maxUsers === -1 ? 'Unlimited' : adjustedUsers}
-                       </span>
-                     </div>
+                                                               <div className="flex justify-between">
+                        <span>System Users:</span>
+                        <span className="font-medium">
+                          {selectedPlan.maxUsers === -1 ? 'Unlimited' : selectedPlan.maxUsers}
+                        </span>
+                      </div>
                      <div className="flex justify-between">
                        <span>Organizational Units:</span>
                        <span className="font-medium">

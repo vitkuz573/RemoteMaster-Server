@@ -1,479 +1,366 @@
 'use client';
 
-import React from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreHorizontal, 
-  Users, 
-  Building2, 
-  DollarSign, 
-  TrendingUp,
-  Settings,
-  Activity,
-  Calendar,
-  Eye,
-  Edit,
-  Trash2,
-  ArrowLeft,
-  CheckCircle,
-  XCircle,
-  AlertCircle
-} from "lucide-react";
-import { appConfig } from '@/lib/app-config';
-import { pricingPlans } from '@/lib/pricing-plans';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RefreshCw, Users, Building2, Globe, Mail, Calendar, Lock, AlertTriangle } from 'lucide-react';
 
-export default function TenantPage() {
+interface Organization {
+  id: string;
+  tenantId: string;
+  name: string;
+  domain: string;
+  industry: string;
+  size: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  plan: string;
+  status: 'pending' | 'active' | 'suspended';
+  createdAt: string;
+  idpConfig?: {
+    provider: string;
+    clientId: string;
+    domain: string;
+  };
+}
+
+export default function AdminPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = React.useState("overview");
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectedPlan, setSelectedPlan] = React.useState("all");
-  const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
-  const [selectedTenant, setSelectedTenant] = React.useState<any>(null);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
 
-  // Application configuration (imported from centralized config)
-
-  // Mock tenant data for SaaS dashboard
-  const tenants = [
-    {
-      id: 'tenant-001',
-      name: 'Acme Corporation',
-      domain: 'acme.corp',
-      plan: 'Enterprise',
-      status: 'active',
-      users: 127,
-      hosts: 45,
-      lastActive: '2024-01-15',
-      billing: 2599.99,
-      usage: 78,
-      contact: {
-        name: 'John Smith',
-        email: 'john@acme.corp',
-        avatar: null
+  const fetchOrganizations = async () => {
+    try {
+      const response = await fetch('/api/organizations');
+      if (response.ok) {
+        const data = await response.json();
+        setOrganizations(data.organizations || []);
+      } else {
+        console.error('Failed to fetch organizations');
       }
-    },
-    {
-      id: 'tenant-002', 
-      name: 'TechStart Inc',
-      domain: 'techstart.io',
-      plan: 'Professional',
-      status: 'active',
-      users: 23,
-      hosts: 12,
-      lastActive: '2024-01-15',
-      billing: 299.99,
-      usage: 45,
-      contact: {
-        name: 'Sarah Johnson',
-        email: 'sarah@techstart.io',
-        avatar: null
-      }
-    },
-    {
-      id: 'tenant-003',
-      name: 'DevOps Ltd',
-      domain: 'devops.ltd',
-      plan: 'Starter',
-      status: 'trial',
-      users: 8,
-      hosts: 3,
-      lastActive: '2024-01-14',
-      billing: 0,
-      usage: 23,
-      contact: {
-        name: 'Mike Wilson',
-        email: 'mike@devops.ltd',
-        avatar: null
-      }
-    },
-    {
-      id: 'tenant-004',
-      name: 'Global Systems',
-      domain: 'globalsys.com',
-      plan: 'Enterprise',
-      status: 'suspended',
-      users: 89,
-      hosts: 31,
-      lastActive: '2024-01-10',
-      billing: 2599.99,
-      usage: 92,
-      contact: {
-        name: 'Lisa Brown',
-        email: 'lisa@globalsys.com',
-        avatar: null
-      }
+    } catch (error) {
+      console.error('Error fetching organizations:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  ];
-
-  // Calculate dashboard statistics
-  const stats = {
-    totalTenants: tenants.length,
-    activeTenants: tenants.filter(t => t.status === 'active').length,
-    totalRevenue: tenants.reduce((sum, t) => sum + t.billing, 0),
-    totalUsers: tenants.reduce((sum, t) => sum + t.users, 0)
   };
 
-  const filteredTenants = tenants.filter(tenant => {
-    const matchesSearch = tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tenant.domain.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPlan = selectedPlan === 'all' || tenant.plan.toLowerCase() === selectedPlan;
-    return matchesSearch && matchesPlan;
-  });
+  useEffect(() => {
+    // Check if admin is authenticated
+    const adminAuth = localStorage.getItem('adminAuthenticated');
+    if (adminAuth === 'true') {
+      setIsAuthenticated(true);
+      fetchOrganizations();
+    } else {
+      setShowLogin(true);
+      setLoading(false);
+    }
+  }, []);
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    
+    // Simple admin password check (in production, this would be more secure)
+    if (adminPassword === 'admin123') {
+      setIsAuthenticated(true);
+      setShowLogin(false);
+      localStorage.setItem('adminAuthenticated', 'true');
+      fetchOrganizations();
+    } else {
+      setLoginError('Invalid admin password');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setShowLogin(true);
+    localStorage.removeItem('adminAuthenticated');
+    setOrganizations([]);
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchOrganizations();
+  };
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      active: { variant: "default" as const, icon: CheckCircle, color: "text-green-600" },
-      trial: { variant: "secondary" as const, icon: AlertCircle, color: "text-yellow-600" },
-      suspended: { variant: "destructive" as const, icon: XCircle, color: "text-red-600" }
-    };
-    
-    const config = variants[status as keyof typeof variants] || variants.active;
-    const Icon = config.icon;
-    
+      pending: 'secondary',
+      active: 'default',
+      suspended: 'destructive'
+    } as const;
+
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
-        <Icon size={12} className={config.color} />
+      <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
   };
 
   const getPlanBadge = (plan: string) => {
-    const colors = {
-      'Starter': 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
-      'Professional': 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300',
-      'Enterprise': 'bg-gold-100 text-gold-800 dark:bg-yellow-900/20 dark:text-yellow-300'
-    };
-    
+    const variants = {
+      free: 'secondary',
+      basic: 'default',
+      premium: 'destructive'
+    } as const;
+
     return (
-      <Badge className={colors[plan as keyof typeof colors] || colors.Starter}>
-        {plan}
+      <Badge variant={variants[plan as keyof typeof variants] || 'secondary'}>
+        {plan.charAt(0).toUpperCase() + plan.slice(1)}
       </Badge>
     );
   };
 
-  return (
-    <div className="bg-background">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => router.push('/')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft size={16} />
-              Back to Dashboard
-            </Button>
-            <Separator orientation="vertical" className="h-6" />
-            <div>
-              <h1 className="text-xl font-semibold">Tenant Management</h1>
-              <p className="text-sm text-muted-foreground">Manage your SaaS tenants and subscriptions</p>
-            </div>
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus size={16} />
-                  Add Tenant
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Create New Tenant</DialogTitle>
-                  <DialogDescription>
-                    Add a new tenant to your SaaS platform
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="tenant-name">Tenant Name</Label>
-                    <Input id="tenant-name" placeholder="Company Name" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tenant-domain">Domain</Label>
-                    <Input id="tenant-domain" placeholder="company.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tenant-plan">Subscription Plan</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select plan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {pricingPlans.map((plan) => (
-                          <SelectItem key={plan.id} value={plan.id}>
-                            {plan.name} - {plan.price === 0 ? 'Free' : `$${plan.price}/user/month`}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-name">Primary Contact</Label>
-                    <Input id="contact-name" placeholder="Contact Name" />
-                  </div>
-        <div className="space-y-2">
-                    <Label htmlFor="contact-email">Contact Email</Label>
-                    <Input id="contact-email" type="email" placeholder="contact@company.com" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={() => setIsCreateModalOpen(false)}>
-                    Create Tenant
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <Skeleton className="h-10 w-24" />
         </div>
-      </header>
-
-      <div className="px-6 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="tenants">Tenants</TabsTrigger>
-            <TabsTrigger value="billing">Billing</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalTenants}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.activeTenants} active
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">
-                    +12.3% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalUsers}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Across all tenants
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Growth Rate</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">+23%</div>
-                  <p className="text-xs text-muted-foreground">
-                    Quarter over quarter
-                  </p>
-                </CardContent>
-              </Card>
+        
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32 mb-2" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ))}
             </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Latest tenant activities and updates</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Acme Corporation upgraded to Enterprise</p>
-                      <p className="text-xs text-muted-foreground">2 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">New tenant TechStart Inc registered</p>
-                      <p className="text-xs text-muted-foreground">5 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">DevOps Ltd trial period ends in 3 days</p>
-                      <p className="text-xs text-muted-foreground">1 day ago</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="tenants" className="space-y-6">
-            {/* Filters and Search */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-                    placeholder="Search tenants..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-80"
-          />
-        </div>
-                <Select value={selectedPlan} onValueChange={setSelectedPlan}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Filter by plan" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Plans</SelectItem>
-                    <SelectItem value="starter">Starter</SelectItem>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="enterprise">Enterprise</SelectItem>
-                  </SelectContent>
-                </Select>
+  if (showLogin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-center justify-center px-6">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+              <Lock className="w-8 h-8 text-red-600" />
+            </div>
+            <CardTitle className="text-2xl">System Administrator Access</CardTitle>
+            <CardDescription>
+              This area is restricted to system administrators only
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="adminPassword">Admin Password</Label>
+                <Input
+                  id="adminPassword"
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="Enter admin password"
+                  required
+                />
               </div>
+              {loginError && (
+                <div className="flex items-center gap-2 text-sm text-red-600">
+                  <AlertTriangle className="w-4 h-4" />
+                  {loginError}
+                </div>
+              )}
+              <Button type="submit" className="w-full">
+                Access Admin Panel
+              </Button>
+            </form>
+            <div className="mt-4 text-center">
+              <Button 
+                variant="ghost" 
+                onClick={() => router.push('/')}
+                className="text-sm"
+              >
+                ← Back to Home
+              </Button>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-            {/* Tenants Table */}
-            <Card>
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">System Administrator Dashboard</h1>
+          <p className="text-muted-foreground">
+            Manage and monitor registered organizations
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleRefresh} disabled={refreshing} variant="outline">
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button onClick={handleLogout} variant="outline" className="text-red-600 hover:text-red-700">
+            Logout
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Organizations</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{organizations.length}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Organizations</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {organizations.filter(org => org.status === 'active').length}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Organizations</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {organizations.filter(org => org.status === 'pending').length}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Free Plan Users</CardTitle>
+            <Globe className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {organizations.filter(org => org.plan === 'free').length}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Registered Organizations</CardTitle>
+          <CardDescription>
+            A list of all organizations that have registered with the platform
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {organizations.length === 0 ? (
+            <div className="text-center py-8">
+              <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No organizations found</h3>
+              <p className="text-muted-foreground">
+                Organizations will appear here once they register through the platform.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Tenant</TableHead>
+                    <TableHead>Organization</TableHead>
+                    <TableHead>Domain</TableHead>
+                    <TableHead>Contact</TableHead>
                     <TableHead>Plan</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Users</TableHead>
-                    <TableHead>Hosts</TableHead>
-                    <TableHead>Usage</TableHead>
-                    <TableHead>Revenue</TableHead>
-                    <TableHead>Last Active</TableHead>
-                    <TableHead className="w-10"></TableHead>
+                    <TableHead>Industry</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Registered</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTenants.map((tenant) => (
-                    <TableRow key={tenant.id}>
+                  {organizations.map((org) => (
+                    <TableRow key={org.id}>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={tenant.contact.avatar || ''} />
-                            <AvatarFallback>
-                              {tenant.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{tenant.name}</div>
-                            <div className="text-sm text-muted-foreground">{tenant.domain}</div>
+                        <div>
+                          <div className="font-medium">{org.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            ID: {org.id}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{getPlanBadge(tenant.plan)}</TableCell>
-                      <TableCell>{getStatusBadge(tenant.status)}</TableCell>
-                      <TableCell>{tenant.users}</TableCell>
-                      <TableCell>{tenant.hosts}</TableCell>
                       <TableCell>
-                        <div className="w-16">
-                          <Progress value={tenant.usage} className="h-2" />
-                          <span className="text-xs text-muted-foreground">{tenant.usage}%</span>
+                        <div className="flex items-center">
+                          <Globe className="h-4 w-4 mr-1 text-muted-foreground" />
+                          {org.domain}
                         </div>
                       </TableCell>
-                      <TableCell>${tenant.billing.toLocaleString()}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {tenant.lastActive}
-                      </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-        </Button>
+                        <div>
+                          <div className="font-medium">{org.contactName}</div>
+                          <div className="text-sm text-muted-foreground flex items-center">
+                            <Mail className="h-3 w-3 mr-1" />
+                            {org.contactEmail}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getPlanBadge(org.plan)}</TableCell>
+                      <TableCell>{getStatusBadge(org.status)}</TableCell>
+                      <TableCell>{org.industry}</TableCell>
+                      <TableCell>{org.size}</TableCell>
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground">
+                          {formatDate(org.createdAt)}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="billing" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Billing Overview</CardTitle>
-                <CardDescription>Revenue and subscription management</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Billing Dashboard</h3>
-                  <p className="text-muted-foreground">
-                    Comprehensive billing features coming soon
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Analytics Dashboard</CardTitle>
-                <CardDescription>Usage metrics and performance insights</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Analytics Dashboard</h3>
-                  <p className="text-muted-foreground">
-                    Advanced analytics and reporting features coming soon
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

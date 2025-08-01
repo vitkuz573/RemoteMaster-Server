@@ -8,22 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { 
   CheckCircle, 
+  Building2, 
+  Globe, 
+  Shield, 
+  Users, 
   ArrowRight,
-  Mail,
-  Users,
-  Settings,
-  Shield,
-  Zap,
+  Copy,
   ExternalLink,
-  Building2,
-  Calendar,
-  Clock,
-  AlertCircle,
-  CreditCard
+  Settings,
+  Key
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
-import { pricingPlans, getPlanById } from '@/lib/pricing-plans';
-import { useRegistrationGuard } from '@/hooks/use-registration-guard';
 
 interface OrganizationForm {
   name: string;
@@ -37,105 +32,53 @@ interface OrganizationForm {
   description: string;
   expectedUsers: number;
   selectedPlan: string;
-  registrationTimestamp?: string;
-  registrationId?: string;
-  paymentCompleted?: boolean;
-  paymentTimestamp?: string;
-  paymentId?: string;
+  id?: string;
+  tenantId?: string;
+  status?: string;
+  idpConfig?: {
+    provider: string;
+    clientId: string;
+    domain: string;
+  };
 }
 
 export default function SetupCompletePage() {
   const router = useRouter();
-  const { registrationData, isLoading, isValidAccess } = useRegistrationGuard();
+  const [registrationData, setRegistrationData] = React.useState<OrganizationForm | null>(null);
+  const [copied, setCopied] = React.useState<string | null>(null);
 
-  // Show loading state
-  if (isLoading) {
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("organizationRegistration");
+      if (stored) {
+        setRegistrationData(JSON.parse(stored));
+      }
+    }
+  }, []);
+
+  const copyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(field);
+      setTimeout(() => setCopied(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  if (!registrationData) {
     return (
-      <div className="bg-gradient-to-br from-background via-background to-muted/30 min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading registration details...</p>
         </div>
       </div>
     );
   }
 
-  // Don't render anything if not valid access (will redirect)
-  if (!isValidAccess || !registrationData) {
-    return null;
-  }
-
-  const selectedPlan = getPlanById(registrationData.selectedPlan);
-  const isFreePlan = selectedPlan?.price === 0;
-
-  const nextSteps = [
-    {
-      icon: <Users className="w-5 h-5" />,
-      title: "Invite Team Members",
-      description: "Add your team members to start collaborating",
-      action: "Invite Users",
-      href: "#"
-    },
-    {
-      icon: <Settings className="w-5 h-5" />,
-      title: "Configure SSO",
-      description: "Set up Single Sign-On with your identity provider",
-      action: "Configure SSO",
-      href: "#"
-    },
-    {
-      icon: <Shield className="w-5 h-5" />,
-      title: "Security Settings",
-      description: "Review and configure security policies",
-      action: "Security Settings",
-      href: "#"
-    },
-    {
-      icon: <Zap className="w-5 h-5" />,
-      title: "API Integration",
-      description: "Connect your existing systems and tools",
-      action: "View APIs",
-      href: "#"
-    }
-  ];
-
-  const supportResources = [
-    {
-      title: "Getting Started Guide",
-      description: "Learn the basics of using RemoteMaster",
-      href: appConfig.support.documentation || "#",
-      icon: <ExternalLink className="w-4 h-4" />
-    },
-    {
-      title: "Video Tutorials",
-      description: "Step-by-step video guides",
-      href: appConfig.support.website || "#",
-      icon: <ExternalLink className="w-4 h-4" />
-    },
-    {
-      title: "API Documentation",
-      description: "Technical documentation for developers",
-      href: appConfig.support.documentation || "#",
-      icon: <ExternalLink className="w-4 h-4" />
-    },
-    {
-      title: "Community Forum",
-      description: "Connect with other users",
-      href: appConfig.support.community || "#",
-      icon: <ExternalLink className="w-4 h-4" />
-    }
-  ];
-
-  const handleGoToDashboard = () => {
-    // Clear registration data after successful setup
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("organizationRegistration");
-    }
-    router.push('/');
-  };
-
   return (
-    <div className="bg-gradient-to-br from-background via-background to-muted/30 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="px-6 py-4">
@@ -151,309 +94,264 @@ export default function SetupCompletePage() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Success Message */}
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-              </div>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="max-w-6xl mx-auto">
+          {/* Success Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full mb-4">
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h1 className="text-4xl font-bold mb-4">Welcome to {appConfig.name}!</h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-              {isFreePlan 
-                ? `Your free ${registrationData.name} account has been successfully created and is now active.`
-                : registrationData.paymentCompleted
-                ? `Your ${registrationData.name} account has been successfully registered and payment processed.`
-                : `Your ${registrationData.name} account has been successfully registered.`
-              }
+            <h1 className="text-3xl font-bold mb-2">Setup Complete!</h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+              Your organization has been successfully registered. You can now access your dashboard and start managing your remote infrastructure.
             </p>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <Badge variant="secondary" className="text-sm">
-                <Building2 className="w-3 h-3 mr-1" />
-                {registrationData.name}
-              </Badge>
-              <Badge variant="outline" className="text-sm">
-                <CreditCard className="w-3 h-3 mr-1" />
-                {selectedPlan?.name} Plan
-              </Badge>
-              {!isFreePlan && registrationData.paymentCompleted && (
-                <Badge variant="secondary" className="text-sm">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  Free 30-day trial active
-                </Badge>
-              )}
-              <Badge variant="outline" className="text-sm">
-                <Clock className="w-3 h-3 mr-1" />
-                Setup completed
-              </Badge>
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Next Steps */}
-              <Card>
+            <div className="xl:col-span-2 space-y-6">
+              {/* Organization Information */}
+              <Card className="border-green-200 dark:border-green-800 overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <ArrowRight className="w-5 h-5" />
-                    Next Steps
+                    <Building2 className="w-5 h-5 text-green-600" />
+                    Organization Information
                   </CardTitle>
                   <CardDescription>
-                    Complete these steps to get your team up and running quickly
+                    Your organization has been successfully created and is ready to use
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {nextSteps.map((step, index) => (
-                      <div key={index} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary">
-                            {step.icon}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold mb-1">{step.title}</h3>
-                            <p className="text-sm text-muted-foreground mb-3">{step.description}</p>
-                            <Button size="sm" variant="outline" className="w-full">
-                              {step.action}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                         <div className="space-y-2">
+                       <label className="text-sm font-medium text-muted-foreground">Organization ID</label>
+                       <div className="flex items-center gap-2">
+                         <code className="px-2 py-1 bg-muted rounded text-sm font-mono flex-1 min-w-0 break-all">
+                           {registrationData.id}
+                         </code>
+                         <Button
+                           variant="ghost"
+                           size="sm"
+                           onClick={() => copyToClipboard(registrationData.id || '', 'orgId')}
+                           className="h-8 w-8 p-0 flex-shrink-0"
+                         >
+                           <Copy className={`h-4 w-4 ${copied === 'orgId' ? 'text-green-600' : ''}`} />
+                         </Button>
+                       </div>
+                     </div>
+
+                     <div className="space-y-2">
+                       <label className="text-sm font-medium text-muted-foreground">Tenant ID</label>
+                       <div className="flex items-center gap-2">
+                         <code className="px-2 py-1 bg-muted rounded text-sm font-mono flex-1 min-w-0 break-all">
+                           {registrationData.tenantId}
+                         </code>
+                         <Button
+                           variant="ghost"
+                           size="sm"
+                           onClick={() => copyToClipboard(registrationData.tenantId || '', 'tenantId')}
+                           className="h-8 w-8 p-0 flex-shrink-0"
+                         >
+                           <Copy className={`h-4 w-4 ${copied === 'tenantId' ? 'text-green-600' : ''}`} />
+                         </Button>
+                       </div>
+                     </div>
+
+                                         <div className="space-y-2">
+                       <label className="text-sm font-medium text-muted-foreground">Domain</label>
+                       <div className="flex items-center gap-2">
+                         <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                         <span className="font-medium break-words">{registrationData.domain}</span>
+                       </div>
+                     </div>
+
+                                         <div className="space-y-2">
+                       <label className="text-sm font-medium text-muted-foreground">Status</label>
+                       <div className="flex items-center">
+                         <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300 inline-flex items-center">
+                           <CheckCircle className="w-3 h-3 mr-1" />
+                           {registrationData.status || 'Active'}
+                         </Badge>
+                       </div>
+                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Quick Actions */}
-              <Card>
+                             {/* Identity Provider Configuration */}
+               {registrationData.idpConfig && (
+                 <Card className="overflow-hidden">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Identity Provider Configuration
+                    </CardTitle>
+                    <CardDescription>
+                      Your SSO configuration details for secure authentication
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                             <div className="space-y-2">
+                         <label className="text-sm font-medium text-muted-foreground">IdP Provider</label>
+                         <div className="flex items-center gap-2">
+                           <Shield className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                           <span className="font-medium capitalize break-words">{registrationData.idpConfig.provider}</span>
+                         </div>
+                       </div>
+
+                                             <div className="space-y-2">
+                         <label className="text-sm font-medium text-muted-foreground">Client ID</label>
+                         <div className="flex items-center gap-2">
+                           <Key className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                           <code className="px-2 py-1 bg-muted rounded text-sm font-mono flex-1 min-w-0 break-all">
+                             {registrationData.idpConfig.clientId}
+                           </code>
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => copyToClipboard(registrationData.idpConfig!.clientId, 'clientId')}
+                             className="h-8 w-8 p-0 flex-shrink-0"
+                           >
+                             <Copy className={`h-4 w-4 ${copied === 'clientId' ? 'text-green-600' : ''}`} />
+                           </Button>
+                         </div>
+                       </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+                             {/* Next Steps */}
+               <Card className="overflow-hidden">
                 <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
+                  <CardTitle>What's Next?</CardTitle>
                   <CardDescription>
-                    Common tasks to get you started
+                    Here are the recommended next steps to get started with your organization
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-2">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        <span className="font-medium">Invite Team Members</span>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-bold text-primary">1</span>
                       </div>
-                      <span className="text-sm text-muted-foreground text-left">
-                        Send invitations to your team
-                      </span>
-                    </Button>
-                    
-                    <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-2">
-                      <div className="flex items-center gap-2">
-                        <Settings className="w-4 h-4" />
-                        <span className="font-medium">Configure Settings</span>
+                      <div>
+                        <h4 className="font-medium">Access Your Dashboard</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Log in to your organization dashboard to start managing users, hosts, and settings.
+                        </p>
                       </div>
-                      <span className="text-sm text-muted-foreground text-left">
-                        Customize your organization settings
-                      </span>
-                    </Button>
-                    
-                    <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-2">
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4" />
-                        <span className="font-medium">Security Setup</span>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-bold text-primary">2</span>
                       </div>
-                      <span className="text-sm text-muted-foreground text-left">
-                        Review security policies and settings
-                      </span>
-                    </Button>
-                    
-                    <Button variant="outline" className="h-auto p-4 flex flex-col items-start gap-2">
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4" />
-                        <span className="font-medium">View Dashboard</span>
+                      <div>
+                        <h4 className="font-medium">Configure SSO (Optional)</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Set up Single Sign-On with your identity provider for enhanced security.
+                        </p>
                       </div>
-                      <span className="text-sm text-muted-foreground text-left">
-                        Go to your main dashboard
-                      </span>
-                    </Button>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-bold text-primary">3</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium">Add Your First Hosts</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Connect your remote servers and infrastructure to start monitoring and management.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Welcome Card */}
-              <Card>
+            <div className="space-y-6 min-w-0">
+                             {/* Quick Actions */}
+               <Card className="overflow-hidden">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="w-5 h-5" />
-                    Welcome!
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Your {appConfig.name} account is now ready. You can start using all features immediately.
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm">Account activated</span>
-                    </div>
-                    {!isFreePlan && registrationData.paymentCompleted && (
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-sm">Payment processed</span>
-                      </div>
-                    )}
-                    {!isFreePlan && registrationData.paymentCompleted && (
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-sm">30-day trial started</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <span className="text-sm">Setup completed</span>
-                    </div>
-                  </div>
-                  
-                  <Button onClick={handleGoToDashboard} className="w-full">
-                    Go to Dashboard
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Plan Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Plan Information</CardTitle>
+                  <CardTitle className="text-lg">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Plan:</span>
-                      <span className="font-medium">{selectedPlan?.name}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Users:</span>
-                      <span className="font-medium">
-                        {selectedPlan?.maxUsers === -1 ? 'Unlimited' : selectedPlan?.maxUsers}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Organizational Units:</span>
-                      <span className="font-medium">
-                        {selectedPlan?.maxOrganizationalUnits === -1 ? 'Unlimited' : selectedPlan?.maxOrganizationalUnits}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Hosts:</span>
-                      <span className="font-medium">
-                        {selectedPlan?.maxHosts === -1 ? 'Unlimited' : selectedPlan?.maxHosts}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Monthly cost:</span>
-                      <span className="font-medium">
-                        {isFreePlan ? 'Free' : `$${selectedPlan?.price}/user`}
-                      </span>
-                    </div>
-                  </div>
+                  <Button 
+                    onClick={() => router.push('/tenant')} 
+                    className="w-full justify-start"
+                    size="lg"
+                  >
+                    <Settings className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">Go to Dashboard</span>
+                  </Button>
                   
-                  {!isFreePlan && registrationData.paymentCompleted && (
-                    <>
-                      <Separator />
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Trial period:</span>
-                          <span className="font-medium">30 days</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Full access:</span>
-                          <span className="font-medium">All features</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">No commitment:</span>
-                          <span className="font-medium">Cancel anytime</span>
-                        </div>
-                      </div>
-                      
-                      <p className="text-xs text-muted-foreground">
-                        Your trial will automatically convert to a paid plan after 30 days. 
-                        You can cancel or modify your plan at any time.
-                      </p>
-                    </>
-                  )}
+                                     <Button 
+                     variant="outline" 
+                     onClick={() => router.push('/tenant')}
+                     className="w-full justify-start"
+                     size="lg"
+                   >
+                     <Users className="w-4 h-4 mr-2 flex-shrink-0" />
+                     <span className="truncate">Manage Organization</span>
+                   </Button>
                 </CardContent>
               </Card>
 
-              {/* Support Resources - Only show if support resources are configured */}
-              {(appConfig.support.documentation || appConfig.support.website || appConfig.support.community) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Support Resources</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {supportResources.map((resource, index) => (
-                      <div key={index} className="flex items-center gap-3 p-2 rounded hover:bg-muted/50 transition-colors">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{resource.title}</p>
-                          <p className="text-xs text-muted-foreground">{resource.description}</p>
-                        </div>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
-                          <a href={resource.href} target="_blank" rel="noopener noreferrer">
-                            {resource.icon}
-                          </a>
-                        </Button>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
+                             {/* Organization Details */}
+               <Card className="overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="text-lg">Organization Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                                     <div className="space-y-1">
+                     <span className="text-sm text-muted-foreground">Name:</span>
+                     <div className="text-sm font-medium break-words">{registrationData.name}</div>
+                   </div>
+                   <div className="space-y-1">
+                     <span className="text-sm text-muted-foreground">Industry:</span>
+                     <div className="text-sm font-medium break-words">{registrationData.industry}</div>
+                   </div>
+                   <div className="space-y-1">
+                     <span className="text-sm text-muted-foreground">Size:</span>
+                     <div className="text-sm font-medium break-words">{registrationData.size}</div>
+                   </div>
+                   <div className="space-y-1">
+                     <span className="text-sm text-muted-foreground">Employees:</span>
+                     <div className="text-sm font-medium break-words">{registrationData.expectedUsers}</div>
+                   </div>
+                   <Separator />
+                   <div className="space-y-1">
+                     <span className="text-sm text-muted-foreground">Contact:</span>
+                     <div className="text-sm font-medium break-words">{registrationData.contactName}</div>
+                   </div>
+                   <div className="space-y-1">
+                     <span className="text-sm text-muted-foreground">Email:</span>
+                     <div className="text-sm font-medium break-words">{registrationData.contactEmail}</div>
+                   </div>
+                </CardContent>
+              </Card>
 
-              {/* Contact Support - Only show if support is configured */}
-              {(appConfig.support.email || appConfig.support.website || appConfig.support.availability || appConfig.support.responseTime) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Need Help?</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      Our support team is here to help you get the most out of {appConfig.name}.
-                    </p>
-                    
-                    <div className="space-y-2">
-                      {appConfig.support.email && (
-                        <Button variant="outline" size="sm" className="w-full" asChild>
-                          <a href={`mailto:${appConfig.support.email}`}>
-                            <Mail className="w-4 h-4 mr-2" />
-                            Contact Support
-                          </a>
-                        </Button>
-                      )}
-                      {appConfig.support.website && (
-                        <Button variant="outline" size="sm" className="w-full" asChild>
-                          <a href={appConfig.support.website} target="_blank" rel="noopener noreferrer">
-                            Schedule Demo
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                    
-                    <div className="text-xs text-muted-foreground">
-                      {appConfig.support.availability && (
-                        <p>Support available {appConfig.support.availability}</p>
-                      )}
-                      {appConfig.support.responseTime && (
-                        <p>Response time: {appConfig.support.responseTime}</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                                                           {/* Support - Only show if support data is available */}
+                {(appConfig.support.email || appConfig.support.website || appConfig.support.documentation) && (
+                  <Card className="overflow-hidden">
+                   <CardHeader>
+                     <CardTitle className="text-lg">Need Help?</CardTitle>
+                   </CardHeader>
+                   <CardContent className="space-y-3">
+                     <p className="text-sm text-muted-foreground">
+                       Our support team is here to help you get started and answer any questions.
+                     </p>
+                     <Button variant="outline" size="sm" className="w-full">
+                       <ExternalLink className="w-4 h-4 mr-2 flex-shrink-0" />
+                       <span className="truncate">Contact Support</span>
+                     </Button>
+                   </CardContent>
+                 </Card>
+                )}
             </div>
           </div>
         </div>
