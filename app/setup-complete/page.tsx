@@ -59,25 +59,25 @@ export default function SetupCompletePage() {
     {
       title: "Getting Started Guide",
       description: "Learn the basics of using RemoteMaster",
-      href: "#",
+      href: appConfig.support.documentation || "#",
       icon: <ExternalLink className="w-4 h-4" />
     },
     {
       title: "Video Tutorials",
       description: "Step-by-step video guides",
-      href: "#",
+      href: appConfig.support.website || "#",
       icon: <ExternalLink className="w-4 h-4" />
     },
     {
       title: "API Documentation",
       description: "Technical documentation for developers",
-      href: "#",
+      href: appConfig.support.documentation || "#",
       icon: <ExternalLink className="w-4 h-4" />
     },
     {
       title: "Community Forum",
       description: "Connect with other users",
-      href: "#",
+      href: appConfig.support.community || "#",
       icon: <ExternalLink className="w-4 h-4" />
     }
   ];
@@ -252,52 +252,70 @@ export default function SetupCompletePage() {
                 </CardContent>
               </Card>
 
-              {/* Support Resources */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Support Resources</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {supportResources.map((resource, index) => (
-                    <div key={index} className="flex items-center gap-3 p-2 rounded hover:bg-muted/50 transition-colors">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{resource.title}</p>
-                        <p className="text-xs text-muted-foreground">{resource.description}</p>
+              {/* Support Resources - Only show if support resources are configured */}
+              {(appConfig.support.documentation || appConfig.support.website || appConfig.support.community) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Support Resources</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {supportResources.map((resource, index) => (
+                      <div key={index} className="flex items-center gap-3 p-2 rounded hover:bg-muted/50 transition-colors">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{resource.title}</p>
+                          <p className="text-xs text-muted-foreground">{resource.description}</p>
+                        </div>
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
+                          <a href={resource.href} target="_blank" rel="noopener noreferrer">
+                            {resource.icon}
+                          </a>
+                        </Button>
                       </div>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                        {resource.icon}
-                      </Button>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
 
-              {/* Contact Support */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Need Help?</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Our support team is here to help you get the most out of {appConfig.name}.
-                  </p>
-                  
-                  <div className="space-y-2">
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Mail className="w-4 h-4 mr-2" />
-                      Contact Support
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Schedule Demo
-                    </Button>
-                  </div>
-                  
-                  <div className="text-xs text-muted-foreground">
-                    <p>Support available 24/7</p>
-                    <p>Response time: &lt; 2 hours</p>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Contact Support - Only show if support is configured */}
+              {(appConfig.support.email || appConfig.support.website || appConfig.support.availability || appConfig.support.responseTime) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Need Help?</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Our support team is here to help you get the most out of {appConfig.name}.
+                    </p>
+                    
+                    <div className="space-y-2">
+                      {appConfig.support.email && (
+                        <Button variant="outline" size="sm" className="w-full" asChild>
+                          <a href={`mailto:${appConfig.support.email}`}>
+                            <Mail className="w-4 h-4 mr-2" />
+                            Contact Support
+                          </a>
+                        </Button>
+                      )}
+                      {appConfig.support.website && (
+                        <Button variant="outline" size="sm" className="w-full" asChild>
+                          <a href={appConfig.support.website} target="_blank" rel="noopener noreferrer">
+                            Schedule Demo
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground">
+                      {appConfig.support.availability && (
+                        <p>Support available {appConfig.support.availability}</p>
+                      )}
+                      {appConfig.support.responseTime && (
+                        <p>Response time: {appConfig.support.responseTime}</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Trial Information */}
               <Card>

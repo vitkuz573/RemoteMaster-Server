@@ -16,6 +16,17 @@ export const appConfig = {
   environment: process.env.NODE_ENV || 'development',
   copyrightStartYear: 2023,
   
+  // Support configuration
+  support: {
+    availability: process.env.NEXT_PUBLIC_SUPPORT_AVAILABILITY,
+    responseTime: process.env.NEXT_PUBLIC_SUPPORT_RESPONSE_TIME,
+    email: process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
+    phone: process.env.NEXT_PUBLIC_SUPPORT_PHONE,
+    website: process.env.NEXT_PUBLIC_SUPPORT_WEBSITE,
+    documentation: process.env.NEXT_PUBLIC_DOCS_URL,
+    community: process.env.NEXT_PUBLIC_COMMUNITY_URL
+  },
+  
   // Repository settings for commit links
   repository: {
     url: process.env.NEXT_PUBLIC_REPO_URL || 'https://github.com/vitkuz573/RemoteMaster-Server',
