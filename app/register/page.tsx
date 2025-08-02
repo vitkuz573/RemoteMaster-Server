@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
 import { pricingPlans, calculateMonthlyCost } from '@/lib/pricing-plans';
+import { apiService } from '@/lib/api-service';
 
 interface OrganizationForm {
   name: string;
@@ -167,20 +168,8 @@ export default function OrganizationRegistrationPage() {
     setIsLoading(true);
 
     try {
-      // Call the registration API
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Registration failed');
-      }
+      // Call the external registration API
+      const result = await apiService.registerOrganization(formData);
 
       // Save organization data to localStorage
       if (typeof window !== "undefined") {

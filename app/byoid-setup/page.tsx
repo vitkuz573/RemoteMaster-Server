@@ -22,6 +22,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
+import { apiService } from '@/lib/api-service';
 
 interface BYOIDForm {
   issuerUrl: string;
@@ -75,30 +76,19 @@ export default function BYOIDSetupPage() {
     setIsSubmitting(true);
 
     try {
-      // In a real implementation, this would send the data to your backend
-      // for processing and IdP configuration
-      const response = await fetch('/api/byoid-setup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          organizationId: organizationData?.id,
-          organizationName: organizationData?.name,
-          organizationDomain: organizationData?.domain
-        }),
+      // Call the external BYOID setup API
+      const result = await apiService.submitBYOIDSetup({
+        ...formData,
+        organizationId: organizationData?.id,
+        organizationName: organizationData?.name,
+        organizationDomain: organizationData?.domain
       });
 
-      if (response.ok) {
-        // Save BYOID setup data
-        localStorage.setItem("byoidSetup", JSON.stringify(formData));
-        
-        // Redirect to success page
-        router.push('/byoid-setup-complete');
-      } else {
-        throw new Error('Failed to submit BYOID setup');
-      }
+      // Save BYOID setup data
+      localStorage.setItem("byoidSetup", JSON.stringify(formData));
+      
+      // Redirect to success page
+      router.push('/byoid-setup-complete');
     } catch (error) {
       console.error('BYOID setup error:', error);
       alert('Failed to submit BYOID setup. Please try again.');

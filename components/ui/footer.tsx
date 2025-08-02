@@ -7,6 +7,7 @@ import { getCachedSystemStatus, type SystemStatus } from '@/lib/system-status';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ExternalLink } from 'lucide-react';
+import { apiService } from '@/lib/api-service';
 
 interface FooterProps {
   /**
@@ -30,18 +31,17 @@ export function Footer({
     
     const loadStatus = async () => {
       try {
-        // Fetch directly from API to ensure we get checkResults
-        const response = await fetch('/api/health');
-        const data = await response.json();
+        // Fetch from external API
+        const data = await apiService.getHealth();
         
         if (mounted) {
           setSystemStatus({
             status: data.status === 'healthy' ? 'online' : 
                     data.status === 'degraded' ? 'degraded' : 'offline',
-            message: data.message,
+            message: data.message || 'System is operational',
             timestamp: Date.now(),
-            services: data.services,
-            checkResults: data.checkResults
+            services: data.services || {},
+            checkResults: data.checkResults || {}
           });
           setIsLoading(false);
         }

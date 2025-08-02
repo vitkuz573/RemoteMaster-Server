@@ -10,25 +10,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RefreshCw, Users, Building2, Globe, Mail, Calendar, Lock, AlertTriangle } from 'lucide-react';
+import { apiService } from '@/lib/api-service';
 
 interface Organization {
   id: string;
-  tenantId: string;
+  tenantId?: string;
   name: string;
   domain: string;
-  industry: string;
-  size: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
+  industry?: string;
+  size?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
   plan: string;
   status: 'pending' | 'active' | 'suspended';
-  createdAt: string;
+  createdAt?: string;
+  registeredAt?: string;
   idpConfig?: {
     provider: string;
     clientId: string;
     domain: string;
   };
+  byoidConfig?: any;
 }
 
 export default function AdminPage() {
@@ -43,13 +46,13 @@ export default function AdminPage() {
 
   const fetchOrganizations = async () => {
     try {
-      const response = await fetch('/api/organizations');
-      if (response.ok) {
-        const data = await response.json();
-        setOrganizations(data.organizations || []);
-      } else {
-        console.error('Failed to fetch organizations');
-      }
+      const data = await apiService.getOrganizations();
+      const orgs = (data.organizations || []).map((org: any) => ({
+        ...org,
+        status: org.status as 'pending' | 'active' | 'suspended',
+        createdAt: org.registeredAt || org.createdAt
+      }));
+      setOrganizations(orgs);
     } catch (error) {
       console.error('Error fetching organizations:', error);
     } finally {
@@ -125,14 +128,19 @@ export default function AdminPage() {
     );
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'Invalid Date';
+    }
   };
 
   if (loading) {

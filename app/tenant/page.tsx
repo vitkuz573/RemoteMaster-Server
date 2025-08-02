@@ -16,6 +16,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
+import { apiService } from '@/lib/api-service';
 
 export default function TenantLoginPage() {
   const router = useRouter();
@@ -28,24 +29,21 @@ export default function TenantLoginPage() {
 
   // Application configuration (imported from centralized config)
 
-  // Load organizations from API
+  // Load organizations from external API
   React.useEffect(() => {
     const loadOrganizations = async () => {
       try {
-        const response = await fetch('/api/organizations');
-        if (response.ok) {
-          const data = await response.json();
-          const organizations = data.organizations || [];
-          const tenants = organizations.map((org: any) => ({
-            id: org.id,
-            name: org.name,
-            domain: org.domain,
-            idp: org.idpConfig?.provider || 'Internal',
-            byoidConfig: org.byoidConfig || null
-          }));
-          console.log('Loaded organizations:', tenants);
-          setKnownTenants(tenants);
-        }
+        const data = await apiService.getOrganizations();
+        const organizations = data.organizations || [];
+        const tenants = organizations.map((org: any) => ({
+          id: org.id,
+          name: org.name,
+          domain: org.domain,
+          idp: org.idpConfig?.provider || 'Internal',
+          byoidConfig: org.byoidConfig || null
+        }));
+        console.log('Loaded organizations:', tenants);
+        setKnownTenants(tenants);
       } catch (err) {
         console.error('Failed to load organizations:', err);
       }
@@ -161,24 +159,12 @@ export default function TenantLoginPage() {
           return;
         }
 
-        // Call the login API
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: email.trim(),
-            password: password,
-            domain: tenantId.trim()
-          }),
+        // Call the external login API
+        const result = await apiService.login({
+          email: email.trim(),
+          password: password,
+          domain: tenantId.trim()
         });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.error || 'Login failed');
-        }
 
         // Save auth data to localStorage
         if (typeof window !== "undefined") {
