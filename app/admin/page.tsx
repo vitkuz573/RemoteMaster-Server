@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RefreshCw, Users, Building2, Globe, Mail, Calendar, Lock, AlertTriangle } from 'lucide-react';
 import { apiService } from '@/lib/api-service';
+import { useHeader } from '@/contexts/header-context';
 
 interface Organization {
   id: string;
@@ -36,6 +37,7 @@ interface Organization {
 
 export default function AdminPage() {
   const router = useRouter();
+  const { showHeader } = useHeader();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,6 +45,8 @@ export default function AdminPage() {
   const [showLogin, setShowLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isApiAvailable, setIsApiAvailable] = useState(true);
+  const [isCheckingApi, setIsCheckingApi] = useState(true);
 
   const fetchOrganizations = async () => {
     try {
@@ -65,6 +69,30 @@ export default function AdminPage() {
       setRefreshing(false);
     }
   };
+
+  // Show header on admin page
+  useEffect(() => {
+    showHeader();
+  }, [showHeader]);
+
+  // Check API availability on component mount
+  useEffect(() => {
+    const checkApiAvailability = async () => {
+      setIsCheckingApi(true);
+      try {
+        // Try to get organizations to check if API is available
+        await apiService.getOrganizations();
+        setIsApiAvailable(true);
+      } catch (err) {
+        console.error('API check failed:', err);
+        setIsApiAvailable(false);
+      } finally {
+        setIsCheckingApi(false);
+      }
+    };
+
+    checkApiAvailability();
+  }, []);
 
   useEffect(() => {
     // Check if admin is authenticated
@@ -195,7 +223,7 @@ export default function AdminPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleAdminLogin} className="space-y-4">
+            <form onSubmit={handleAdminLogin} className={`space-y-4 ${isCheckingApi || !isApiAvailable ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="space-y-2">
                 <Label htmlFor="adminPassword">Admin Password</Label>
                 <Input
@@ -205,6 +233,8 @@ export default function AdminPage() {
                   onChange={(e) => setAdminPassword(e.target.value)}
                   placeholder="Enter admin password"
                   required
+                  disabled={isCheckingApi || !isApiAvailable}
+                  tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                 />
               </div>
               {loginError && (
@@ -213,8 +243,12 @@ export default function AdminPage() {
                   {loginError}
                 </div>
               )}
-              <Button type="submit" className="w-full">
-                Access Admin Panel
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isCheckingApi || !isApiAvailable}
+              >
+                {isCheckingApi ? 'Checking Service...' : !isApiAvailable ? 'Service Unavailable' : 'Access Admin Panel'}
               </Button>
             </form>
             <div className="mt-4 text-center">
@@ -234,6 +268,36 @@ export default function AdminPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Loading State */}
+      {isCheckingApi && (
+        <Card className="border-2 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20">
+          <CardHeader>
+            <CardTitle className="text-lg text-blue-800 dark:text-blue-200 flex items-center gap-2">
+              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              Checking Service Status
+            </CardTitle>
+            <CardDescription className="text-blue-700 dark:text-blue-300">
+              Verifying connection to admin service...
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
+      {/* API Status Check */}
+      {!isCheckingApi && !isApiAvailable && (
+        <Card className="border-2 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
+          <CardHeader>
+            <CardTitle className="text-lg text-red-800 dark:text-red-200 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Service Unavailable
+            </CardTitle>
+            <CardDescription className="text-red-700 dark:text-red-300">
+              Unable to connect to the admin service. Please check your connection and try again later.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">System Administrator Dashboard</h1>
@@ -242,9 +306,13 @@ export default function AdminPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={handleRefresh} disabled={refreshing} variant="outline">
+          <Button 
+            onClick={handleRefresh} 
+            disabled={refreshing || isCheckingApi || !isApiAvailable} 
+            variant="outline"
+          >
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            {isCheckingApi ? 'Checking...' : !isApiAvailable ? 'Service Unavailable' : 'Refresh'}
           </Button>
           <Button onClick={handleLogout} variant="outline" className="text-red-600 hover:text-red-700">
             Logout

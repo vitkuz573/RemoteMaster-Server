@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
 import { apiService } from '@/lib/api-service';
+import { useHeader } from '@/contexts/header-context';
 
 interface BYOIDForm {
   issuerUrl: string;
@@ -36,6 +37,7 @@ const supportedProviders = [
 
 export default function BYOIDSetupPage() {
   const router = useRouter();
+  const { showHeader } = useHeader();
   const [formData, setFormData] = React.useState<BYOIDForm>({
     issuerUrl: '',
     clientId: '',
@@ -46,6 +48,8 @@ export default function BYOIDSetupPage() {
   const [isDiscovering, setIsDiscovering] = React.useState(false);
   const [discoveryResult, setDiscoveryResult] = React.useState<any>(null);
   const [discoveryError, setDiscoveryError] = React.useState<string | null>(null);
+  const [isApiAvailable, setIsApiAvailable] = React.useState(true);
+  const [isCheckingApi, setIsCheckingApi] = React.useState(true);
 
   // Check if form is valid and ready for submission
   const isFormValid = React.useMemo(() => {
@@ -57,6 +61,30 @@ export default function BYOIDSetupPage() {
       !discoveryError
     );
   }, [formData, discoveryResult, discoveryError]);
+
+  // Show header on byoid-setup page
+  React.useEffect(() => {
+    showHeader();
+  }, [showHeader]);
+
+  // Check API availability on component mount
+  React.useEffect(() => {
+    const checkApiAvailability = async () => {
+      setIsCheckingApi(true);
+      try {
+        // Try to get organizations to check if API is available
+        await apiService.getOrganizations();
+        setIsApiAvailable(true);
+      } catch (err) {
+        console.error('API check failed:', err);
+        setIsApiAvailable(false);
+      } finally {
+        setIsCheckingApi(false);
+      }
+    };
+
+    checkApiAvailability();
+  }, []);
 
   React.useEffect(() => {
     // Load organization data from localStorage
@@ -169,22 +197,36 @@ export default function BYOIDSetupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-bold text-primary">{appConfig.shortName}</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold">{appConfig.name}</h1>
-              <p className="text-xs text-muted-foreground">{appConfig.description}</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Loading State */}
+        {isCheckingApi && (
+          <Card className="border-2 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20 mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                Checking Service Status
+              </CardTitle>
+              <CardDescription className="text-blue-700 dark:text-blue-300">
+                Verifying connection to BYOID setup service...
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
+        {/* API Status Check */}
+        {!isCheckingApi && !isApiAvailable && (
+          <Card className="border-2 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20 mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg text-red-800 dark:text-red-200 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Service Unavailable
+              </CardTitle>
+              <CardDescription className="text-red-700 dark:text-red-300">
+                Unable to connect to the BYOID setup service. Please check your connection and try again later.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
         {/* Back Button */}
         <Button 
           variant="ghost" 
@@ -228,7 +270,7 @@ export default function BYOIDSetupPage() {
           </CardContent>
         </Card>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className={`space-y-8 ${isCheckingApi || !isApiAvailable ? 'opacity-50 pointer-events-none' : ''}`}>
           {/* IdP Provider Selection */}
           <Card>
             <CardHeader>
@@ -250,8 +292,10 @@ export default function BYOIDSetupPage() {
                      id="issuerUrl"
                      value={formData.issuerUrl}
                      onChange={(e) => handleInputChange('issuerUrl', e.target.value)}
-                                           placeholder="https://your-idp.com"
+                     placeholder="https://your-idp.com"
                      required
+                     disabled={isCheckingApi || !isApiAvailable}
+                     tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                    />
                                        <p className="text-xs text-muted-foreground">
                       The OpenID Connect issuer URL
@@ -282,6 +326,8 @@ export default function BYOIDSetupPage() {
                      onChange={(e) => handleInputChange('clientId', e.target.value)}
                      placeholder="your-client-id"
                      required
+                     disabled={isCheckingApi || !isApiAvailable}
+                     tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                    />
                    <p className="text-xs text-muted-foreground">
                                            The client ID configured in your IdP
@@ -298,6 +344,8 @@ export default function BYOIDSetupPage() {
                    onChange={(e) => handleInputChange('clientSecret', e.target.value)}
                    placeholder="your-client-secret"
                    required
+                   disabled={isCheckingApi || !isApiAvailable}
+                   tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                  />
                                     <p className="text-xs text-muted-foreground">
                                            The client secret configured in your IdP
@@ -351,7 +399,7 @@ export default function BYOIDSetupPage() {
                          <Button 
                type="submit" 
                size="lg" 
-               disabled={isSubmitting || !isFormValid}
+               disabled={isSubmitting || !isFormValid || isCheckingApi || !isApiAvailable}
                className="px-8"
              >
               {isSubmitting ? (
@@ -359,12 +407,20 @@ export default function BYOIDSetupPage() {
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   Submitting...
                 </>
+              ) : isCheckingApi ? (
+                <>
+                  Checking Service...
+                </>
+              ) : !isApiAvailable ? (
+                <>
+                  Service Unavailable
+                </>
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4 mr-2" />
-                                     Submit OpenID Connect Configuration
+                  Submit OpenID Connect Configuration
                 </>
-                             )}
+              )}
              </Button>
              
            </div>
