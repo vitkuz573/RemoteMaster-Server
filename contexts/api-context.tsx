@@ -43,7 +43,7 @@ const initialState: ApiState = {
   pendingRequests: 0,
   apiUrl: process.env.NEXT_PUBLIC_API_URL || '',
   isMockApi: false,
-  isApiAvailable: true,
+  isApiAvailable: false, // Start as unavailable until proven otherwise
   isCheckingApi: false,
 };
 

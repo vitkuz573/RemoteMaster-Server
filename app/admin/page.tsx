@@ -10,7 +10,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RefreshCw, Users, Building2, Globe, Mail, Calendar, Lock, AlertTriangle } from 'lucide-react';
+import { API_CONFIG } from '@/lib/api-config';
 import { mockApiService } from '@/lib/api-service-mock';
+import { apiService } from '@/lib/api-service';
 import { useHeader } from '@/contexts/header-context';
 
 interface Organization {
@@ -50,7 +52,9 @@ export default function AdminPage() {
 
   const fetchOrganizations = async () => {
     try {
-              const data = await mockApiService.getOrganizations();
+      // Use the appropriate API service based on configuration
+      const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
+      const data = await api.getOrganizations();
       const orgs = (data.organizations || []).map((org: any) => ({
         ...org,
         status: org.status as 'pending' | 'active' | 'suspended',
@@ -59,7 +63,9 @@ export default function AdminPage() {
       setOrganizations(orgs);
       
       if (orgs.length === 0) {
-        mockApiService.showInfo('No organizations found');
+        // Use the appropriate API service based on configuration
+        const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
+        api.showInfo('No organizations found');
       }
     } catch (error) {
       console.error('Error fetching organizations:', error);
@@ -80,8 +86,9 @@ export default function AdminPage() {
     const checkApiAvailability = async () => {
       setIsCheckingApi(true);
       try {
-        // Try to get organizations to check if API is available
-        await mockApiService.getOrganizations();
+        // Use the appropriate API service based on configuration
+        const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
+        await api.getOrganizations();
         setIsApiAvailable(true);
       } catch (err) {
         console.error('API check failed:', err);

@@ -17,7 +17,9 @@ import {
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
 import { useHeader } from '@/contexts/header-context';
+import { API_CONFIG } from '@/lib/api-config';
 import { mockApiService } from '@/lib/api-service-mock';
+import { apiService } from '@/lib/api-service';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,7 +45,9 @@ export default function LoginPage() {
     const loadOrganizations = async () => {
       setIsCheckingApi(true);
       try {
-        const data = await mockApiService.getOrganizations();
+        // Use the appropriate API service based on configuration
+        const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
+        const data = await api.getOrganizations();
         const organizations = data.organizations || [];
         const tenants = organizations.map((org: any) => ({
           id: org.id,
