@@ -23,7 +23,7 @@ export function Footer({
   const [systemStatus, setSystemStatus] = React.useState<SystemStatus | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   
-  const { showSystemStatus, showBuildDate, showDevBadge } = footerConfig;
+  const { showSystemStatus, showBuildDate } = footerConfig;
   
   // Load system status on mount
   React.useEffect(() => {

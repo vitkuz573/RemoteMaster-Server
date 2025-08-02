@@ -122,8 +122,7 @@ export default function MyPage() {
     // Customize footer
     updateFooterConfig({
       showSystemStatus: false,
-      showBuildDate: false,
-      showDevBadge: true
+      showBuildDate: false
     });
   }, []);
   

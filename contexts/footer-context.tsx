@@ -9,7 +9,6 @@ interface FooterContextType {
   footerConfig: {
     showSystemStatus: boolean;
     showBuildDate: boolean;
-    showDevBadge: boolean;
   };
   updateFooterConfig: (config: Partial<FooterContextType['footerConfig']>) => void;
 }
@@ -25,7 +24,6 @@ export function FooterProvider({ children }: FooterProviderProps) {
   const [footerConfig, setFooterConfig] = useState({
     showSystemStatus: true,
     showBuildDate: true,
-    showDevBadge: true,
   });
 
   const hideFooter = useCallback(() => setIsFooterVisible(false), []);
