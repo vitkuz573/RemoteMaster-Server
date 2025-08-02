@@ -599,14 +599,6 @@ export default function OrganizationRegistrationPage() {
                                      <div className="flex items-start gap-3">
                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                      <div>
-                       <p className="font-medium">Multi-tenant Architecture</p>
-                       <p className="text-sm text-muted-foreground">Isolated environments for each organization</p>
-                     </div>
-                   </div>
-                   
-                   <div className="flex items-start gap-3">
-                     <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
-                     <div>
                        <p className="font-medium">Organizational Unit Management</p>
                        <p className="text-sm text-muted-foreground">Organize users into organizational units and teams</p>
                      </div>
@@ -716,21 +708,23 @@ export default function OrganizationRegistrationPage() {
                 </CardContent>
               </Card>
 
-              {/* Help */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Need Help?</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Our team is here to help you get started. Contact us for personalized assistance.
-                  </p>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Mail className="w-4 h-4 mr-2" />
-                    Contact Sales
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Help - Only show if support data is available */}
+              {(appConfig.support.email || appConfig.support.website || appConfig.support.documentation) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Need Help?</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Our team is here to help you get started. Contact us for personalized assistance.
+                    </p>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Mail className="w-4 h-4 mr-2" />
+                      Contact Sales
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
