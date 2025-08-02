@@ -20,12 +20,12 @@ export const API_CONFIG = {
 };
 
 // Helper function to get the appropriate API service
-export function getApiService() {
+export async function getApiService() {
   if (API_CONFIG.USE_MOCK_API) {
     // Dynamic import to avoid loading mock in production
-    return import('./api-service-mock').then(module => module.mockApiService);
+    return (await import('./api-service-mock')).mockApiService;
   } else {
-    return import('./api-service').then(module => module.apiService);
+    return (await import('./api-service')).apiService;
   }
 }
 
