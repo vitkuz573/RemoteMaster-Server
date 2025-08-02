@@ -26,12 +26,15 @@ export default function LoginPage() {
   const [password, setPassword] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [isApiAvailable, setIsApiAvailable] = React.useState(true);
+  const [isCheckingApi, setIsCheckingApi] = React.useState(true);
 
   // Application configuration (imported from centralized config)
 
   // Load organizations from external API
   React.useEffect(() => {
     const loadOrganizations = async () => {
+      setIsCheckingApi(true);
       try {
         const data = await apiService.getOrganizations();
         const organizations = data.organizations || [];
@@ -44,8 +47,12 @@ export default function LoginPage() {
         }));
         console.log('Loaded organizations:', tenants);
         setKnownTenants(tenants);
+        setIsApiAvailable(true);
       } catch (err) {
         console.error('Failed to load organizations:', err);
+        setIsApiAvailable(false);
+      } finally {
+        setIsCheckingApi(false);
       }
     };
 
@@ -226,29 +233,63 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setLoginMode('sso')}
+              disabled={isCheckingApi || !isApiAvailable}
+              tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 loginMode === 'sso'
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
+              } ${isCheckingApi || !isApiAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               SSO Login
             </button>
             <button
               type="button"
               onClick={() => setLoginMode('credentials')}
+              disabled={isCheckingApi || !isApiAvailable}
+              tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 loginMode === 'credentials'
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
+              } ${isCheckingApi || !isApiAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               Credentials
             </button>
           </div>
 
+          {/* Loading State */}
+          {isCheckingApi && (
+            <Card className="border-2 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20">
+              <CardHeader>
+                <CardTitle className="text-lg text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  Checking Service Status
+                </CardTitle>
+                <CardDescription className="text-blue-700 dark:text-blue-300">
+                  Verifying connection to authentication service...
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
+
+          {/* API Status Check */}
+          {!isCheckingApi && !isApiAvailable && (
+            <Card className="border-2 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
+              <CardHeader>
+                <CardTitle className="text-lg text-red-800 dark:text-red-200 flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  API Unavailable
+                </CardTitle>
+                <CardDescription className="text-red-700 dark:text-red-300">
+                  Unable to connect to the authentication service. Please check your connection and try again later.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
+
           {/* Main Form */}
-          <Card className="border-2">
+          <Card className={`border-2 ${isCheckingApi || !isApiAvailable ? 'opacity-50 pointer-events-none' : ''}`}>
             <CardHeader>
               <CardTitle className="text-lg">
                 {loginMode === 'sso' ? 'Organization Sign-In' : 'User Login'}
@@ -273,7 +314,9 @@ export default function LoginPage() {
                     placeholder={loginMode === 'sso' ? "your-organization-id" : "example.com"}
                     className="h-11"
                     autoComplete="organization"
-                    autoFocus
+                    autoFocus={!isCheckingApi && isApiAvailable}
+                    disabled={isCheckingApi || !isApiAvailable}
+                    tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                   />
                   <p className="text-xs text-muted-foreground">
                     {loginMode === 'sso' 
@@ -297,6 +340,8 @@ export default function LoginPage() {
                         placeholder="user@example.com"
                         className="h-11"
                         autoComplete="email"
+                        disabled={isCheckingApi || !isApiAvailable}
+                        tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                       />
                     </div>
 
@@ -312,6 +357,8 @@ export default function LoginPage() {
                         placeholder="Enter your password"
                         className="h-11"
                         autoComplete="current-password"
+                        disabled={isCheckingApi || !isApiAvailable}
+                        tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                       />
                     </div>
                   </>
@@ -327,12 +374,20 @@ export default function LoginPage() {
                 <Button 
                   type="submit" 
                   className="w-full h-11" 
-                  disabled={isLoading}
+                  disabled={isLoading || isCheckingApi || !isApiAvailable}
                 >
                   {isLoading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
                       {loginMode === 'sso' ? 'Connecting...' : 'Signing in...'}
+                    </>
+                  ) : isCheckingApi ? (
+                    <>
+                      Checking Service...
+                    </>
+                  ) : !isApiAvailable ? (
+                    <>
+                      Service Unavailable
                     </>
                   ) : (
                     <>
@@ -372,6 +427,8 @@ export default function LoginPage() {
                 variant="outline" 
                 onClick={() => router.push('/register')}
                 className="w-full"
+                disabled={isCheckingApi || !isApiAvailable}
+                tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
               >
                 Register Your Organization
                 <ExternalLink size={16} className="ml-2" />

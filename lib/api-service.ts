@@ -50,7 +50,7 @@ class ApiService {
       
       if (this.showNotifications && error instanceof Error) {
         toast.error(error.message, {
-          description: `Request to ${endpoint} failed`,
+          description: `Network error: ${endpoint}`,
           duration: 5000,
         });
       }

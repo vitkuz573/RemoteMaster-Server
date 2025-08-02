@@ -9,10 +9,8 @@ export interface ApiError {
 export const useNotifications = () => {
   const showError = (error: ApiError | string) => {
     const message = typeof error === 'string' ? error : error.message;
-    const status = typeof error === 'string' ? undefined : error.status;
     
     toast.error(message, {
-      description: status ? `Status: ${status}` : undefined,
       duration: 5000,
     });
   };

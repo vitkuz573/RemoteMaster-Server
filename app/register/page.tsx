@@ -60,6 +60,8 @@ export default function OrganizationRegistrationPage() {
   });
   const [isLoading, setIsLoading] = React.useState(false);
   const [errors, setErrors] = React.useState<Partial<Record<keyof OrganizationForm, string>>>({});
+  const [isApiAvailable, setIsApiAvailable] = React.useState(true);
+  const [isCheckingApi, setIsCheckingApi] = React.useState(true);
 
   const industries = [
     'Technology',
@@ -82,6 +84,25 @@ export default function OrganizationRegistrationPage() {
     '501-1000 employees',
     '1000+ employees'
   ];
+
+  // Check API availability on component mount
+  React.useEffect(() => {
+    const checkApiAvailability = async () => {
+      setIsCheckingApi(true);
+      try {
+        // Try to get organizations to check if API is available
+        await apiService.getOrganizations();
+        setIsApiAvailable(true);
+      } catch (err) {
+        console.error('API check failed:', err);
+        setIsApiAvailable(false);
+      } finally {
+        setIsCheckingApi(false);
+      }
+    };
+
+    checkApiAvailability();
+  }, []);
 
 
 
@@ -239,7 +260,37 @@ export default function OrganizationRegistrationPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Form */}
             <div className="lg:col-span-2">
-              <Card>
+              {/* Loading State */}
+              {isCheckingApi && (
+                <Card className="border-2 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20 mb-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      Checking Service Status
+                    </CardTitle>
+                    <CardDescription className="text-blue-700 dark:text-blue-300">
+                      Verifying connection to registration service...
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              )}
+
+              {/* API Status Check */}
+              {!isCheckingApi && !isApiAvailable && (
+                <Card className="border-2 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20 mb-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-red-800 dark:text-red-200 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5" />
+                      Service Unavailable
+                    </CardTitle>
+                    <CardDescription className="text-red-700 dark:text-red-300">
+                      Unable to connect to the registration service. Please check your connection and try again later.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              )}
+
+              <Card className={`${isCheckingApi || !isApiAvailable ? 'opacity-50 pointer-events-none' : ''}`}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building2 className="w-5 h-5" />
@@ -267,6 +318,8 @@ export default function OrganizationRegistrationPage() {
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('name', e.target.value)}
                             placeholder="Acme Corporation"
                             className={errors.name ? 'border-red-500' : ''}
+                            disabled={isCheckingApi || !isApiAvailable}
+                            tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                           />
                           {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
                         </div>
@@ -279,14 +332,16 @@ export default function OrganizationRegistrationPage() {
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('domain', e.target.value)}
                             placeholder="acme.com"
                             className={errors.domain ? 'border-red-500' : ''}
+                            disabled={isCheckingApi || !isApiAvailable}
+                            tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                           />
                           {errors.domain && <p className="text-sm text-red-500">{errors.domain}</p>}
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="industry">Industry *</Label>
-                          <Select value={formData.industry} onValueChange={(value) => handleInputChange('industry', value)}>
-                            <SelectTrigger className={errors.industry ? 'border-red-500' : ''}>
+                          <Select value={formData.industry} onValueChange={(value) => handleInputChange('industry', value)} disabled={isCheckingApi || !isApiAvailable}>
+                            <SelectTrigger className={errors.industry ? 'border-red-500' : ''} tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}>
                               <SelectValue placeholder="Select industry" />
                             </SelectTrigger>
                             <SelectContent>
@@ -302,8 +357,8 @@ export default function OrganizationRegistrationPage() {
 
                         <div className="space-y-2">
                           <Label htmlFor="size">Company Size *</Label>
-                          <Select value={formData.size} onValueChange={(value) => handleInputChange('size', value)}>
-                            <SelectTrigger className={errors.size ? 'border-red-500' : ''}>
+                          <Select value={formData.size} onValueChange={(value) => handleInputChange('size', value)} disabled={isCheckingApi || !isApiAvailable}>
+                            <SelectTrigger className={errors.size ? 'border-red-500' : ''} tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}>
                               <SelectValue placeholder="Select size" />
                             </SelectTrigger>
                             <SelectContent>
@@ -326,6 +381,8 @@ export default function OrganizationRegistrationPage() {
                           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleInputChange('description', e.target.value)}
                           placeholder="Brief description of your organization..."
                           rows={3}
+                          disabled={isCheckingApi || !isApiAvailable}
+                          tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                         />
                       </div>
                     </div>
@@ -348,6 +405,8 @@ export default function OrganizationRegistrationPage() {
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('contactName', e.target.value)}
                             placeholder="John Doe"
                             className={errors.contactName ? 'border-red-500' : ''}
+                            disabled={isCheckingApi || !isApiAvailable}
+                            tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                           />
                           {errors.contactName && <p className="text-sm text-red-500">{errors.contactName}</p>}
                         </div>
@@ -361,6 +420,8 @@ export default function OrganizationRegistrationPage() {
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('contactEmail', e.target.value)}
                             placeholder="john@acme.com"
                             className={errors.contactEmail ? 'border-red-500' : ''}
+                            disabled={isCheckingApi || !isApiAvailable}
+                            tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                           />
                           {errors.contactEmail && <p className="text-sm text-red-500">{errors.contactEmail}</p>}
                         </div>
@@ -373,6 +434,8 @@ export default function OrganizationRegistrationPage() {
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('contactPhone', e.target.value)}
                             placeholder="+1 (555) 123-4567"
                             className={errors.contactPhone ? 'border-red-500' : ''}
+                            disabled={isCheckingApi || !isApiAvailable}
+                            tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                           />
                           {errors.contactPhone && <p className="text-sm text-red-500">{errors.contactPhone}</p>}
                         </div>
@@ -387,6 +450,8 @@ export default function OrganizationRegistrationPage() {
                             value={formData.expectedUsers}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('expectedUsers', parseInt(e.target.value) || 10)}
                             placeholder="10"
+                            disabled={isCheckingApi || !isApiAvailable}
+                            tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                           />
                         </div>
                       </div>
@@ -400,6 +465,8 @@ export default function OrganizationRegistrationPage() {
                           placeholder="123 Business St, City, State, ZIP"
                           rows={2}
                           className={errors.address ? 'border-red-500' : ''}
+                          disabled={isCheckingApi || !isApiAvailable}
+                          tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                         />
                         {errors.address && <p className="text-sm text-red-500">{errors.address}</p>}
                       </div>
@@ -422,12 +489,17 @@ export default function OrganizationRegistrationPage() {
                         {pricingPlans.map((plan) => (
                           <div
                             key={plan.id}
-                            className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
+                            className={`p-4 border rounded-lg transition-all duration-200 ${
+                              isCheckingApi || !isApiAvailable 
+                                ? 'opacity-50 cursor-not-allowed' 
+                                : 'cursor-pointer'
+                            } ${
                               formData.selectedPlan === plan.id
                                 ? 'border-primary bg-primary/5'
                                 : 'border-muted hover:border-primary/50'
                             }`}
-                            onClick={() => handlePlanChange(plan.id)}
+                            onClick={isCheckingApi || !isApiAvailable ? undefined : () => handlePlanChange(plan.id)}
+                            tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
                           >
                                                          <div className="flex items-center justify-between mb-2">
                                <div className="flex items-center gap-3">
@@ -481,16 +553,24 @@ export default function OrganizationRegistrationPage() {
                         type="button"
                         variant="outline"
                         onClick={() => router.push('/login')}
-                        disabled={isLoading}
+                        disabled={isLoading || isCheckingApi || !isApiAvailable}
                       >
                         Back to Login
                       </Button>
                       
-                      <Button type="submit" disabled={isLoading} className="min-w-[140px]">
+                      <Button type="submit" disabled={isLoading || isCheckingApi || !isApiAvailable} className="min-w-[140px]">
                         {isLoading ? (
                           <>
                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                             Processing...
+                          </>
+                        ) : isCheckingApi ? (
+                          <>
+                            Checking Service...
+                          </>
+                        ) : !isApiAvailable ? (
+                          <>
+                            Service Unavailable
                           </>
                         ) : (
                           <>
