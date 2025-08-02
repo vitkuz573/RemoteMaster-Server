@@ -1,7 +1,7 @@
 // API Configuration - Switch between real and mock API
 export const API_CONFIG = {
   // Set to true to use mock API for testing
-  USE_MOCK_API: true,
+  USE_MOCK_API: false,
   
   // Mock API settings
   MOCK_DELAY: {

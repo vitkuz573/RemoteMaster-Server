@@ -31,10 +31,8 @@ import {
   Info
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
-import { mockApiService } from '@/lib/api-service-mock';
-import { apiService } from '@/lib/api-service';
-import { API_CONFIG } from '@/lib/api-config';
 import { useHeader } from '@/contexts/header-context';
+import { useApiAvailability } from '@/hooks/use-api-availability';
 
 interface OrganizationForm {
   name: string;
@@ -74,19 +72,22 @@ type WizardStep = 'organization' | 'contact' | 'pricing' | 'byoid' | 'complete';
 export function SetupWizard() {
   const router = useRouter();
   const { showHeader } = useHeader();
-  
-  // API service instance based on configuration
-  const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
+  const { 
+    isApiAvailable, 
+    isCheckingApi, 
+    isFormDisabled, 
+    getLoadingText, 
+    getStatusMessage,
+    api 
+  } = useApiAvailability();
   
   // State for API data
   const [industries, setIndustries] = React.useState<string[]>([]);
   const [companySizes, setCompanySizes] = React.useState<string[]>([]);
   const [pricingPlans, setPricingPlans] = React.useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = React.useState(true);
-
+  
   const [currentStep, setCurrentStep] = React.useState<WizardStep>('organization');
-  const [isApiAvailable, setIsApiAvailable] = React.useState(true);
-  const [isCheckingApi, setIsCheckingApi] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isDiscovering, setIsDiscovering] = React.useState(false);
 
@@ -151,23 +152,7 @@ export function SetupWizard() {
     showHeader();
   }, [showHeader]);
 
-  // Check API availability on component mount
-  React.useEffect(() => {
-    const checkApiAvailability = async () => {
-      setIsCheckingApi(true);
-      try {
-        await api.getOrganizations();
-        setIsApiAvailable(true);
-      } catch (err) {
-        console.error('API check failed:', err);
-        setIsApiAvailable(false);
-      } finally {
-        setIsCheckingApi(false);
-      }
-    };
 
-    checkApiAvailability();
-  }, [api]);
 
   const steps: { key: WizardStep; title: string; description: string; icon: React.ReactNode }[] = [
     {
@@ -326,7 +311,7 @@ export function SetupWizard() {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Checking service status...</p>
+          <p className="text-muted-foreground">{getLoadingText()}</p>
         </div>
       </div>
     );
@@ -343,7 +328,7 @@ export function SetupWizard() {
             </div>
             <CardTitle className="text-2xl">Service Unavailable</CardTitle>
             <CardDescription>
-              Unable to connect to the setup service. Please check your connection and try again later.
+              {getStatusMessage()}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
@@ -404,6 +389,7 @@ export function SetupWizard() {
                       value={orgForm.name}
                       onChange={(e) => handleOrgInputChange('name', e.target.value)}
                       placeholder="Acme Corporation"
+                      disabled={isFormDisabled}
                     />
                   </div>
                   <div className="space-y-2">
@@ -413,11 +399,12 @@ export function SetupWizard() {
                       value={orgForm.domain}
                       onChange={(e) => handleOrgInputChange('domain', e.target.value)}
                       placeholder="acme.com"
+                      disabled={isFormDisabled}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="industry">Industry *</Label>
-                    <Select value={orgForm.industry} onValueChange={(value) => handleOrgInputChange('industry', value)}>
+                    <Select value={orgForm.industry} onValueChange={(value) => handleOrgInputChange('industry', value)} disabled={isFormDisabled}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select industry" />
                       </SelectTrigger>
@@ -436,7 +423,7 @@ export function SetupWizard() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="size">Company Size *</Label>
-                    <Select value={orgForm.size} onValueChange={(value) => handleOrgInputChange('size', value)}>
+                    <Select value={orgForm.size} onValueChange={(value) => handleOrgInputChange('size', value)} disabled={isFormDisabled}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select size" />
                       </SelectTrigger>
@@ -462,6 +449,7 @@ export function SetupWizard() {
                     onChange={(e) => handleOrgInputChange('description', e.target.value)}
                     placeholder="Brief description of your organization..."
                     rows={3}
+                    disabled={isFormDisabled}
                   />
                 </div>
               </div>
@@ -477,6 +465,7 @@ export function SetupWizard() {
                       value={orgForm.contactName}
                       onChange={(e) => handleOrgInputChange('contactName', e.target.value)}
                       placeholder="John Doe"
+                      disabled={isFormDisabled}
                     />
                   </div>
                   <div className="space-y-2">
@@ -487,6 +476,7 @@ export function SetupWizard() {
                       value={orgForm.contactEmail}
                       onChange={(e) => handleOrgInputChange('contactEmail', e.target.value)}
                       placeholder="john@acme.com"
+                      disabled={isFormDisabled}
                     />
                   </div>
                   <div className="space-y-2">
@@ -496,6 +486,7 @@ export function SetupWizard() {
                       value={orgForm.contactPhone}
                       onChange={(e) => handleOrgInputChange('contactPhone', e.target.value)}
                       placeholder="+1 (555) 123-4567"
+                      disabled={isFormDisabled}
                     />
                   </div>
                   <div className="space-y-2">
@@ -508,6 +499,7 @@ export function SetupWizard() {
                       value={orgForm.expectedUsers}
                       onChange={(e) => handleOrgInputChange('expectedUsers', parseInt(e.target.value) || 10)}
                       placeholder="10"
+                      disabled={isFormDisabled}
                     />
                   </div>
                 </div>
@@ -519,6 +511,7 @@ export function SetupWizard() {
                     onChange={(e) => handleOrgInputChange('address', e.target.value)}
                     placeholder="123 Business St, City, State, ZIP"
                     rows={2}
+                    disabled={isFormDisabled}
                   />
                 </div>
               </div>
@@ -549,12 +542,12 @@ export function SetupWizard() {
                     pricingPlans.map((plan) => (
                     <div
                       key={plan.id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
+                      className={`p-4 border rounded-lg transition-all duration-200 ${
                         orgForm.selectedPlan === plan.id
                           ? 'border-primary bg-primary/5'
                           : 'border-muted hover:border-primary/50'
-                      }`}
-                      onClick={() => handleOrgInputChange('selectedPlan', plan.id)}
+                      } ${isFormDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      onClick={isFormDisabled ? undefined : () => handleOrgInputChange('selectedPlan', plan.id)}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
@@ -648,10 +641,11 @@ export function SetupWizard() {
                          onChange={(e) => handleByoidInputChange('issuerUrl', e.target.value)}
                          placeholder="https://your-idp.com"
                          className="flex-1"
+                         disabled={isFormDisabled}
                        />
                        <Button
                          onClick={handleDiscoverProvider}
-                         disabled={isDiscovering || !byoidForm.issuerUrl.trim()}
+                         disabled={isDiscovering || !byoidForm.issuerUrl.trim() || isFormDisabled}
                          variant="outline"
                          className="whitespace-nowrap"
                        >
@@ -699,6 +693,7 @@ export function SetupWizard() {
                          value={byoidForm.clientId}
                          onChange={(e) => handleByoidInputChange('clientId', e.target.value)}
                          placeholder="your-client-id"
+                         disabled={isFormDisabled}
                        />
                        <p className="text-xs text-muted-foreground">
                          The client ID configured in your IdP
@@ -713,6 +708,7 @@ export function SetupWizard() {
                          value={byoidForm.clientSecret}
                          onChange={(e) => handleByoidInputChange('clientSecret', e.target.value)}
                          placeholder="your-client-secret"
+                         disabled={isFormDisabled}
                        />
                        <p className="text-xs text-muted-foreground">
                          The client secret configured in your IdP
@@ -871,7 +867,7 @@ export function SetupWizard() {
             <Button
               variant="outline"
               onClick={handleBack}
-              disabled={currentStepIndex === 0}
+              disabled={currentStepIndex === 0 || isFormDisabled}
               className="w-full sm:w-auto order-2 sm:order-1"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -880,7 +876,7 @@ export function SetupWizard() {
             
             <Button
               onClick={handleNext}
-              disabled={!validateCurrentStep() || isSubmitting}
+              disabled={!validateCurrentStep() || isSubmitting || isFormDisabled}
               className="w-full sm:w-auto order-1 sm:order-2"
             >
               {isSubmitting ? (

@@ -114,12 +114,25 @@ export default function MockInfoPage() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full mb-4">
-            <TestTube className="w-8 h-8 text-blue-600" />
+          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
+            API_CONFIG.USE_MOCK_API 
+              ? "bg-blue-100 dark:bg-blue-900/20"
+              : "bg-green-100 dark:bg-green-900/20"
+          }`}>
+            {API_CONFIG.USE_MOCK_API ? (
+              <TestTube className="w-8 h-8 text-blue-600" />
+            ) : (
+              <Database className="w-8 h-8 text-green-600" />
+            )}
           </div>
-          <h1 className="text-3xl font-bold mb-2">Mock API Testing Mode</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            {API_CONFIG.USE_MOCK_API ? "Mock API Testing Mode" : "API Information Dashboard"}
+          </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Comprehensive testing environment with real system data, live monitoring, and interactive API testing
+            {API_CONFIG.USE_MOCK_API 
+              ? "Comprehensive testing environment with real system data, live monitoring, and interactive API testing"
+              : "Production environment with real API integration, system monitoring, and performance metrics"
+            }
           </p>
         </div>
 
@@ -163,12 +176,12 @@ export default function MockInfoPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Mock API Status */}
+          {/* API Status */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Database className="w-5 h-5" />
-                Mock API Status
+                {API_CONFIG.USE_MOCK_API ? "Mock API Status" : "API Status"}
               </CardTitle>
               <CardDescription>
                 Current API configuration and status
@@ -177,9 +190,24 @@ export default function MockInfoPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">API Mode:</span>
-                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Mock API Active
+                <Badge 
+                  variant="secondary" 
+                  className={API_CONFIG.USE_MOCK_API 
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200"
+                    : "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200"
+                  }
+                >
+                  {API_CONFIG.USE_MOCK_API ? (
+                    <>
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Mock API Active
+                    </>
+                  ) : (
+                    <>
+                      <Database className="w-3 h-3 mr-1" />
+                      Real API Active
+                    </>
+                  )}
                 </Badge>
               </div>
               
@@ -188,105 +216,111 @@ export default function MockInfoPage() {
                 <Badge variant="outline">Enabled</Badge>
               </div>
 
-              <Separator />
+              {API_CONFIG.USE_MOCK_API && (
+                <>
+                  <Separator />
 
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm">Mock Delays:</h4>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="flex justify-between">
-                    <span>Registration:</span>
-                    <span className="font-mono">{API_CONFIG.MOCK_DELAY.REGISTRATION}ms</span>
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Mock Delays:</h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex justify-between">
+                        <span>Registration:</span>
+                        <span className="font-mono">{API_CONFIG.MOCK_DELAY.REGISTRATION}ms</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Login:</span>
+                        <span className="font-mono">{API_CONFIG.MOCK_DELAY.LOGIN}ms</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>BYOID Setup:</span>
+                        <span className="font-mono">{API_CONFIG.MOCK_DELAY.BYOID}ms</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Health Check:</span>
+                        <span className="font-mono">{API_CONFIG.MOCK_DELAY.HEALTH}ms</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Login:</span>
-                    <span className="font-mono">{API_CONFIG.MOCK_DELAY.LOGIN}ms</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>BYOID Setup:</span>
-                    <span className="font-mono">{API_CONFIG.MOCK_DELAY.BYOID}ms</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Health Check:</span>
-                    <span className="font-mono">{API_CONFIG.MOCK_DELAY.HEALTH}ms</span>
-                  </div>
-                </div>
-              </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
           {/* Test Credentials & Mock Data */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                Test Credentials & Mock Data
-              </CardTitle>
-              <CardDescription>
-                Use these credentials and manage mock data for testing
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm">Login Credentials:</h4>
-                <div className="bg-muted p-3 rounded-lg space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Email:</span>
-                    <code className="text-sm font-mono bg-background px-2 py-1 rounded">
-                      {API_CONFIG.MOCK_CREDENTIALS.EMAIL}
-                    </code>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Password:</span>
-                    <code className="text-sm font-mono bg-background px-2 py-1 rounded">
-                      {API_CONFIG.MOCK_CREDENTIALS.PASSWORD}
-                    </code>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm">Available Organizations:</h4>
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span>Acme Corporation</span>
-                    <Badge variant="outline" className="text-xs">Pro Plan</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>TechStart Inc</span>
-                    <Badge variant="outline" className="text-xs">Free Plan</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Global Solutions</span>
-                    <Badge variant="outline" className="text-xs">Enterprise</Badge>
+          {API_CONFIG.USE_MOCK_API && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  Test Credentials & Mock Data
+                </CardTitle>
+                <CardDescription>
+                  Use these credentials and manage mock data for testing
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Login Credentials:</h4>
+                  <div className="bg-muted p-3 rounded-lg space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Email:</span>
+                      <code className="text-sm font-mono bg-background px-2 py-1 rounded">
+                        {API_CONFIG.MOCK_CREDENTIALS.EMAIL}
+                      </code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Password:</span>
+                      <code className="text-sm font-mono bg-background px-2 py-1 rounded">
+                        {API_CONFIG.MOCK_CREDENTIALS.PASSWORD}
+                      </code>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm">Mock Data Statistics:</h4>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="flex justify-between">
-                    <span>Users:</span>
-                    <span className="font-mono">1,247</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Organizations:</span>
-                    <span className="font-mono">89</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Active Sessions:</span>
-                    <span className="font-mono">156</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>API Calls Today:</span>
-                    <span className="font-mono">{apiCallCount}</span>
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Available Organizations:</h4>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span>Acme Corporation</span>
+                      <Badge variant="outline" className="text-xs">Pro Plan</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>TechStart Inc</span>
+                      <Badge variant="outline" className="text-xs">Free Plan</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Global Solutions</span>
+                      <Badge variant="outline" className="text-xs">Enterprise</Badge>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Mock Data Statistics:</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex justify-between">
+                      <span>Users:</span>
+                      <span className="font-mono">1,247</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Organizations:</span>
+                      <span className="font-mono">89</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Active Sessions:</span>
+                      <span className="font-mono">156</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>API Calls Today:</span>
+                      <span className="font-mono">{apiCallCount}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Real System Data */}
           <Card>
@@ -545,12 +579,39 @@ export default function MockInfoPage() {
         </div>
 
                           {/* Testing Environment Notice */}
-         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+         <div className={`mt-6 p-4 border rounded-lg ${
+           API_CONFIG.USE_MOCK_API 
+             ? "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800"
+             : "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800"
+         }`}>
            <div className="flex items-center gap-3">
-             <AlertTriangle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+             {API_CONFIG.USE_MOCK_API ? (
+               <AlertTriangle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+             ) : (
+               <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+             )}
              <div className="flex-1">
-               <p className="text-blue-800 dark:text-blue-200 text-sm">
-                 Testing environment with mock API. To switch to real API, set <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded text-xs">USE_MOCK_API: false</code> in <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded text-xs">lib/api-config.ts</code>
+               <p className={`text-sm ${
+                 API_CONFIG.USE_MOCK_API 
+                   ? "text-blue-800 dark:text-blue-200"
+                   : "text-green-800 dark:text-green-200"
+               }`}>
+                 {API_CONFIG.USE_MOCK_API 
+                   ? "Testing environment with mock API. To switch to real API, set "
+                   : "Production environment with real API. To switch to mock API for testing, set "
+                 }
+                 <code className={`px-1 rounded text-xs ${
+                   API_CONFIG.USE_MOCK_API 
+                     ? "bg-blue-100 dark:bg-blue-900"
+                     : "bg-green-100 dark:bg-green-900"
+                 }`}>
+                   USE_MOCK_API: {API_CONFIG.USE_MOCK_API ? "false" : "true"}
+                 </code> 
+                 in <code className={`px-1 rounded text-xs ${
+                   API_CONFIG.USE_MOCK_API 
+                     ? "bg-blue-100 dark:bg-blue-900"
+                     : "bg-green-100 dark:bg-green-900"
+                 }`}>lib/api-config.ts</code>
                </p>
              </div>
            </div>

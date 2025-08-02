@@ -15,6 +15,9 @@ export interface ApiState {
   errors: string[];
   pendingRequests: number;
   apiUrl: string;
+  isMockApi: boolean;
+  isApiAvailable: boolean;
+  isCheckingApi: boolean;
 }
 
 // API Actions
@@ -26,7 +29,10 @@ export type ApiAction =
   | { type: 'ADD_ERROR'; payload: string }
   | { type: 'CLEAR_ERRORS' }
   | { type: 'INCREMENT_PENDING' }
-  | { type: 'DECREMENT_PENDING' };
+  | { type: 'DECREMENT_PENDING' }
+  | { type: 'SET_MOCK_API'; payload: boolean }
+  | { type: 'SET_API_AVAILABLE'; payload: boolean }
+  | { type: 'SET_CHECKING_API'; payload: boolean };
 
 // Initial state
 const initialState: ApiState = {
@@ -36,6 +42,9 @@ const initialState: ApiState = {
   errors: [],
   pendingRequests: 0,
   apiUrl: process.env.NEXT_PUBLIC_API_URL || '',
+  isMockApi: false,
+  isApiAvailable: true,
+  isCheckingApi: false,
 };
 
 // Reducer
@@ -81,6 +90,15 @@ function apiReducer(state: ApiState, action: ApiAction): ApiState {
         pendingRequests: Math.max(0, state.pendingRequests - 1) 
       };
     
+    case 'SET_MOCK_API':
+      return { ...state, isMockApi: action.payload };
+    
+    case 'SET_API_AVAILABLE':
+      return { ...state, isApiAvailable: action.payload };
+    
+    case 'SET_CHECKING_API':
+      return { ...state, isCheckingApi: action.payload };
+    
     default:
       return state;
   }
@@ -98,6 +116,9 @@ interface ApiContextType {
   clearErrors: () => void;
   incrementPending: () => void;
   decrementPending: () => void;
+  setMockApi: (isMock: boolean) => void;
+  setApiAvailable: (available: boolean) => void;
+  setCheckingApi: (checking: boolean) => void;
 }
 
 const ApiContext = createContext<ApiContextType | undefined>(undefined);
@@ -109,6 +130,14 @@ interface ApiProviderProps {
 
 export function ApiProvider({ children }: ApiProviderProps) {
   const [state, dispatch] = useReducer(apiReducer, initialState);
+
+  // Initialize API state based on configuration
+  React.useEffect(() => {
+    // Import API_CONFIG dynamically to avoid SSR issues
+    import('@/lib/api-config').then(({ API_CONFIG }) => {
+      setMockApi(API_CONFIG.USE_MOCK_API);
+    });
+  }, []);
 
   const setConnected = (connected: boolean) => {
     dispatch({ type: 'SET_CONNECTED', payload: connected });
@@ -142,6 +171,18 @@ export function ApiProvider({ children }: ApiProviderProps) {
     dispatch({ type: 'DECREMENT_PENDING' });
   };
 
+  const setMockApi = (isMock: boolean) => {
+    dispatch({ type: 'SET_MOCK_API', payload: isMock });
+  };
+
+  const setApiAvailable = (available: boolean) => {
+    dispatch({ type: 'SET_API_AVAILABLE', payload: available });
+  };
+
+  const setCheckingApi = (checking: boolean) => {
+    dispatch({ type: 'SET_CHECKING_API', payload: checking });
+  };
+
   const value: ApiContextType = {
     state,
     dispatch,
@@ -153,6 +194,9 @@ export function ApiProvider({ children }: ApiProviderProps) {
     clearErrors,
     incrementPending,
     decrementPending,
+    setMockApi,
+    setApiAvailable,
+    setCheckingApi,
   };
 
   return (
