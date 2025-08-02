@@ -66,8 +66,8 @@ class MockApiService {
     const tempPassword = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10).toUpperCase();
     
          // Generate organization ID
-     const orgId = `org_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-     const tenantId = `tenant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+     const orgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+     const tenantId = `tenant_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
      
      // Simulate success response
      const mockResponse = {
@@ -181,7 +181,7 @@ class MockApiService {
     if (data.email === 'admin@acme.com' && data.password === 'password123') {
       const mockResponse = {
         success: true,
-        token: `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        token: `mock_token_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
         user: {
           id: 'user_1',
           email: data.email,
@@ -246,7 +246,7 @@ class MockApiService {
     const mockResponse = {
       success: true,
       byoidConfig: {
-        id: `byoid_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `byoid_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
         organizationId: data.organizationId,
         issuerUrl: data.issuerUrl,
         clientId: data.clientId,
