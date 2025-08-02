@@ -175,13 +175,7 @@ class ApiService {
     }>('/health');
   }
 
-  // Test connection
-  async testConnection() {
-    return this.request<{
-      success: boolean;
-      message: string;
-    }>('/test-connection');
-  }
+
 }
 
 // Export singleton instance

@@ -22,6 +22,11 @@ All operations on application pages have been migrated from local API endpoints 
 - Fixed text formatting in login page security notice
 - Renamed `/tenant` route to `/login` for better UX
 
+### 5. Cleanup
+- Removed all local API endpoints and directories
+- Removed unused API client files (`api-client.ts`, `use-api.ts`)
+- Cleaned up all internal API references
+
 ## API Endpoints
 
 The external API must support the following endpoints:
@@ -136,12 +141,21 @@ The external API URL is configured through the `NEXT_PUBLIC_API_URL` environment
 
 ## Local API Endpoints
 
-The following local API endpoints are no longer used and can be removed:
-- `app/api/register/route.ts`
-- `app/api/organizations/route.ts`
-- `app/api/auth/login/route.ts`
-- `app/api/byoid-setup/route.ts`
-- `app/api/health/route.ts`
+All local API endpoints have been completely removed:
+- `app/api/register/` - organization registration API
+- `app/api/organizations/` - organizations management API  
+- `app/api/auth/` - authentication API
+- `app/api/byoid-setup/` - BYOID setup API
+- `app/api/health/` - health check API
+- `app/api/test-connection/` - connection testing API
+
+The entire `/app/api/` directory has been removed.
+
+## Removed Files
+
+The following files have been removed as they are no longer needed:
+- `lib/api-client.ts` - old API client (replaced by `api-service.ts`)
+- `hooks/use-api.ts` - unused API hooks (replaced by `use-dynamic-api.ts`)
 
 ## Testing
 
