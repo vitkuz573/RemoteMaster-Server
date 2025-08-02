@@ -1,11 +1,14 @@
 import { appConfig } from './app-config';
+import { toast } from 'sonner';
 
 // API Service for external API calls
 class ApiService {
   private baseUrl: string;
+  private showNotifications: boolean;
 
-  constructor() {
+  constructor(showNotifications: boolean = true) {
     this.baseUrl = appConfig.endpoints.api;
+    this.showNotifications = showNotifications;
   }
 
   private async request<T>(
@@ -29,12 +32,29 @@ class ApiService {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        const errorMessage = errorData.error || `HTTP error! status: ${response.status}`;
+        
+        if (this.showNotifications) {
+          toast.error(errorMessage, {
+            description: `Request to ${endpoint} failed`,
+            duration: 5000,
+          });
+        }
+        
+        throw new Error(errorMessage);
       }
 
       return await response.json();
     } catch (error) {
       console.error(`API request failed for ${endpoint}:`, error);
+      
+      if (this.showNotifications && error instanceof Error) {
+        toast.error(error.message, {
+          description: `Request to ${endpoint} failed`,
+          duration: 5000,
+        });
+      }
+      
       throw error;
     }
   }
@@ -175,6 +195,38 @@ class ApiService {
     }>('/health');
   }
 
+  // Notification management
+  enableNotifications() {
+    this.showNotifications = true;
+  }
+
+  disableNotifications() {
+    this.showNotifications = false;
+  }
+
+  showSuccess(message: string) {
+    if (this.showNotifications) {
+      toast.success(message, {
+        duration: 3000,
+      });
+    }
+  }
+
+  showWarning(message: string) {
+    if (this.showNotifications) {
+      toast.warning(message, {
+        duration: 4000,
+      });
+    }
+  }
+
+  showInfo(message: string) {
+    if (this.showNotifications) {
+      toast.info(message, {
+        duration: 3000,
+      });
+    }
+  }
 
 }
 

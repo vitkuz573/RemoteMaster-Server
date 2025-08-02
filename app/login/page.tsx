@@ -174,12 +174,13 @@ export default function LoginPage() {
         }
 
         // Show success message
-        alert(result.message || 'Login successful!');
+        apiService.showSuccess(result.message || 'Login successful!');
         
         // Redirect to main dashboard
         router.push("/");
         
       } catch (err) {
+        // Error notification is already handled by apiService
         setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
         setIsLoading(false);
       }

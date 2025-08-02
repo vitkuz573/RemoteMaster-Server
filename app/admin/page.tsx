@@ -53,8 +53,13 @@ export default function AdminPage() {
         createdAt: org.registeredAt || org.createdAt
       }));
       setOrganizations(orgs);
+      
+      if (orgs.length === 0) {
+        apiService.showInfo('No organizations found');
+      }
     } catch (error) {
       console.error('Error fetching organizations:', error);
+      // Error notification is already handled by apiService
     } finally {
       setLoading(false);
       setRefreshing(false);

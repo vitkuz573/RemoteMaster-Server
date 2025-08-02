@@ -5,6 +5,7 @@ import { Footer } from "@/components/ui/footer";
 import { FooterProvider } from "@/contexts/footer-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApiProvider } from "@/contexts/api-context";
+import { Toaster } from "@/components/ui/sonner";
 import { appConfig } from "@/lib/app-config";
 import { initializeDefaultHealthChecks } from "@/lib/system-status";
 import { initializeCustomHealthChecks } from "@/lib/custom-health-checks";
@@ -50,6 +51,7 @@ export default function RootLayout({
             </FooterProvider>
           </ApiProvider>
         </TooltipProvider>
+        <Toaster />
       </body>
     </html>
   );

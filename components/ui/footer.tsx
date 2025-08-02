@@ -55,6 +55,9 @@ export function Footer({
             checkResults: {}
           });
           setIsLoading(false);
+          
+          // Show warning notification for system status check failure
+          apiService.showWarning('Unable to check system status. Please check your connection.');
         }
       }
     };

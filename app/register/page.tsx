@@ -187,7 +187,7 @@ export default function OrganizationRegistrationPage() {
       }
 
       // Show success message
-      alert(result.message || 'Registration successful!');
+      apiService.showSuccess(result.message || 'Registration successful!');
 
       // Redirect based on plan type
       if (selectedPlan.price === 0) {
@@ -200,7 +200,7 @@ export default function OrganizationRegistrationPage() {
       
     } catch (err) {
       console.error('Registration error:', err);
-      alert(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+      // Error notification is already handled by apiService
     } finally {
       setIsLoading(false);
     }

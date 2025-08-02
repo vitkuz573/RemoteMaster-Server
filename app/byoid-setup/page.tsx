@@ -84,6 +84,9 @@ export default function BYOIDSetupPage() {
         organizationDomain: organizationData?.domain
       });
 
+      // Show success message
+      apiService.showSuccess('BYOID setup submitted successfully!');
+      
       // Save BYOID setup data
       localStorage.setItem("byoidSetup", JSON.stringify(formData));
       
@@ -91,7 +94,7 @@ export default function BYOIDSetupPage() {
       router.push('/byoid-setup-complete');
     } catch (error) {
       console.error('BYOID setup error:', error);
-      alert('Failed to submit BYOID setup. Please try again.');
+      // Error notification is already handled by apiService
     } finally {
       setIsSubmitting(false);
     }
