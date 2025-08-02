@@ -13,35 +13,158 @@ class MockApiService {
   }
 
   private showMockNotification(type: 'success' | 'error' | 'warning' | 'info', message: string) {
-    if (!this.showNotifications) return;
-    
-    switch (type) {
-      case 'success':
-        toast.success(message, {
-          description: 'Mock API response',
-          duration: 3000,
-        });
-        break;
-      case 'error':
-        toast.error(message, {
-          description: 'Mock API error',
-          duration: 5000,
-        });
-        break;
-      case 'warning':
-        toast.warning(message, {
-          description: 'Mock API warning',
-          duration: 4000,
-        });
-        break;
-      case 'info':
-        toast.info(message, {
-          description: 'Mock API info',
-          duration: 3000,
-        });
-        break;
+    if (this.showNotifications) {
+      // This will be handled by the notification system
+      console.log(`Mock ${type}: ${message}`);
     }
   }
+
+  // Mock data for organizations, hosts, and units
+  private mockOrganizationsData = {
+    'acme-corp': {
+      id: 'acme-corp',
+      name: 'Acme Corp',
+      domain: 'acme.com',
+      status: 'active',
+      plan: 'pro',
+      organizationalUnits: {
+        'production': {
+          id: 'production',
+          name: 'Production',
+          hosts: [
+            { id: 'web-server-01', name: 'web-server-01', status: 'online', type: 'web' },
+            { id: 'db-server-01', name: 'db-server-01', status: 'online', type: 'database' },
+            { id: 'app-server-01', name: 'app-server-01', status: 'offline', type: 'application' }
+          ]
+        },
+        'development': {
+          id: 'development',
+          name: 'Development',
+          hosts: [
+            { id: 'dev-server-01', name: 'dev-server-01', status: 'online', type: 'development' },
+            { id: 'dev-server-02', name: 'dev-server-02', status: 'offline', type: 'development' }
+          ]
+        },
+        'testing': {
+          id: 'testing',
+          name: 'Testing',
+          hosts: [
+            { id: 'test-server-01', name: 'test-server-01', status: 'online', type: 'testing' },
+            { id: 'test-server-02', name: 'test-server-02', status: 'online', type: 'testing' },
+            { id: 'test-server-03', name: 'test-server-03', status: 'offline', type: 'testing' }
+          ]
+        }
+      }
+    }
+  };
+
+  // Mock data for pricing plans
+  private mockPricingPlans = [
+    {
+      id: 'free',
+      name: 'Free',
+      description: 'Perfect for small teams getting started',
+      price: 0,
+      billingCycle: 'monthly',
+      features: [
+        'Up to 2 organizational units',
+        'Up to 10 hosts',
+        'Basic monitoring',
+        'Email support'
+      ],
+      maxOrganizationalUnits: 2,
+      maxHosts: 10,
+      maxUsers: 5
+    },
+    {
+      id: 'pro',
+      name: 'Professional',
+      description: 'Ideal for growing businesses',
+      price: 29,
+      billingCycle: 'monthly',
+      features: [
+        'Up to 10 organizational units',
+        'Up to 50 hosts',
+        'Advanced monitoring',
+        'Priority support',
+        'Custom integrations'
+      ],
+      maxOrganizationalUnits: 10,
+      maxHosts: 50,
+      maxUsers: 25
+    },
+    {
+      id: 'business',
+      name: 'Business',
+      description: 'For established organizations',
+      price: 99,
+      billingCycle: 'monthly',
+      features: [
+        'Up to 50 organizational units',
+        'Up to 200 hosts',
+        'Enterprise monitoring',
+        '24/7 support',
+        'Advanced analytics',
+        'Custom branding'
+      ],
+      maxOrganizationalUnits: 50,
+      maxHosts: 200,
+      maxUsers: 100
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      description: 'For large-scale deployments',
+      price: 299,
+      billingCycle: 'monthly',
+      features: [
+        'Unlimited organizational units',
+        'Unlimited hosts',
+        'Enterprise-grade monitoring',
+        'Dedicated support',
+        'Advanced analytics',
+        'Custom branding',
+        'SLA guarantees'
+      ],
+      maxOrganizationalUnits: -1, // Unlimited
+      maxHosts: -1, // Unlimited
+      maxUsers: -1 // Unlimited
+    }
+  ];
+
+  // Mock data for industries
+  private mockIndustries = [
+    'Technology',
+    'Healthcare',
+    'Finance',
+    'Education',
+    'Manufacturing',
+    'Retail',
+    'Consulting',
+    'Government',
+    'Non-profit',
+    'Other'
+  ];
+
+  // Mock data for company sizes
+  private mockCompanySizes = [
+    '1-10 employees',
+    '11-50 employees',
+    '51-200 employees',
+    '201-500 employees',
+    '501-1000 employees',
+    '1000+ employees'
+  ];
+
+  // Mock current user data
+  private mockCurrentUser = {
+    id: 'user_1',
+    name: 'John Doe',
+    email: 'john.doe@company.com',
+    role: 'Administrator',
+    avatar: null,
+    organizationId: 'acme-corp'
+  };
 
   // Organization operations
   async registerOrganization(data: {
@@ -330,6 +453,107 @@ class MockApiService {
 
   showInfo(message: string) {
     this.showMockNotification('info', message);
+  }
+
+  // Get current user information
+  async getCurrentUser() {
+    console.log('Mock API: getCurrentUser called');
+    
+    await this.delay(500);
+    
+    return {
+      success: true,
+      user: this.mockCurrentUser,
+      message: 'Current user retrieved successfully'
+    };
+  }
+
+  // Get organizations with hosts and units
+  async getOrganizationsWithUnits() {
+    console.log('Mock API: getOrganizationsWithUnits called');
+    
+    await this.delay(800);
+    
+    return {
+      success: true,
+      organizations: this.mockOrganizationsData,
+      message: 'Organizations with units retrieved successfully'
+    };
+  }
+
+  // Get pricing plans
+  async getPricingPlans() {
+    console.log('Mock API: getPricingPlans called');
+    
+    await this.delay(600);
+    
+    return {
+      success: true,
+      plans: this.mockPricingPlans,
+      message: 'Pricing plans retrieved successfully'
+    };
+  }
+
+  // Get industries
+  async getIndustries() {
+    console.log('Mock API: getIndustries called');
+    
+    await this.delay(300);
+    
+    return {
+      success: true,
+      industries: this.mockIndustries,
+      message: 'Industries retrieved successfully'
+    };
+  }
+
+  // Get company sizes
+  async getCompanySizes() {
+    console.log('Mock API: getCompanySizes called');
+    
+    await this.delay(300);
+    
+    return {
+      success: true,
+      companySizes: this.mockCompanySizes,
+      message: 'Company sizes retrieved successfully'
+    };
+  }
+
+  // Calculate monthly cost based on plan and users
+  async calculateMonthlyCost(planId: string, expectedUsers: number) {
+    console.log('Mock API: calculateMonthlyCost called with:', { planId, expectedUsers });
+    
+    await this.delay(200);
+    
+    const plan = this.mockPricingPlans.find(p => p.id === planId);
+    if (!plan) {
+      throw new Error('Plan not found');
+    }
+
+    // For unlimited plans, use the expected users
+    const userCount = plan.maxUsers === -1 ? expectedUsers : Math.min(expectedUsers, plan.maxUsers);
+    
+    // For limited plans, cap at the maximum
+    const actualUsers = plan.maxUsers === -1 ? userCount : Math.min(userCount, plan.maxUsers);
+    
+    const baseCost = plan.price;
+    const userCost = actualUsers * 2; // $2 per user
+    
+    return {
+      success: true,
+      calculation: {
+        planId,
+        planName: plan.name,
+        baseCost,
+        userCost,
+        totalCost: baseCost + userCost,
+        expectedUsers,
+        actualUsers,
+        isUnlimited: plan.maxUsers === -1
+      },
+      message: 'Cost calculation completed successfully'
+    };
   }
 }
 

@@ -228,6 +228,104 @@ class ApiService {
     }
   }
 
+  // Get current user information
+  async getCurrentUser() {
+    return this.request<{
+      success: boolean;
+      user: {
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+        avatar: string | null;
+        organizationId: string;
+      };
+      message: string;
+    }>('/user/current');
+  }
+
+  // Get organizations with hosts and units
+  async getOrganizationsWithUnits() {
+    return this.request<{
+      success: boolean;
+      organizations: Record<string, {
+        id: string;
+        name: string;
+        domain: string;
+        status: string;
+        plan: string;
+        organizationalUnits: Record<string, {
+          id: string;
+          name: string;
+          hosts: Array<{
+            id: string;
+            name: string;
+            status: string;
+            type: string;
+          }>;
+        }>;
+      }>;
+      message: string;
+    }>('/organizations/with-units');
+  }
+
+  // Get pricing plans
+  async getPricingPlans() {
+    return this.request<{
+      success: boolean;
+      plans: Array<{
+        id: string;
+        name: string;
+        description: string;
+        price: number;
+        billingCycle: string;
+        features: string[];
+        maxOrganizationalUnits: number;
+        maxHosts: number;
+        maxUsers: number;
+      }>;
+      message: string;
+    }>('/pricing/plans');
+  }
+
+  // Get industries
+  async getIndustries() {
+    return this.request<{
+      success: boolean;
+      industries: string[];
+      message: string;
+    }>('/reference/industries');
+  }
+
+  // Get company sizes
+  async getCompanySizes() {
+    return this.request<{
+      success: boolean;
+      companySizes: string[];
+      message: string;
+    }>('/reference/company-sizes');
+  }
+
+  // Calculate monthly cost based on plan and users
+  async calculateMonthlyCost(planId: string, expectedUsers: number) {
+    return this.request<{
+      success: boolean;
+      calculation: {
+        planId: string;
+        planName: string;
+        baseCost: number;
+        userCost: number;
+        totalCost: number;
+        expectedUsers: number;
+        actualUsers: number;
+        isUnlimited: boolean;
+      };
+      message: string;
+    }>('/pricing/calculate', {
+      method: 'POST',
+      body: JSON.stringify({ planId, expectedUsers }),
+    });
+  }
 }
 
 // Export singleton instance

@@ -31,9 +31,9 @@ import {
   Info
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
-import { pricingPlans, calculateMonthlyCost } from '@/lib/pricing-plans';
 import { mockApiService } from '@/lib/api-service-mock';
-import { isMockApiEnabled } from '@/lib/api-config';
+import { apiService } from '@/lib/api-service';
+import { API_CONFIG } from '@/lib/api-config';
 import { useHeader } from '@/contexts/header-context';
 
 interface OrganizationForm {
@@ -71,31 +71,19 @@ interface BYOIDForm {
 
 type WizardStep = 'organization' | 'contact' | 'pricing' | 'byoid' | 'complete';
 
-const industries = [
-  'Technology',
-  'Healthcare',
-  'Finance',
-  'Education',
-  'Manufacturing',
-  'Retail',
-  'Consulting',
-  'Government',
-  'Non-profit',
-  'Other'
-];
-
-const companySizes = [
-  '1-10 employees',
-  '11-50 employees',
-  '51-200 employees',
-  '201-500 employees',
-  '501-1000 employees',
-  '1000+ employees'
-];
-
 export function SetupWizard() {
   const router = useRouter();
   const { showHeader } = useHeader();
+  
+  // API service instance based on configuration
+  const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
+  
+  // State for API data
+  const [industries, setIndustries] = React.useState<string[]>([]);
+  const [companySizes, setCompanySizes] = React.useState<string[]>([]);
+  const [pricingPlans, setPricingPlans] = React.useState<any[]>([]);
+  const [isLoadingData, setIsLoadingData] = React.useState(true);
+
   const [currentStep, setCurrentStep] = React.useState<WizardStep>('organization');
   const [isApiAvailable, setIsApiAvailable] = React.useState(true);
   const [isCheckingApi, setIsCheckingApi] = React.useState(true);
@@ -124,6 +112,40 @@ export function SetupWizard() {
     clientSecret: ''
   });
 
+  // Load API data on component mount
+  React.useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoadingData(true);
+        
+        // Load industries
+        const industriesResponse = await api.getIndustries();
+        if (industriesResponse.success) {
+          setIndustries(industriesResponse.industries);
+        }
+        
+        // Load company sizes
+        const companySizesResponse = await api.getCompanySizes();
+        if (companySizesResponse.success) {
+          setCompanySizes(companySizesResponse.companySizes);
+        }
+        
+        // Load pricing plans
+        const pricingPlansResponse = await api.getPricingPlans();
+        if (pricingPlansResponse.success) {
+          setPricingPlans(pricingPlansResponse.plans);
+        }
+        
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadData();
+  }, [api]);
+
   // Show header on setup wizard
   React.useEffect(() => {
     showHeader();
@@ -134,7 +156,7 @@ export function SetupWizard() {
     const checkApiAvailability = async () => {
       setIsCheckingApi(true);
       try {
-        await mockApiService.getOrganizations();
+        await api.getOrganizations();
         setIsApiAvailable(true);
       } catch (err) {
         console.error('API check failed:', err);
@@ -145,7 +167,7 @@ export function SetupWizard() {
     };
 
     checkApiAvailability();
-  }, []);
+  }, [api]);
 
   const steps: { key: WizardStep; title: string; description: string; icon: React.ReactNode }[] = [
     {
@@ -295,7 +317,8 @@ export function SetupWizard() {
   };
 
   const selectedPlan = pricingPlans.find(plan => plan.id === orgForm.selectedPlan) || pricingPlans[0];
-  const totalMonthly = calculateMonthlyCost(orgForm.selectedPlan, orgForm.expectedUsers);
+          const costResponse = await api.calculateMonthlyCost(orgForm.selectedPlan, orgForm.expectedUsers);
+        const totalMonthly = costResponse.calculation.totalCost;
 
   // Show loading state while checking API
   if (isCheckingApi) {
@@ -399,11 +422,15 @@ export function SetupWizard() {
                         <SelectValue placeholder="Select industry" />
                       </SelectTrigger>
                       <SelectContent>
-                        {industries.map((industry) => (
-                          <SelectItem key={industry} value={industry}>
-                            {industry}
-                          </SelectItem>
-                        ))}
+                        {isLoadingData ? (
+                          <SelectItem value="" disabled>Loading industries...</SelectItem>
+                        ) : (
+                          industries.map((industry) => (
+                            <SelectItem key={industry} value={industry}>
+                              {industry}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -414,11 +441,15 @@ export function SetupWizard() {
                         <SelectValue placeholder="Select size" />
                       </SelectTrigger>
                       <SelectContent>
-                        {companySizes.map((size) => (
-                          <SelectItem key={size} value={size}>
-                            {size}
-                          </SelectItem>
-                        ))}
+                        {isLoadingData ? (
+                          <SelectItem value="" disabled>Loading company sizes...</SelectItem>
+                        ) : (
+                          companySizes.map((size) => (
+                            <SelectItem key={size} value={size}>
+                              {size}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -500,7 +531,22 @@ export function SetupWizard() {
                 </p>
                 
                 <div className="space-y-3">
-                  {pricingPlans.map((plan) => (
+                  {isLoadingData ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="p-4 border rounded-lg animate-pulse">
+                          <div className="h-6 bg-muted rounded mb-2"></div>
+                          <div className="h-4 bg-muted rounded mb-3"></div>
+                          <div className="space-y-2">
+                            <div className="h-3 bg-muted rounded"></div>
+                            <div className="h-3 bg-muted rounded"></div>
+                            <div className="h-3 bg-muted rounded"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    pricingPlans.map((plan) => (
                     <div
                       key={plan.id}
                       className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ${
@@ -549,7 +595,8 @@ export function SetupWizard() {
                         ))}
                       </div>
                     </div>
-                  ))}
+                  ))
+                  )}
                 </div>
 
                 <Separator />

@@ -11,6 +11,9 @@ import Link from 'next/link';
 import { PanelLeftClose, PanelLeftOpen, ArrowLeftRight, Bell, BellOff, ChevronDown, ChevronRight, LogOut, User, Settings, Building2 } from 'lucide-react';
 import { appConfig } from '@/lib/app-config';
 import { useHeader } from '@/contexts/header-context';
+import { mockApiService } from '@/lib/api-service-mock';
+import { apiService } from '@/lib/api-service';
+import { API_CONFIG } from '@/lib/api-config';
 
 export default function Home() {
   const router = useRouter();
@@ -36,45 +39,31 @@ export default function Home() {
   // Application configuration (imported from centralized config)
   // Note: Import moved to top of file
 
-  // Mock user data - replace with actual user data
-  const currentUser = {
-    name: 'John Doe',
-    email: 'john.doe@company.com',
-    role: 'Administrator',
-    avatar: null
-  };
+  // API service instance based on configuration
+  const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
 
-  // Mock data structure
-  const organizations = {
-    'acme-corp': {
-      name: 'Acme Corp',
-      organizationalUnits: {
-        'production': {
-          name: 'Production',
-          hosts: [
-            { id: 'web-server-01', name: 'web-server-01', status: 'online', type: 'web' },
-            { id: 'db-server-01', name: 'db-server-01', status: 'online', type: 'database' },
-            { id: 'app-server-01', name: 'app-server-01', status: 'offline', type: 'application' }
-          ]
-        },
-        'development': {
-          name: 'Development',
-          hosts: [
-            { id: 'dev-server-01', name: 'dev-server-01', status: 'online', type: 'development' },
-            { id: 'dev-server-02', name: 'dev-server-02', status: 'offline', type: 'development' }
-          ]
-        },
-        'testing': {
-          name: 'Testing',
-          hosts: [
-            { id: 'test-server-01', name: 'test-server-01', status: 'online', type: 'testing' },
-            { id: 'test-server-02', name: 'test-server-02', status: 'online', type: 'testing' },
-            { id: 'test-server-03', name: 'test-server-03', status: 'offline', type: 'testing' }
-          ]
-        }
-      }
-    }
-  };
+  // State for API data
+  const [currentUser, setCurrentUser] = React.useState<{
+    name: string;
+    email: string;
+    role: string;
+    avatar: string | null;
+  } | null>(null);
+  
+  const [organizations, setOrganizations] = React.useState<Record<string, {
+    name: string;
+    organizationalUnits: Record<string, {
+      name: string;
+      hosts: Array<{
+        id: string;
+        name: string;
+        status: string;
+        type: string;
+      }>;
+    }>;
+  }>>({});
+  
+  const [isLoadingData, setIsLoadingData] = React.useState(true);
 
   React.useEffect(() => {
     // Load sidebar position from localStorage
@@ -135,6 +124,34 @@ export default function Home() {
       // This will be handled by other pages
     };
   }, [hideHeader]);
+
+  // Load API data on component mount
+  React.useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoadingData(true);
+        
+        // Load current user
+        const userResponse = await api.getCurrentUser();
+        if (userResponse.success) {
+          setCurrentUser(userResponse.user);
+        }
+        
+        // Load organizations with units
+        const orgsResponse = await api.getOrganizationsWithUnits();
+        if (orgsResponse.success) {
+          setOrganizations(orgsResponse.organizations);
+        }
+        
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadData();
+  }, [api]);
 
   // Check authentication on component mount
   React.useEffect(() => {
@@ -197,8 +214,8 @@ export default function Home() {
   };
 
   const getSelectedOrganizationalUnit = () => {
-    if (!selectedOrganizationalUnit) return null;
-    return (organizations as any)['acme-corp'].organizationalUnits[selectedOrganizationalUnit];
+    if (!selectedOrganizationalUnit || !organizations['acme-corp']) return null;
+    return organizations['acme-corp'].organizationalUnits[selectedOrganizationalUnit];
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -266,14 +283,16 @@ export default function Home() {
     return createPortal(children, document.body);
   };
 
-  // Show loading state while checking authentication
-  if (isCheckingAuth) {
+  // Show loading state while checking authentication or loading data
+  if (isCheckingAuth || isLoadingData) {
     return (
       <div className="bg-background flex flex-col min-h-screen">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Checking authentication...</p>
+            <p className="text-muted-foreground">
+              {isCheckingAuth ? 'Checking authentication...' : 'Loading data...'}
+            </p>
           </div>
         </div>
       </div>
@@ -283,6 +302,19 @@ export default function Home() {
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return null; // Router will handle redirect
+  }
+
+  // Show error if user data failed to load
+  if (!currentUser) {
+    return (
+      <div className="bg-background flex flex-col min-h-screen">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground">Failed to load user data</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
