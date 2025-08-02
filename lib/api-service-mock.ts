@@ -62,22 +62,45 @@ class MockApiService {
     // Simulate API delay
     await this.delay(1500);
     
-    // Simulate success response
-    const mockResponse = {
-      success: true,
-      organization: {
-        id: `org_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        tenantId: `tenant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: data.name,
-        domain: data.domain,
-        status: 'active',
-        plan: data.selectedPlan,
-        idpConfig: undefined
-      },
-      message: 'Organization registered successfully'
-    };
+    // Generate temporary password
+    const tempPassword = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10).toUpperCase();
+    
+         // Generate organization ID
+     const orgId = `org_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+     const tenantId = `tenant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+     
+     // Simulate success response
+     const mockResponse = {
+       success: true,
+       organization: {
+         id: orgId,
+         tenantId: tenantId,
+         name: data.name,
+         domain: data.domain,
+         status: 'active',
+         plan: data.selectedPlan,
+         idpConfig: data.selectedPlan === 'free' ? {
+           provider: 'built-in',
+           type: 'internal',
+           domain: data.domain
+         } : undefined
+       },
+       credentials: {
+         email: data.contactEmail,
+         tempPassword: tempPassword,
+         loginUrl: typeof window !== 'undefined' ? `${window.location.origin}/login` : 'https://your-domain.com/login',
+         organizationId: orgId
+       },
+       message: 'Organization registered successfully'
+     };
 
-    this.showMockNotification('success', 'Organization registered successfully!');
+    this.showMockNotification('success', 'Organization registered successfully! Check your email for login credentials.');
+    
+    // Simulate email notification
+    setTimeout(() => {
+      this.showMockNotification('info', `Temporary password sent to ${data.contactEmail}`);
+    }, 2000);
+    
     return mockResponse;
   }
 
@@ -175,6 +198,35 @@ class MockApiService {
       this.showMockNotification('error', 'Invalid credentials');
       throw new Error('Invalid credentials');
     }
+  }
+
+  async discoverOpenIDProvider(issuerUrl: string) {
+    console.log('Mock API: discoverOpenIDProvider called with:', issuerUrl);
+    
+    // Simulate API delay
+    await this.delay(1500);
+    
+    // Simulate discovery response
+    const mockDiscovery = {
+      success: true,
+      discovery: {
+        issuer: issuerUrl,
+        authorization_endpoint: `${issuerUrl}/oauth/authorize`,
+        token_endpoint: `${issuerUrl}/oauth/token`,
+        userinfo_endpoint: `${issuerUrl}/oauth/userinfo`,
+        jwks_uri: `${issuerUrl}/oauth/jwks`,
+        response_types_supported: ['code', 'token', 'id_token'],
+        subject_types_supported: ['public'],
+        id_token_signing_alg_values_supported: ['RS256'],
+        scopes_supported: ['openid', 'profile', 'email'],
+        claims_supported: ['sub', 'iss', 'name', 'email', 'picture'],
+        end_session_endpoint: `${issuerUrl}/oauth/logout`
+      },
+      message: 'OpenID Connect discovery completed successfully'
+    };
+
+    this.showMockNotification('success', 'OpenID Connect provider discovered successfully!');
+    return mockDiscovery;
   }
 
   async submitBYOIDSetup(data: {
