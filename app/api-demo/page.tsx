@@ -1,424 +1,224 @@
 'use client';
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ApiStatus } from '@/components/ui/api-status';
-import { DynamicData, DataRenderers } from '@/components/ui/dynamic-data';
-import { useApiContext } from '@/contexts/api-context';
-import { dynamicApiClient } from '@/lib/dynamic-api-client';
-import { appConfig } from '@/lib/app-config';
+import React from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { 
-  Activity, 
-  Server, 
-  Users, 
-  Database, 
-  Settings,
-  Play,
-  Pause,
-  RefreshCw,
-  Globe,
-  Link
-} from 'lucide-react';
+  CheckCircle, 
+  Shield, 
+  User,
+  Building2,
+  ArrowRight,
+  ExternalLink
+} from "lucide-react";
+import { appConfig } from '@/lib/app-config';
 
-export default function ApiDemoPage() {
-  const { state, setConnected, setConnecting, setApiUrl, clearErrors } = useApiContext();
-  const [apiUrlInput, setApiUrlInput] = React.useState(state.apiUrl || '');
-  const [testingConnection, setTestingConnection] = React.useState(false);
-  
-  // Get the effective API URL (user input or default config)
-  const effectiveApiUrl = state.apiUrl || appConfig.endpoints.api;
+export default function APIDemoPage() {
+  const router = useRouter();
+  const [tenantInfo, setTenantInfo] = React.useState<any>(null);
+  const [byoidConfig, setByoidConfig] = React.useState<any>(null);
 
-  // Example API configurations with mock data for demo
-  const apiConfigs = [
-    {
-      endpoint: '/api/system/status',
-      title: 'System Status',
-      refreshInterval: 30000, // 30 seconds
-      render: DataRenderers.status,
-      transform: () => ({ status: 'online', message: 'All systems operational' })
-    },
-    {
-      endpoint: '/api/metrics/performance',
-      title: 'Performance Metrics',
-      refreshInterval: 10000, // 10 seconds
-      render: DataRenderers.metric,
-      transform: () => ({ value: 85, trend: 5.2, unit: '%' })
-    },
-    {
-      endpoint: '/api/hosts/list',
-      title: 'Active Hosts',
-      refreshInterval: 15000, // 15 seconds
-      render: DataRenderers.list,
-      transform: () => [
-        { id: '1', name: 'Web Server 01', status: 'online' },
-        { id: '2', name: 'Database Server', status: 'online' },
-        { id: '3', name: 'Load Balancer', status: 'online' },
-        { id: '4', name: 'Backup Server', status: 'offline' }
-      ]
-    },
-    {
-      endpoint: '/api/activity/feed',
-      title: 'Activity Feed',
-      refreshInterval: 20000, // 20 seconds
-      render: DataRenderers.activity,
-      transform: () => [
-        {
-          id: '1',
-          action: 'User login',
-          timestamp: new Date().toISOString(),
-          user: 'john.doe'
-        },
-        {
-          id: '2',
-          action: 'Configuration updated',
-          timestamp: new Date(Date.now() - 300000).toISOString(),
-          user: 'admin'
-        },
-        {
-          id: '3',
-          action: 'Backup completed',
-          timestamp: new Date(Date.now() - 600000).toISOString(),
-          user: 'system'
-        }
-      ]
-    },
-    {
-      endpoint: '/api/system/info',
-      title: 'System Information',
-      refreshInterval: 60000, // 1 minute
-      render: DataRenderers.keyValue,
-      transform: () => ({
-        version: '2.1.4',
-        uptime: '15 days',
-        cpu: '45%',
-        memory: '2.1GB',
-        disk: '75%',
-        activeConnections: '127'
-      })
-    }
-  ];
-
-  const handleTestConnection = async () => {
-    if (!effectiveApiUrl) {
-      console.error('No API URL configured');
-      return;
-    }
-
-    // Start connecting state
-    setConnecting(true);
-    setTestingConnection(true);
-    
-    try {
-      // Test connection to the configured API
-      const response = await dynamicApiClient.testConnection(effectiveApiUrl, '/health');
-      
-      if (response.success) {
-        // Connection successful
-        setConnected(true);
-        console.log('Connection test successful:', response.data);
-      } else {
-        // Connection failed
-        setConnected(false);
-        console.error('Connection test failed:', response.error);
-      }
-    } catch (error) {
-      // Network error
-      setConnected(false);
-      console.error('Connection test failed:', error);
-    } finally {
-      setTestingConnection(false);
-    }
-  };
-
-  const handleUpdateApiUrl = () => {
-    setApiUrl(apiUrlInput);
-  };
-
-  const handleToggleConnection = () => {
-    if (state.isConnecting) {
-      // If connecting, stop the connection attempt
-      setConnecting(false);
-      setConnected(false);
-    } else if (state.isConnected) {
-      // If connected, disconnect
-      setConnected(false);
-    } else {
-      // If disconnected, start connecting
-      handleTestConnection();
-    }
-  };
-
-  const handleClearErrors = () => {
-    clearErrors();
-  };
-
-  // Test with unavailable endpoint for demo purposes
-  const handleTestUnavailable = async () => {
-    if (!effectiveApiUrl) {
-      console.error('No API URL configured');
-      return;
-    }
-
-    setConnecting(true);
-    
-    try {
-      const response = await dynamicApiClient.get(effectiveApiUrl, '/non-existent-endpoint');
-      setConnected(false);
-    } catch (error) {
-      setConnected(false);
-      console.error('Unavailable endpoint test failed:', error);
-    }
-  };
-
-  // Auto-test connection on page load
   React.useEffect(() => {
-    if (!state.isConnected && !state.isConnecting && effectiveApiUrl) {
-      handleTestConnection();
+    if (typeof window !== "undefined") {
+      const storedTenant = localStorage.getItem("tenantInfo");
+      const storedByoid = localStorage.getItem("byoidSetup");
+      
+      if (storedTenant) {
+        setTenantInfo(JSON.parse(storedTenant));
+      }
+      if (storedByoid) {
+        setByoidConfig(JSON.parse(storedByoid));
+      }
     }
-  }, [effectiveApiUrl]); // Run when effective API URL changes
+  }, []);
+
+  if (!tenantInfo) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading authentication details...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">API Demo Dashboard</h1>
-              <p className="text-muted-foreground">Real-time data from API endpoints</p>
+        <div className="px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+              <span className="text-sm font-bold text-primary">{appConfig.shortName}</span>
             </div>
-            <div className="flex items-center gap-4">
-              <ApiStatus compact />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleTestConnection}
-                disabled={testingConnection}
-              >
-                {testingConnection ? (
-                  <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                ) : (
-                  <Server className="w-4 h-4 mr-2" />
-                )}
-                Test Connection
-              </Button>
+            <div>
+              <h1 className="text-xl font-semibold">{appConfig.name}</h1>
+              <p className="text-xs text-muted-foreground">{appConfig.description}</p>
             </div>
           </div>
         </div>
       </header>
 
-             <div className="container mx-auto px-6 py-8">
-         {/* API Configuration */}
-         <Card className="mb-8">
-           <CardHeader>
-             <CardTitle className="flex items-center gap-2">
-               <Globe className="w-5 h-5" />
-               API Configuration
-             </CardTitle>
-           </CardHeader>
-           <CardContent>
-             <div className="space-y-4">
-               <div className="flex gap-4">
-                 <div className="flex-1">
-                   <Label htmlFor="api-url" className="text-sm font-medium">
-                     External API URL
-                   </Label>
-                   <div className="flex gap-2 mt-1">
-                                           <Input
-                        id="api-url"
-                        type="url"
-                        placeholder={appConfig.endpoints.api}
-                        value={apiUrlInput}
-                        onChange={(e) => setApiUrlInput(e.target.value)}
-                      />
-                     <Button
-                       onClick={handleUpdateApiUrl}
-                       disabled={!apiUrlInput.trim()}
-                       variant={apiUrlInput.trim() ? "default" : "outline"}
-                     >
-                       <Link className="w-4 h-4 mr-2" />
-                       Update URL
-                     </Button>
-                   </div>
-                   <p className="text-xs text-muted-foreground mt-1">
-                     Enter the base URL of your external API (e.g., https://api.example.com)
-                   </p>
-                 </div>
-               </div>
-               
-                                               <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Current API URL:</span>
-                  {effectiveApiUrl ? (
-                    <Badge variant="outline" className="font-mono text-xs">
-                      {effectiveApiUrl}
-                    </Badge>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">Not configured</span>
-                  )}
-                </div>
-             </div>
-           </CardContent>
-         </Card>
-
-         {/* Connection Controls */}
-         <Card className="mb-8">
-           <CardHeader>
-             <CardTitle className="flex items-center gap-2">
-               <Settings className="w-5 h-5" />
-               Connection Controls
-             </CardTitle>
-           </CardHeader>
-           <CardContent>
-             <div className="flex items-center gap-4">
-                               <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">API Connection:</span>
-                  <Badge variant={
-                    state.isConnecting ? 'secondary' :
-                    state.isConnected ? 'default' : 'destructive'
-                  }>
-                    {state.isConnecting ? 'Connecting...' :
-                     state.isConnected ? 'Connected' : 'Disconnected'}
-                  </Badge>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleToggleConnection}
-                  disabled={state.isConnecting || !effectiveApiUrl}
-                >
-                 {state.isConnecting ? (
-                   <>
-                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                     Connecting...
-                   </>
-                 ) : state.isConnected ? (
-                   <>
-                     <Pause className="w-4 h-4 mr-2" />
-                     Disconnect
-                   </>
-                 ) : (
-                   <>
-                     <Play className="w-4 h-4 mr-2" />
-                     Connect
-                   </>
-                 )}
-               </Button>
-               {state.errors.length > 0 && (
-                 <Button
-                   variant="outline"
-                   size="sm"
-                   onClick={handleClearErrors}
-                 >
-                   Clear Errors ({state.errors.length})
-                 </Button>
-               )}
-                               <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleTestUnavailable}
-                  disabled={state.isConnecting || !effectiveApiUrl}
-                >
-                 Test Unavailable
-               </Button>
-             </div>
-           </CardContent>
-         </Card>
-
-        {/* API Status Dashboard */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <ApiStatus showDetails />
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Activity className="w-4 h-4" />
-                Connection Stats
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-                             <div className="flex justify-between">
-                 <span className="text-sm text-muted-foreground">Status</span>
-                 <Badge variant={
-                   state.isConnecting ? 'secondary' :
-                   state.isConnected ? 'default' : 'secondary'
-                 }>
-                   {state.isConnecting ? 'Connecting' :
-                    state.isConnected ? 'Active' : 'Inactive'}
-                 </Badge>
-               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Pending Requests</span>
-                <span className="text-sm font-medium">{state.pendingRequests}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Last Sync</span>
-                <span className="text-sm">
-                  {state.lastSync ? state.lastSync.toLocaleTimeString() : 'Never'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Error Count</span>
-                <span className="text-sm font-medium">{state.errors.length}</span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Database className="w-4 h-4" />
-                API Endpoints
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {apiConfigs.map((config) => (
-                  <div key={config.endpoint} className="flex items-center justify-between">
-                    <span className="text-sm">{config.title}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {config.refreshInterval ? `${config.refreshInterval / 1000}s` : 'Manual'}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Success Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full mb-4">
+            <CheckCircle className="w-8 h-8 text-green-600" />
+          </div>
+          <h1 className="text-3xl font-bold mb-2">Authentication Successful!</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            You have been successfully authenticated through your Identity Provider
+          </p>
         </div>
 
-                 {/* Dynamic Data Grid */}
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                   {apiConfigs.map((config) => (
-              <DynamicData
-                key={config.endpoint}
-                config={config}
-                baseUrl={effectiveApiUrl}
-                showRefreshButton={true}
-              />
-            ))}
-         </div>
-
-        {/* Error Display */}
-        {state.errors.length > 0 && (
-          <Card className="mt-8 border-red-200">
-            <CardHeader>
-              <CardTitle className="text-red-600 flex items-center gap-2">
-                <Activity className="w-4 h-4" />
-                Recent API Errors
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {state.errors.map((error, index) => (
-                  <div key={index} className="text-sm text-red-600 bg-red-50 p-3 rounded">
-                    {error}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Authentication Summary */}
+            <Card className="border-green-200 dark:border-green-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-green-600" />
+                  OpenID Connect Authentication
+                </CardTitle>
+                <CardDescription>
+                  Your authentication flow completed successfully
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <span className="text-sm text-muted-foreground">Organization</span>
+                    <div className="font-medium">{tenantInfo.name}</div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  <div className="space-y-2">
+                    <span className="text-sm text-muted-foreground">Domain</span>
+                    <div className="font-medium">{tenantInfo.domain}</div>
+                  </div>
+                </div>
+                {byoidConfig && (
+                  <div className="space-y-2">
+                    <span className="text-sm text-muted-foreground">Identity Provider</span>
+                    <div className="font-mono text-sm break-all bg-muted p-2 rounded">
+                      {byoidConfig.issuerUrl}
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <CheckCircle className="w-4 h-4" />
+                  Authentication validated and successful
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* What This Means */}
+            <Card>
+              <CardHeader>
+                <CardTitle>What Just Happened?</CardTitle>
+                <CardDescription>
+                  Your OpenID Connect authentication flow
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <ExternalLink className="w-3 h-3 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Redirected to Your IdP</h4>
+                      <p className="text-sm text-muted-foreground">
+                        You were redirected to your Identity Provider for authentication.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <User className="w-3 h-3 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Authenticated Successfully</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Your Identity Provider verified your credentials and returned you to the application.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Shield className="w-3 h-3 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Secure Session Established</h4>
+                      <p className="text-sm text-muted-foreground">
+                        A secure session has been established using OpenID Connect tokens.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* User Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">User Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-1">
+                  <span className="text-sm text-muted-foreground">Organization:</span>
+                  <div className="text-sm font-medium break-words">{tenantInfo.name}</div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-sm text-muted-foreground">Domain:</span>
+                  <div className="text-sm font-medium break-words">{tenantInfo.domain}</div>
+                </div>
+                <Separator />
+                <div className="space-y-1">
+                  <span className="text-sm text-muted-foreground">Status:</span>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                    Authenticated
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button 
+                  onClick={() => router.push('/')} 
+                  className="w-full justify-start"
+                  size="lg"
+                >
+                  <Building2 className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Go to Dashboard</span>
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push('/tenant')}
+                  className="w-full justify-start"
+                  size="lg"
+                >
+                  <Shield className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Sign Out</span>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

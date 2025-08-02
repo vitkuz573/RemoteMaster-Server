@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getOrganizations, addOrganization } from '../organizations/route';
 
 interface BYOIDSetupRequest {
   issuerUrl: string;
@@ -62,6 +63,18 @@ export async function POST(request: NextRequest) {
 
     // Store the request
     byoidRequests.push(byoidRequest);
+
+    // Update the organization with BYOID configuration
+    const organizations = getOrganizations();
+    const orgIndex = organizations.findIndex(org => org.id === body.organizationId);
+    
+    if (orgIndex !== -1) {
+      organizations[orgIndex].byoidConfig = {
+        issuerUrl: body.issuerUrl,
+        clientId: body.clientId,
+        status: 'active'
+      };
+    }
 
     // In a real implementation, you would:
     // 1. Send notification to your support team

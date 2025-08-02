@@ -40,7 +40,8 @@ export async function GET(request: NextRequest) {
         domain: org.domain,
         status: org.status,
         plan: org.selectedPlan,
-        registeredAt: org.registrationTimestamp
+        registeredAt: org.registrationTimestamp,
+        byoidConfig: org.byoidConfig || null
       }))
     });
 

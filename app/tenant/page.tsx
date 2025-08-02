@@ -40,7 +40,8 @@ export default function TenantLoginPage() {
             id: org.id,
             name: org.name,
             domain: org.domain,
-            idp: org.idpConfig?.provider || 'Internal'
+            idp: org.idpConfig?.provider || 'Internal',
+            byoidConfig: org.byoidConfig || null
           }));
           console.log('Loaded organizations:', tenants);
           setKnownTenants(tenants);
@@ -54,7 +55,17 @@ export default function TenantLoginPage() {
   }, []);
 
   // Tenant registry will be fetched from API
-  const [knownTenants, setKnownTenants] = React.useState<Array<{id: string, name: string, domain: string, idp: string}>>([]);
+  const [knownTenants, setKnownTenants] = React.useState<Array<{
+    id: string, 
+    name: string, 
+    domain: string, 
+    idp: string,
+    byoidConfig?: {
+      issuerUrl: string;
+      clientId: string;
+      status: string;
+    } | null
+  }>>([]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -96,15 +107,29 @@ export default function TenantLoginPage() {
           localStorage.setItem("tenantInfo", JSON.stringify(tenant));
         }
 
-        // In a real app, this would redirect to the actual IdP
-        // For demo purposes, we'll redirect to the main app
-        console.log(`Redirecting to ${tenant.idp} for tenant: ${tenant.name}`);
-        
-        // Simulate SSO redirect delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Redirect to main dashboard
-        router.push("/");
+        // Check if organization has BYOID configuration
+        if (tenant.byoidConfig && tenant.byoidConfig.status === 'active') {
+          console.log(`Redirecting to BYOID IdP: ${tenant.byoidConfig.issuerUrl} for tenant: ${tenant.name}`);
+          
+          // In a real implementation, this would redirect to the IdP's authorization endpoint
+          // For demo purposes, we'll show a message and redirect to a demo page
+          alert(`Redirecting to your Identity Provider: ${tenant.byoidConfig.issuerUrl}`);
+          
+          // Simulate SSO redirect delay
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // For demo: redirect to a success page that simulates IdP authentication
+          router.push("/api-demo");
+        } else {
+          // No BYOID configuration, redirect to main app
+          console.log(`No BYOID config found for tenant: ${tenant.name}, redirecting to main app`);
+          
+          // Simulate SSO redirect delay
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Redirect to main dashboard
+          router.push("/");
+        }
         
       } catch (err) {
         setError("Unable to connect to authentication service. Please try again.");
