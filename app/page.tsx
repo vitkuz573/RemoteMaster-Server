@@ -19,6 +19,8 @@ export default function Home() {
   const [notificationCount, setNotificationCount] = React.useState(3);
   const [notificationsOpen, setNotificationsOpen] = React.useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = React.useState(false);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
 
   const [selectedOrganizationalUnit, setSelectedOrganizationalUnit] = React.useState<string | null>(null);
   const [selectedHosts, setSelectedHosts] = React.useState<Set<string>>(new Set());
@@ -123,6 +125,33 @@ export default function Home() {
     }
   }, [isDragging, dragStart]);
 
+  // Check authentication on component mount
+  React.useEffect(() => {
+    const checkAuth = () => {
+      setIsCheckingAuth(true);
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const organizationData = localStorage.getItem('organizationRegistration');
+        
+        if (authToken && organizationData) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+          // Redirect to login if not authenticated
+          router.push('/login');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setIsAuthenticated(false);
+        router.push('/login');
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
   const toggleSidebar = () => {
     setSidebarPosition(prev => prev === 'left' ? 'right' : 'left');
   };
@@ -143,8 +172,11 @@ export default function Home() {
 
   const handleLogout = () => {
     setLogoutModalOpen(false);
-    // Add logout logic here
-    console.log('User logged out');
+    // Clear authentication data
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('organizationRegistration');
+    // Redirect to login
+    router.push('/login');
   };
 
   const handleOrganizationalUnitClick = (unitId: string) => {
@@ -222,6 +254,25 @@ export default function Home() {
     if (typeof window === 'undefined') return null;
     return createPortal(children, document.body);
   };
+
+  // Show loading state while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="bg-background flex flex-col min-h-screen">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Checking authentication...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return null; // Router will handle redirect
+  }
 
   return (
     <div className="bg-background flex flex-col">
