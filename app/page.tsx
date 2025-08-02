@@ -595,7 +595,7 @@ function Sidebar({ onLogoutClick }: { onLogoutClick: () => void }) {
       <nav className="flex flex-col gap-2 flex-1">
         <SidebarLink href="/admin">Tenant Management</SidebarLink>
         <SidebarLink href="/example">Footer Demo</SidebarLink>
-        <SidebarLink href="/api-demo">API Demo</SidebarLink>
+        <SidebarLink href="/mock-info">Mock Info</SidebarLink>
         {/* Add more links here */}
       </nav>
       

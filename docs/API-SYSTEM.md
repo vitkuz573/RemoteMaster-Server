@@ -407,7 +407,7 @@ Wrap components that use API data:
 
 ## Examples
 
-See `app/api-demo/page.tsx` for a complete example of the API system in action.
+See `app/mock-info/page.tsx` for a complete example of the API system in action.
 
 ## Troubleshooting
 

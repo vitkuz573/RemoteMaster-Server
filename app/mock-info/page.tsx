@@ -12,7 +12,10 @@ import {
   AlertTriangle,
   Code,
   Database,
-  Shield
+  Shield,
+  User,
+  Building2,
+  ExternalLink
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useHeader } from '@/contexts/header-context';
@@ -21,14 +24,29 @@ import { API_CONFIG } from '@/lib/api-config';
 export default function MockInfoPage() {
   const router = useRouter();
   const { showHeader } = useHeader();
+  const [tenantInfo, setTenantInfo] = React.useState<any>(null);
+  const [byoidConfig, setByoidConfig] = React.useState<any>(null);
 
   React.useEffect(() => {
     showHeader();
+    
+    // Load authentication data if available
+    if (typeof window !== "undefined") {
+      const storedTenant = localStorage.getItem("tenantInfo");
+      const storedByoid = localStorage.getItem("byoidSetup");
+      
+      if (storedTenant) {
+        setTenantInfo(JSON.parse(storedTenant));
+      }
+      if (storedByoid) {
+        setByoidConfig(JSON.parse(storedByoid));
+      }
+    }
   }, [showHeader]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full mb-4">
@@ -39,6 +57,45 @@ export default function MockInfoPage() {
             This application is currently running with mock API for testing purposes.
           </p>
         </div>
+
+        {/* Authentication Success Section - Show if authenticated */}
+        {tenantInfo && (
+          <Card className="mb-6 border-green-200 dark:border-green-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="w-5 h-5" />
+                Authentication Successful!
+              </CardTitle>
+              <CardDescription>
+                Your OpenID Connect authentication flow completed successfully
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <span className="text-sm text-muted-foreground">Organization</span>
+                  <div className="font-medium">{tenantInfo.name}</div>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-sm text-muted-foreground">Domain</span>
+                  <div className="font-medium">{tenantInfo.domain}</div>
+                </div>
+              </div>
+              {byoidConfig && (
+                <div className="space-y-2">
+                  <span className="text-sm text-muted-foreground">Identity Provider</span>
+                  <div className="font-mono text-sm break-all bg-muted p-2 rounded">
+                    {byoidConfig.issuerUrl}
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <CheckCircle className="w-4 h-4" />
+                Authentication validated and successful
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Mock API Status */}
@@ -142,6 +199,58 @@ export default function MockInfoPage() {
             </CardContent>
           </Card>
 
+          {/* Authentication Flow Explanation */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Authentication Flow
+              </CardTitle>
+              <CardDescription>
+                How the OpenID Connect authentication works
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <ExternalLink className="w-3 h-3 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Redirected to Your IdP</h4>
+                    <p className="text-sm text-muted-foreground">
+                      You were redirected to your Identity Provider for authentication.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <User className="w-3 h-3 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Authenticated Successfully</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Your Identity Provider verified your credentials and returned you to the application.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Shield className="w-3 h-3 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Secure Session Established</h4>
+                    <p className="text-sm text-muted-foreground">
+                      A secure session has been established using OpenID Connect tokens.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Features Testing */}
           <Card>
             <CardHeader>
@@ -196,7 +305,17 @@ export default function MockInfoPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button 
+                onClick={() => router.push('/')} 
+                className="w-full"
+                size="lg"
+              >
+                <Building2 className="w-4 h-4 mr-2" />
+                Go to Dashboard
+              </Button>
+              
+              <Button 
                 onClick={() => router.push('/setup')} 
+                variant="outline"
                 className="w-full"
                 size="lg"
               >

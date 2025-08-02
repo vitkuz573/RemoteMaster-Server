@@ -131,7 +131,7 @@ export default function LoginPage() {
           await new Promise(resolve => setTimeout(resolve, 1000));
           
           // For demo: redirect to a success page that simulates IdP authentication
-          router.push("/api-demo");
+          router.push("/mock-info");
         } else {
           // No BYOID configuration, redirect to main app
           console.log(`No BYOID config found for tenant: ${tenant.name}, redirecting to main app`);
