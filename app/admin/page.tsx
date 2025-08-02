@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RefreshCw, Users, Building2, Globe, Mail, Calendar, Lock, AlertTriangle } from 'lucide-react';
-import { apiService } from '@/lib/api-service';
+import { mockApiService } from '@/lib/api-service-mock';
 import { useHeader } from '@/contexts/header-context';
 
 interface Organization {
@@ -50,7 +50,7 @@ export default function AdminPage() {
 
   const fetchOrganizations = async () => {
     try {
-      const data = await apiService.getOrganizations();
+              const data = await mockApiService.getOrganizations();
       const orgs = (data.organizations || []).map((org: any) => ({
         ...org,
         status: org.status as 'pending' | 'active' | 'suspended',
@@ -59,7 +59,7 @@ export default function AdminPage() {
       setOrganizations(orgs);
       
       if (orgs.length === 0) {
-        apiService.showInfo('No organizations found');
+        mockApiService.showInfo('No organizations found');
       }
     } catch (error) {
       console.error('Error fetching organizations:', error);
@@ -81,7 +81,7 @@ export default function AdminPage() {
       setIsCheckingApi(true);
       try {
         // Try to get organizations to check if API is available
-        await apiService.getOrganizations();
+        await mockApiService.getOrganizations();
         setIsApiAvailable(true);
       } catch (err) {
         console.error('API check failed:', err);

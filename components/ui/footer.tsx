@@ -7,7 +7,7 @@ import { getCachedSystemStatus, type SystemStatus } from '@/lib/system-status';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ExternalLink } from 'lucide-react';
-import { apiService } from '@/lib/api-service';
+import { mockApiService } from '@/lib/api-service-mock';
 
 interface FooterProps {
   /**
@@ -32,7 +32,7 @@ export function Footer({
     const loadStatus = async () => {
       try {
         // Fetch from external API
-        const data = await apiService.getHealth();
+        const data = await mockApiService.getHealth();
         
         if (mounted) {
           setSystemStatus({
@@ -57,7 +57,7 @@ export function Footer({
           setIsLoading(false);
           
           // Show warning notification for system status check failure
-          apiService.showWarning('Unable to check system status. Please check your connection.');
+          mockApiService.showWarning('Unable to check system status. Please check your connection.');
         }
       }
     };

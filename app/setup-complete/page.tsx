@@ -291,7 +291,7 @@ export default function SetupCompletePage() {
                                        {registrationData.selectedPlan !== 'free' && (
                       <Button 
                         variant="outline" 
-                        onClick={() => router.push('/byoid-setup')}
+                        onClick={() => router.push('/setup')}
                         className="w-full justify-start"
                         size="lg"
                       >

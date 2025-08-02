@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
 import { useHeader } from '@/contexts/header-context';
-import { apiService } from '@/lib/api-service';
+import { mockApiService } from '@/lib/api-service-mock';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function LoginPage() {
     const loadOrganizations = async () => {
       setIsCheckingApi(true);
       try {
-        const data = await apiService.getOrganizations();
+        const data = await mockApiService.getOrganizations();
         const organizations = data.organizations || [];
         const tenants = organizations.map((org: any) => ({
           id: org.id,
@@ -174,7 +174,7 @@ export default function LoginPage() {
         }
 
         // Call the external login API
-        const result = await apiService.login({
+        const result = await mockApiService.login({
           email: email.trim(),
           password: password,
           domain: tenantId.trim()
@@ -188,7 +188,7 @@ export default function LoginPage() {
         }
 
         // Show success message
-        apiService.showSuccess(result.message || 'Login successful!');
+        mockApiService.showSuccess(result.message || 'Login successful!');
         
         // Redirect to main dashboard
         router.push("/");
@@ -417,7 +417,7 @@ export default function LoginPage() {
               </p>
               <Button 
                 variant="outline" 
-                onClick={() => router.push('/register')}
+                onClick={() => router.push('/setup')}
                 className="w-full"
                 disabled={isCheckingApi || !isApiAvailable}
                 tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
