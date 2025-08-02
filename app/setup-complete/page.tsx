@@ -19,6 +19,7 @@ import {
   Key
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
+import { useHeader } from '@/contexts/header-context';
 
 interface OrganizationForm {
   name: string;
@@ -44,8 +45,14 @@ interface OrganizationForm {
 
 export default function SetupCompletePage() {
   const router = useRouter();
+  const { showHeader } = useHeader();
   const [registrationData, setRegistrationData] = React.useState<OrganizationForm | null>(null);
   const [copied, setCopied] = React.useState<string | null>(null);
+
+  // Show header on setup-complete page
+  React.useEffect(() => {
+    showHeader();
+  }, [showHeader]);
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -79,20 +86,7 @@ export default function SetupCompletePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-bold text-primary">{appConfig.shortName}</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold">{appConfig.name}</h1>
-              <p className="text-xs text-muted-foreground">{appConfig.description}</p>
-            </div>
-          </div>
-        </div>
-      </header>
+
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="max-w-6xl mx-auto">

@@ -26,6 +26,7 @@ import {
   Zap
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
+import { useHeader } from '@/contexts/header-context';
 import { pricingPlans, calculateMonthlyCost } from '@/lib/pricing-plans';
 import { apiService } from '@/lib/api-service';
 
@@ -45,6 +46,7 @@ interface OrganizationForm {
 
 export default function OrganizationRegistrationPage() {
   const router = useRouter();
+  const { showHeader } = useHeader();
   const [formData, setFormData] = React.useState<OrganizationForm>({
     name: '',
     domain: '',
@@ -84,6 +86,11 @@ export default function OrganizationRegistrationPage() {
     '501-1000 employees',
     '1000+ employees'
   ];
+
+  // Show header on register page
+  React.useEffect(() => {
+    showHeader();
+  }, [showHeader]);
 
   // Check API availability on component mount
   React.useEffect(() => {
@@ -229,20 +236,7 @@ export default function OrganizationRegistrationPage() {
 
   return (
     <div className="bg-gradient-to-br from-background via-background to-muted/30 min-h-screen">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-bold text-primary">{appConfig.shortName}</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold">{appConfig.name}</h1>
-              <p className="text-xs text-muted-foreground">{appConfig.description}</p>
-            </div>
-          </div>
-        </div>
-      </header>
+
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">

@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import Link from 'next/link';
 import { PanelLeftClose, PanelLeftOpen, ArrowLeftRight, Bell, BellOff, ChevronDown, ChevronRight, LogOut, User, Settings, Building2 } from 'lucide-react';
 import { appConfig } from '@/lib/app-config';
+import { useHeader } from '@/contexts/header-context';
 
 export default function Home() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function Home() {
   const [logoutModalOpen, setLogoutModalOpen] = React.useState(false);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
+  const { hideHeader } = useHeader();
 
   const [selectedOrganizationalUnit, setSelectedOrganizationalUnit] = React.useState<string | null>(null);
   const [selectedHosts, setSelectedHosts] = React.useState<Set<string>>(new Set());
@@ -124,6 +126,15 @@ export default function Home() {
       };
     }
   }, [isDragging, dragStart]);
+
+  // Hide header on main dashboard page
+  React.useEffect(() => {
+    hideHeader();
+    return () => {
+      // Show header when leaving this page
+      // This will be handled by other pages
+    };
+  }, [hideHeader]);
 
   // Check authentication on component mount
   React.useEffect(() => {

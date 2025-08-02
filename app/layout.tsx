@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Footer } from "@/components/ui/footer";
 import { FooterProvider } from "@/contexts/footer-context";
+import { ConditionalHeader } from "@/components/ui/conditional-header";
+import { HeaderProvider } from "@/contexts/header-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApiProvider } from "@/contexts/api-context";
 import { Toaster } from "@/components/ui/sonner";
@@ -43,12 +45,15 @@ export default function RootLayout({
       >
         <TooltipProvider>
           <ApiProvider>
-            <FooterProvider>
-              <div className="flex-1">
-                {children}
-              </div>
-              <Footer />
-            </FooterProvider>
+            <HeaderProvider>
+              <FooterProvider>
+                <ConditionalHeader />
+                <div className="flex-1">
+                  {children}
+                </div>
+                <Footer />
+              </FooterProvider>
+            </HeaderProvider>
           </ApiProvider>
         </TooltipProvider>
         <Toaster />

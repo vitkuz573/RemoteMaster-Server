@@ -16,10 +16,12 @@ import {
   ExternalLink
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
+import { useHeader } from '@/contexts/header-context';
 import { apiService } from '@/lib/api-service';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { showHeader } = useHeader();
   const [loginMode, setLoginMode] = React.useState<'sso' | 'credentials'>('sso');
   const [tenantId, setTenantId] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -30,6 +32,11 @@ export default function LoginPage() {
   const [isCheckingApi, setIsCheckingApi] = React.useState(true);
 
   // Application configuration (imported from centralized config)
+
+  // Show header on login page
+  React.useEffect(() => {
+    showHeader();
+  }, [showHeader]);
 
   // Load organizations from external API
   React.useEffect(() => {
@@ -198,21 +205,6 @@ export default function LoginPage() {
 
   return (
     <div className="bg-gradient-to-br from-background via-background to-muted/30">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-bold text-primary">{appConfig.shortName}</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold">{appConfig.name}</h1>
-              <p className="text-xs text-muted-foreground">{appConfig.description}</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-6 py-12">
         <div className="w-full max-w-md space-y-8">
           {/* Welcome Section */}
