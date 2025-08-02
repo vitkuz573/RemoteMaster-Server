@@ -208,7 +208,7 @@ export default function APIDemoPage() {
                 
                 <Button 
                   variant="outline" 
-                  onClick={() => router.push('/tenant')}
+                  onClick={() => router.push('/login')}
                   className="w-full justify-start"
                   size="lg"
                 >

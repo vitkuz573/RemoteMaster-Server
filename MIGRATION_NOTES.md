@@ -11,12 +11,16 @@ All operations on application pages have been migrated from local API endpoints 
 
 ### 2. Updated Pages
 - `app/register/page.tsx` - organization registration
-- `app/tenant/page.tsx` - system login
+- `app/login/page.tsx` - system login (renamed from /tenant)
 - `app/byoid-setup/page.tsx` - BYOID setup
 - `app/admin/page.tsx` - admin panel
 
 ### 3. Updated Components
 - `components/ui/footer.tsx` - system status check
+
+### 4. UI Improvements
+- Fixed text formatting in login page security notice
+- Renamed `/tenant` route to `/login` for better UX
 
 ## API Endpoints
 

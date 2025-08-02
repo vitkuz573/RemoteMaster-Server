@@ -294,7 +294,7 @@ export default function Home() {
                   </div>
             </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/tenant')}>
+                <DropdownMenuItem onClick={() => router.push('/login')}>
                   <Building2 size={16} className="mr-2" />
                   Switch Organization
                 </DropdownMenuItem>

@@ -480,7 +480,7 @@ export default function OrganizationRegistrationPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => router.push('/tenant')}
+                        onClick={() => router.push('/login')}
                         disabled={isLoading}
                       >
                         Back to Login

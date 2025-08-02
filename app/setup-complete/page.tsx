@@ -286,7 +286,7 @@ export default function SetupCompletePage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                                      <Button 
-                     onClick={() => router.push('/tenant')} 
+                     onClick={() => router.push('/login')} 
                      className="w-full justify-start"
                      size="lg"
                    >
@@ -308,7 +308,7 @@ export default function SetupCompletePage() {
                    
                    <Button 
                      variant="outline" 
-                     onClick={() => router.push('/tenant')}
+                     onClick={() => router.push('/login')}
                      className="w-full justify-start"
                      size="lg"
                    >

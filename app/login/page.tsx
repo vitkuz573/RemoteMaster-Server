@@ -18,7 +18,7 @@ import {
 import { appConfig } from '@/lib/app-config';
 import { apiService } from '@/lib/api-service';
 
-export default function TenantLoginPage() {
+export default function LoginPage() {
   const router = useRouter();
   const [loginMode, setLoginMode] = React.useState<'sso' | 'credentials'>('sso');
   const [tenantId, setTenantId] = React.useState("");
