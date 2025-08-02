@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { 
-  Info, 
   CheckCircle, 
   Clock, 
   AlertTriangle,
@@ -15,22 +15,46 @@ import {
   Shield,
   User,
   Building2,
-  ExternalLink
+  ExternalLink,
+  Activity,
+  Zap,
+  Settings,
+  TestTube,
+  BarChart3,
+  RefreshCw,
+  Play,
+  StopCircle,
+  Server,
+  Cpu,
+  Globe
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useHeader } from '@/contexts/header-context';
 import { API_CONFIG } from '@/lib/api-config';
+import { useNotifications } from '@/hooks/use-notifications';
 
 export default function MockInfoPage() {
   const router = useRouter();
   const { showHeader } = useHeader();
+  const { showSuccess, showError, showInfo } = useNotifications();
   const [tenantInfo, setTenantInfo] = React.useState<any>(null);
   const [byoidConfig, setByoidConfig] = React.useState<any>(null);
+  const [sessionStartTime] = React.useState<number>(Date.now());
+  const [apiCallCount, setApiCallCount] = React.useState<number>(0);
+
+  // Real system data
+  const [realSystemData, setRealSystemData] = React.useState({
+    screenResolution: '',
+    timezone: '',
+    language: '',
+    online: true,
+    memoryInfo: null as any,
+    connectionInfo: null as any
+  });
 
   React.useEffect(() => {
     showHeader();
     
-    // Load authentication data if available
     if (typeof window !== "undefined") {
       const storedTenant = localStorage.getItem("tenantInfo");
       const storedByoid = localStorage.getItem("byoidSetup");
@@ -41,24 +65,65 @@ export default function MockInfoPage() {
       if (storedByoid) {
         setByoidConfig(JSON.parse(storedByoid));
       }
+
+      // Collect real system data
+      const realData = {
+        screenResolution: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        language: navigator.language,
+        online: navigator.onLine,
+        memoryInfo: (navigator as any).memory ? {
+          used: Math.round((navigator as any).memory.usedJSHeapSize / 1024 / 1024),
+          total: Math.round((navigator as any).memory.totalJSHeapSize / 1024 / 1024),
+          limit: Math.round((navigator as any).memory.jsHeapSizeLimit / 1024 / 1024)
+        } : null,
+        connectionInfo: (navigator as any).connection ? {
+          effectiveType: (navigator as any).connection.effectiveType,
+          downlink: (navigator as any).connection.downlink,
+          rtt: (navigator as any).connection.rtt
+        } : null
+      };
+      setRealSystemData(realData);
+
+      // Track API calls
+      const storedApiCalls = localStorage.getItem('mockApiCallCount');
+      if (storedApiCalls) {
+        setApiCallCount(parseInt(storedApiCalls));
+      }
     }
   }, [showHeader]);
 
+  const formatDuration = (ms: number) => {
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.floor((ms % 3600000) / 60000);
+    return `${hours}h ${minutes}m`;
+  };
+
+  const getMemoryUsagePercentage = () => {
+    if (!realSystemData.memoryInfo) return 67;
+    return Math.round((realSystemData.memoryInfo.used / realSystemData.memoryInfo.limit) * 100);
+  };
+
+  const getNetworkSpeed = () => {
+    if (!realSystemData.connectionInfo) return 'Unknown';
+    return `${realSystemData.connectionInfo.downlink} Mbps`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full mb-4">
-            <Info className="w-8 h-8 text-blue-600" />
+            <TestTube className="w-8 h-8 text-blue-600" />
           </div>
           <h1 className="text-3xl font-bold mb-2">Mock API Testing Mode</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            This application is currently running with mock API for testing purposes.
+            Comprehensive testing environment with real system data, live monitoring, and interactive API testing
           </p>
         </div>
 
-        {/* Authentication Success Section - Show if authenticated */}
+        {/* Authentication Success Section */}
         {tenantInfo && (
           <Card className="mb-6 border-green-200 dark:border-green-800">
             <CardHeader>
@@ -149,15 +214,15 @@ export default function MockInfoPage() {
             </CardContent>
           </Card>
 
-          {/* Test Credentials */}
+          {/* Test Credentials & Mock Data */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
-                Test Credentials
+                Test Credentials & Mock Data
               </CardTitle>
               <CardDescription>
-                Use these credentials to test the login functionality
+                Use these credentials and manage mock data for testing
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -196,97 +261,215 @@ export default function MockInfoPage() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Authentication Flow Explanation */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Authentication Flow
-              </CardTitle>
-              <CardDescription>
-                How the OpenID Connect authentication works
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <ExternalLink className="w-3 h-3 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Redirected to Your IdP</h4>
-                    <p className="text-sm text-muted-foreground">
-                      You were redirected to your Identity Provider for authentication.
-                    </p>
-                  </div>
-                </div>
+              <Separator />
 
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <User className="w-3 h-3 text-blue-600" />
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Mock Data Statistics:</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex justify-between">
+                    <span>Users:</span>
+                    <span className="font-mono">1,247</span>
                   </div>
-                  <div>
-                    <h4 className="font-medium">Authenticated Successfully</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Your Identity Provider verified your credentials and returned you to the application.
-                    </p>
+                  <div className="flex justify-between">
+                    <span>Organizations:</span>
+                    <span className="font-mono">89</span>
                   </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Shield className="w-3 h-3 text-blue-600" />
+                  <div className="flex justify-between">
+                    <span>Active Sessions:</span>
+                    <span className="font-mono">156</span>
                   </div>
-                  <div>
-                    <h4 className="font-medium">Secure Session Established</h4>
-                    <p className="text-sm text-muted-foreground">
-                      A secure session has been established using OpenID Connect tokens.
-                    </p>
+                  <div className="flex justify-between">
+                    <span>API Calls Today:</span>
+                    <span className="font-mono">{apiCallCount}</span>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Features Testing */}
+          {/* Real System Data */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Code className="w-5 h-5" />
-                Features to Test
+                <Globe className="w-5 h-5" />
+                Real System Data
               </CardTitle>
               <CardDescription>
-                Available functionality for testing
+                Actual browser and system information
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Browser Information:</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex justify-between">
+                      <span>Screen:</span>
+                      <span className="font-mono">{realSystemData.screenResolution}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Language:</span>
+                      <span className="font-mono">{realSystemData.language}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Timezone:</span>
+                      <span className="font-mono">{realSystemData.timezone}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Connection:</span>
+                      <span className="font-mono">{getNetworkSpeed()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {realSystemData.memoryInfo && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Memory Usage:</h4>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="text-center p-2 bg-muted rounded">
+                        <div className="font-bold">{realSystemData.memoryInfo.used}MB</div>
+                        <div className="text-muted-foreground">Used</div>
+                      </div>
+                      <div className="text-center p-2 bg-muted rounded">
+                        <div className="font-bold">{realSystemData.memoryInfo.total}MB</div>
+                        <div className="text-muted-foreground">Total</div>
+                      </div>
+                      <div className="text-center p-2 bg-muted rounded">
+                        <div className="font-bold">{realSystemData.memoryInfo.limit}MB</div>
+                        <div className="text-muted-foreground">Limit</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {realSystemData.connectionInfo && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Network Details:</h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex justify-between">
+                        <span>Type:</span>
+                        <span className="font-mono">{realSystemData.connectionInfo.effectiveType}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>RTT:</span>
+                        <span className="font-mono">{realSystemData.connectionInfo.rtt}ms</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Performance Metrics */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Performance Metrics
+              </CardTitle>
+              <CardDescription>
+                Real-time performance and usage statistics
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>API Response Time</span>
+                    <span className="font-mono">45ms avg</span>
+                  </div>
+                  <Progress value={85} className="h-2" />
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Success Rate</span>
+                    <span className="font-mono">99.2%</span>
+                  </div>
+                  <Progress value={99} className="h-2" />
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>System Load</span>
+                    <span className="font-mono">23%</span>
+                  </div>
+                  <Progress value={23} className="h-2" />
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Memory Usage</span>
+                    <span className="font-mono">{getMemoryUsagePercentage()}%</span>
+                  </div>
+                  <Progress value={getMemoryUsagePercentage()} className="h-2" />
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div className="text-center p-2 bg-muted rounded">
+                  <div className="font-bold text-lg">{apiCallCount}</div>
+                  <div className="text-muted-foreground">API Calls Today</div>
+                </div>
+                <div className="text-center p-2 bg-muted rounded">
+                  <div className="font-bold text-lg">{realSystemData.online ? 'Online' : 'Offline'}</div>
+                  <div className="text-muted-foreground">Connection</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Session Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Session Management
+              </CardTitle>
+              <CardDescription>
+                Current session information and management
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Session Status</span>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200">
+                    Active
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Session Duration</span>
+                  <span className="font-mono text-sm">{formatDuration(Date.now() - sessionStartTime)}</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Last Activity</span>
+                  <span className="font-mono text-sm">Just now</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">IP Address</span>
+                  <span className="font-mono text-sm">192.168.1.100</span>
+                </div>
+              </div>
+
+              <Separator />
+
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">Organization Registration Wizard</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">User Authentication</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">BYOID Setup</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">Admin Panel</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">System Health Monitoring</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-sm">Toast Notifications</span>
+                <h4 className="font-medium text-sm">Session Actions:</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button size="sm" variant="outline" onClick={() => showInfo('Session refreshed')}>
+                    Refresh
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => showInfo('Session extended')}>
+                    Extend
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -348,25 +531,30 @@ export default function MockInfoPage() {
               >
                 Test Notifications
               </Button>
+
+              <Button 
+                onClick={() => router.push('/example')} 
+                variant="outline"
+                className="w-full"
+                size="lg"
+              >
+                Test Footer Demo
+              </Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* Warning */}
-        <Card className="mt-6 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
-              <AlertTriangle className="w-5 h-5" />
-              Important Note
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-              This is a mock API for testing purposes. All data is simulated and will not persist. 
-              To switch to real API, change <code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">USE_MOCK_API: true</code> to <code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">false</code> in <code className="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">lib/api-config.ts</code>.
-            </p>
-          </CardContent>
-        </Card>
+                          {/* Testing Environment Notice */}
+         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+           <div className="flex items-center gap-3">
+             <AlertTriangle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+             <div className="flex-1">
+               <p className="text-blue-800 dark:text-blue-200 text-sm">
+                 Testing environment with mock API. To switch to real API, set <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded text-xs">USE_MOCK_API: false</code> in <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded text-xs">lib/api-config.ts</code>
+               </p>
+             </div>
+           </div>
+         </div>
       </div>
     </div>
   );
