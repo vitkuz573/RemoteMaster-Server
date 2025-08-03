@@ -1,142 +1,192 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Shield, Info } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { 
+  CheckCircle, 
+  Download, 
+  Plus, 
+  AlertTriangle,
+  Building2,
+  Users,
+  CreditCard,
+  Shield
+} from 'lucide-react';
 import { OrganizationForm } from './types';
+import { toast } from 'sonner';
 
 interface CompleteStepProps {
   orgForm: OrganizationForm;
+  onStartNew?: () => void;
 }
 
-export function CompleteStep({ orgForm }: CompleteStepProps) {
-  const router = useRouter();
+export function CompleteStep({ orgForm, onStartNew }: CompleteStepProps) {
+  const handleDownloadInfo = () => {
+    const data = {
+      organization: {
+        name: orgForm.name,
+        domain: orgForm.domain,
+        industry: orgForm.industry,
+        size: orgForm.size,
+        description: orgForm.description,
+        contactName: orgForm.contactName,
+        contactEmail: orgForm.contactEmail,
+        contactPhone: orgForm.contactPhone,
+        address: orgForm.address,
+        expectedUsers: orgForm.expectedUsers,
+        selectedPlan: orgForm.selectedPlan
+      },
+      registrationDate: new Date().toISOString(),
+      note: 'Please save this information as it will not be available again.'
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${orgForm.name}-setup-info.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success('Organization information downloaded successfully!');
+  };
+
+  const handleStartNew = () => {
+    if (onStartNew) {
+      onStartNew();
+    } else {
+      // Fallback: reload the page to start fresh
+      window.location.reload();
+    }
+  };
 
   return (
-    <div className="text-center space-y-8">
-      {/* Success Icon and Title */}
-      <div className="space-y-4">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full">
-          <CheckCircle className="w-10 h-10 text-green-600" />
-        </div>
-        <div>
-          <h3 className="text-3xl font-bold mb-3">Setup Complete!</h3>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Your organization <strong>"{orgForm.name}"</strong> has been successfully configured and is ready to use.
-          </p>
-        </div>
-      </div>
+    <div className="space-y-6">
+      {/* Success Message */}
+      <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+              <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <CardTitle className="text-xl text-green-800 dark:text-green-200">
+                Setup Complete!
+              </CardTitle>
+              <CardDescription className="text-green-700 dark:text-green-300">
+                Your organization has been successfully configured and is ready to use.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
-      {/* Login Credentials Card */}
-      <Card className="max-w-2xl mx-auto border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20">
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl flex items-center justify-center gap-2">
-            <Shield className="w-6 h-6 text-green-600" />
-            Your Login Information
-          </CardTitle>
+      {/* Important Warning */}
+      <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/20">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+              <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+            </div>
+            <div>
+              <CardTitle className="text-lg text-yellow-800 dark:text-yellow-200">
+                Important: Save Your Information
+              </CardTitle>
+              <CardDescription className="text-yellow-700 dark:text-yellow-300">
+                This setup information will not be available again. Please download and save it securely.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={handleDownloadInfo}
+            variant="outline" 
+            className="w-full sm:w-auto border-yellow-300 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-600 dark:text-yellow-300 dark:hover:bg-yellow-900/30"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Setup Information
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Organization Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Organization Summary</CardTitle>
+          <CardDescription>Your configured organization details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="text-left">
-              <span className="text-sm font-medium text-muted-foreground">Login URL</span>
-              <div className="font-mono text-sm bg-background p-3 rounded border mt-1 break-all">
-                {typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/login
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <Building2 className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">{orgForm.name}</p>
+                <p className="text-sm text-muted-foreground">{orgForm.domain}</p>
               </div>
             </div>
-            <div className="text-left">
-              <span className="text-sm font-medium text-muted-foreground">Admin Email</span>
-              <div className="font-mono text-sm bg-background p-3 rounded border mt-1 break-all">
-                {orgForm.contactEmail}
+            <div className="flex items-center gap-3">
+              <Users className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">{orgForm.contactName}</p>
+                <p className="text-sm text-muted-foreground">{orgForm.contactEmail}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <CreditCard className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">Plan: {orgForm.selectedPlan}</p>
+                <p className="text-sm text-muted-foreground">{orgForm.expectedUsers} users</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">Industry</p>
+                <p className="text-sm text-muted-foreground">{orgForm.industry} • {orgForm.size}</p>
               </div>
             </div>
           </div>
-          
-          <div className="text-left">
-            <span className="text-sm font-medium text-muted-foreground">Organization ID (for SSO)</span>
-            <div className="font-mono text-sm bg-background p-3 rounded border mt-1 break-all">
-              {(() => {
-                const registrationData = localStorage.getItem("organizationRegistration");
-                if (registrationData) {
-                  const data = JSON.parse(registrationData);
-                  return data.id || 'Loading...';
-                }
-                return 'Loading...';
-              })()}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Use this ID for SSO configuration and API integrations
-            </p>
-          </div>
-         
-          {(() => {
-            const registrationData = localStorage.getItem("organizationRegistration");
-            if (registrationData) {
-              const data = JSON.parse(registrationData);
-              if (data.credentials?.tempPassword) {
-                return (
-                  <div className="text-left">
-                    <span className="text-sm font-medium text-muted-foreground">Temporary Password</span>
-                    <div className="font-mono text-lg font-bold bg-background p-3 rounded border mt-1 text-green-600 text-center">
-                      {data.credentials.tempPassword}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2 text-center">
-                      Use this password for your first login
-                    </p>
-                  </div>
-                );
-              }
-            }
-            return (
-              <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
-                  <strong>Important:</strong> You will receive an email with your temporary password. 
-                  Please change it after your first login.
-                </p>
-              </div>
-            );
-          })()}
         </CardContent>
       </Card>
 
       {/* Next Steps */}
-      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 max-w-2xl mx-auto">
-        <div className="flex items-start gap-4">
-          <Info className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
-          <div className="text-left">
-            <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-lg mb-3">What's Next?</h4>
-            <ul className="text-blue-700 dark:text-blue-300 space-y-2">
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">1.</span>
-                <span>Check your email for login credentials</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">2.</span>
-                <span>Sign in to your organization dashboard</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">3.</span>
-                <span>Invite team members to your organization</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 font-bold">4.</span>
-                <span>Configure additional security settings</span>
-              </li>
-            </ul>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">What's Next?</CardTitle>
+          <CardDescription>Choose your next action</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Button 
+              onClick={handleStartNew}
+              variant="outline" 
+              className="h-auto p-4 flex flex-col items-center gap-2"
+            >
+              <Plus className="w-6 h-6" />
+              <div className="text-center">
+                <p className="font-medium">Register Another Organization</p>
+                <p className="text-sm text-muted-foreground">Start a new setup process</p>
+              </div>
+            </Button>
+            <Button 
+              onClick={() => window.location.href = '/'}
+              className="h-auto p-4 flex flex-col items-center gap-2"
+            >
+              <CheckCircle className="w-6 h-6" />
+              <div className="text-center">
+                <p className="font-medium">Go to Dashboard</p>
+                <p className="text-sm text-muted-foreground">Access your organization</p>
+              </div>
+            </Button>
           </div>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-        <Button onClick={() => router.push('/login')} size="lg" className="w-full sm:w-auto text-lg px-8 py-6">
-          Sign In Now
-        </Button>
-        <Button variant="outline" onClick={() => router.push('/')} size="lg" className="w-full sm:w-auto text-lg px-8 py-6">
-          Go to Dashboard
-        </Button>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 } 

@@ -68,6 +68,9 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   
   // Debug panel state (only in development)
   const [showDebugPanel, setShowDebugPanel] = React.useState(false);
+  
+  // Confirmation dialog state
+  const [showResetConfirmation, setShowResetConfirmation] = React.useState(false);
 
   // Load API data on component mount
   React.useEffect(() => {
@@ -348,6 +351,25 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     }
   }, [orgForm.selectedPlan, orgForm.expectedUsers, api, setTotalMonthly]);
 
+  const handleStartNew = () => {
+    // Reset all state to start fresh
+    resetSetupWizardState();
+    setCurrentStep('organization');
+    
+    // Show success message
+    toast.success('Starting new organization setup...');
+  };
+
+  const handleReset = () => {
+    setShowResetConfirmation(true);
+  };
+
+  const handleConfirmReset = () => {
+    resetSetupWizardState();
+    setShowResetConfirmation(false);
+    toast.success('Setup wizard has been reset. You can start over.');
+  };
+
   // Check for loading/error states first
   if (isCheckingApi || !isApiAvailable) {
     return (
@@ -453,7 +475,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
                 )}
 
                 {currentStep === 'complete' && (
-                  <CompleteStep orgForm={orgForm} />
+                  <CompleteStep orgForm={orgForm} onStartNew={handleStartNew} />
                 )}
               </motion.div>
             </AnimatePresence>
@@ -465,7 +487,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
           <NavigationButtons
             onBack={handleBack}
             onNext={handleNext}
-            onReset={resetSetupWizardState}
+            onReset={handleReset}
             canGoBack={currentStepIndex > 0}
             canGoNext={validateCurrentStep()}
             isSubmitting={isSubmitting}
@@ -474,6 +496,16 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
           />
         )}
       </div>
+      <ConfirmationDialog
+        isOpen={showResetConfirmation}
+        onClose={() => setShowResetConfirmation(false)}
+        onConfirm={handleConfirmReset}
+        title="Reset Setup Wizard"
+        description="Are you sure you want to reset the setup wizard? This will clear all your current progress and start over from the beginning."
+        confirmText="Reset"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 } 
