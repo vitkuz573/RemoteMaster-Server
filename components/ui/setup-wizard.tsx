@@ -450,143 +450,218 @@ export function SetupWizard() {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            {currentStep === 'organization' && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Organization Name *</Label>
-                    <Input
-                      id="name"
-                      value={orgForm.name}
-                      onChange={(e) => handleOrgInputChange('name', e.target.value)}
-                      placeholder="Acme Corporation"
-                      disabled={isFormDisabled}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="domain">Domain *</Label>
-                    <Input
-                      id="domain"
-                      value={orgForm.domain}
-                      onChange={(e) => handleOrgInputChange('domain', e.target.value)}
-                      placeholder="acme.com"
-                      disabled={isFormDisabled}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="industry">Industry *</Label>
-                    <Select value={orgForm.industry} onValueChange={(value) => handleOrgInputChange('industry', value)} disabled={isFormDisabled}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select industry" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {isLoadingData ? (
-                          <SelectItem value="loading" disabled>Loading industries...</SelectItem>
-                        ) : (
-                          industries.map((industry) => (
-                            <SelectItem key={industry} value={industry}>
-                              {industry}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="size">Company Size *</Label>
-                    <Select value={orgForm.size} onValueChange={(value) => handleOrgInputChange('size', value)} disabled={isFormDisabled}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {isLoadingData ? (
-                          <SelectItem value="loading" disabled>Loading company sizes...</SelectItem>
-                        ) : (
-                          companySizes.map((size) => (
-                            <SelectItem key={size} value={size}>
-                              {size}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                         {currentStep === 'organization' && (
+               <div className="space-y-8">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <div className="space-y-3">
+                     <Label htmlFor="name" className="text-sm font-medium text-foreground">
+                       Organization Name *
+                     </Label>
+                     <div className="relative">
+                       <Input
+                         id="name"
+                         value={orgForm.name}
+                         onChange={(e) => handleOrgInputChange('name', e.target.value)}
+                         placeholder="Acme Corporation"
+                         disabled={isFormDisabled}
+                         className="h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm"
+                       />
+                       {orgForm.name && (
+                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                           <CheckCircle className="w-5 h-5 text-green-500" />
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                   <div className="space-y-3">
+                     <Label htmlFor="domain" className="text-sm font-medium text-foreground">
+                       Domain *
+                     </Label>
+                     <div className="relative">
+                       <Input
+                         id="domain"
+                         value={orgForm.domain}
+                         onChange={(e) => handleOrgInputChange('domain', e.target.value)}
+                         placeholder="acme.com"
+                         disabled={isFormDisabled}
+                         className="h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm"
+                       />
+                       {orgForm.domain && (
+                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                           <CheckCircle className="w-5 h-5 text-green-500" />
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                                     <div className="space-y-3">
+                     <Label htmlFor="industry" className="text-sm font-medium text-foreground">
+                       Industry *
+                     </Label>
+                     <Select value={orgForm.industry} onValueChange={(value) => handleOrgInputChange('industry', value)} disabled={isFormDisabled}>
+                       <SelectTrigger className="h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm">
+                         <SelectValue placeholder="Select industry" />
+                       </SelectTrigger>
+                       <SelectContent className="bg-background/95 backdrop-blur-sm border-2 border-primary/20">
+                         {isLoadingData ? (
+                           <SelectItem value="loading" disabled className="text-muted-foreground">
+                             <div className="flex items-center gap-2">
+                               <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                               Loading industries...
+                             </div>
+                           </SelectItem>
+                         ) : (
+                           industries.map((industry) => (
+                             <SelectItem key={industry} value={industry} className="hover:bg-primary/10">
+                               {industry}
+                             </SelectItem>
+                           ))
+                         )}
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   <div className="space-y-3">
+                     <Label htmlFor="size" className="text-sm font-medium text-foreground">
+                       Company Size *
+                     </Label>
+                     <Select value={orgForm.size} onValueChange={(value) => handleOrgInputChange('size', value)} disabled={isFormDisabled}>
+                       <SelectTrigger className="h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm">
+                         <SelectValue placeholder="Select size" />
+                       </SelectTrigger>
+                       <SelectContent className="bg-background/95 backdrop-blur-sm border-2 border-primary/20">
+                         {isLoadingData ? (
+                           <SelectItem value="loading" disabled className="text-muted-foreground">
+                             <div className="flex items-center gap-2">
+                               <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                               Loading company sizes...
+                             </div>
+                           </SelectItem>
+                         ) : (
+                           companySizes.map((size) => (
+                             <SelectItem key={size} value={size} className="hover:bg-primary/10">
+                               {size}
+                             </SelectItem>
+                           ))
+                         )}
+                       </SelectContent>
+                     </Select>
+                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Organization Description</Label>
-                  <Textarea
-                    id="description"
-                    value={orgForm.description}
-                    onChange={(e) => handleOrgInputChange('description', e.target.value)}
-                    placeholder="Brief description of your organization..."
-                    rows={3}
-                    disabled={isFormDisabled}
-                  />
-                </div>
+                                 <div className="space-y-3">
+                   <Label htmlFor="description" className="text-sm font-medium text-foreground">
+                     Organization Description
+                   </Label>
+                   <Textarea
+                     id="description"
+                     value={orgForm.description}
+                     onChange={(e) => handleOrgInputChange('description', e.target.value)}
+                     placeholder="Brief description of your organization..."
+                     rows={4}
+                     disabled={isFormDisabled}
+                     className="min-h-[120px] px-4 py-3 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm resize-none"
+                   />
+                 </div>
               </div>
             )}
 
-            {currentStep === 'contact' && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contactName">Contact Name *</Label>
-                    <Input
-                      id="contactName"
-                      value={orgForm.contactName}
-                      onChange={(e) => handleOrgInputChange('contactName', e.target.value)}
-                      placeholder="John Doe"
-                      disabled={isFormDisabled}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contactEmail">Contact Email *</Label>
-                    <Input
-                      id="contactEmail"
-                      type="email"
-                      value={orgForm.contactEmail}
-                      onChange={(e) => handleOrgInputChange('contactEmail', e.target.value)}
-                      placeholder="john@acme.com"
-                      disabled={isFormDisabled}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contactPhone">Contact Phone *</Label>
-                    <Input
-                      id="contactPhone"
-                      value={orgForm.contactPhone}
-                      onChange={(e) => handleOrgInputChange('contactPhone', e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                      disabled={isFormDisabled}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expectedUsers">Organization Size (Employees)</Label>
-                    <Input
-                      id="expectedUsers"
-                      type="number"
-                      min="1"
-                      max="10000"
-                      value={orgForm.expectedUsers}
-                      onChange={(e) => handleOrgInputChange('expectedUsers', parseInt(e.target.value) || 10)}
-                      placeholder="10"
-                      disabled={isFormDisabled}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address *</Label>
-                  <Textarea
-                    id="address"
-                    value={orgForm.address}
-                    onChange={(e) => handleOrgInputChange('address', e.target.value)}
-                    placeholder="123 Business St, City, State, ZIP"
-                    rows={2}
-                    disabled={isFormDisabled}
-                  />
-                </div>
-              </div>
-            )}
+                         {currentStep === 'contact' && (
+               <div className="space-y-8">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <div className="space-y-3">
+                     <Label htmlFor="contactName" className="text-sm font-medium text-foreground">
+                       Contact Name *
+                     </Label>
+                     <div className="relative">
+                       <Input
+                         id="contactName"
+                         value={orgForm.contactName}
+                         onChange={(e) => handleOrgInputChange('contactName', e.target.value)}
+                         placeholder="John Doe"
+                         disabled={isFormDisabled}
+                         className="h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm"
+                       />
+                       {orgForm.contactName && (
+                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                           <CheckCircle className="w-5 h-5 text-green-500" />
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                   <div className="space-y-3">
+                     <Label htmlFor="contactEmail" className="text-sm font-medium text-foreground">
+                       Contact Email *
+                     </Label>
+                     <div className="relative">
+                       <Input
+                         id="contactEmail"
+                         type="email"
+                         value={orgForm.contactEmail}
+                         onChange={(e) => handleOrgInputChange('contactEmail', e.target.value)}
+                         placeholder="john@acme.com"
+                         disabled={isFormDisabled}
+                         className="h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm"
+                       />
+                       {orgForm.contactEmail && (
+                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                           <CheckCircle className="w-5 h-5 text-green-500" />
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                   <div className="space-y-3">
+                     <Label htmlFor="contactPhone" className="text-sm font-medium text-foreground">
+                       Contact Phone *
+                     </Label>
+                     <div className="relative">
+                       <Input
+                         id="contactPhone"
+                         value={orgForm.contactPhone}
+                         onChange={(e) => handleOrgInputChange('contactPhone', e.target.value)}
+                         placeholder="+1 (555) 123-4567"
+                         disabled={isFormDisabled}
+                         className="h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm"
+                       />
+                       {orgForm.contactPhone && (
+                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                           <CheckCircle className="w-5 h-5 text-green-500" />
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                   <div className="space-y-3">
+                     <Label htmlFor="expectedUsers" className="text-sm font-medium text-foreground">
+                       Organization Size (Employees)
+                     </Label>
+                     <div className="relative">
+                       <Input
+                         id="expectedUsers"
+                         type="number"
+                         min="1"
+                         max="10000"
+                         value={orgForm.expectedUsers}
+                         onChange={(e) => handleOrgInputChange('expectedUsers', parseInt(e.target.value) || 10)}
+                         placeholder="10"
+                         disabled={isFormDisabled}
+                         className="h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm"
+                       />
+                     </div>
+                   </div>
+                 </div>
+                 <div className="space-y-3">
+                   <Label htmlFor="address" className="text-sm font-medium text-foreground">
+                     Address *
+                   </Label>
+                   <Textarea
+                     id="address"
+                     value={orgForm.address}
+                     onChange={(e) => handleOrgInputChange('address', e.target.value)}
+                     placeholder="123 Business St, City, State, ZIP"
+                     rows={3}
+                     disabled={isFormDisabled}
+                     className="min-h-[100px] px-4 py-3 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm resize-none"
+                   />
+                 </div>
+               </div>
+             )}
 
             {currentStep === 'pricing' && (
               <div className="space-y-6">
