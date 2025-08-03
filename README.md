@@ -1,36 +1,171 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RemoteMaster Server UI
 
-## Getting Started
+A modern React application built with Next.js 15 and shadcn UI, featuring enterprise-grade authentication, organizational management, and host monitoring capabilities.
 
-First, run the development server:
+## 🚀 Features
 
+- **Modern UI/UX** - Built with shadcn UI components for consistent design
+- **Enterprise Authentication** - SSO and credential-based login systems
+- **Organizational Management** - Multi-tenant architecture with organizational units
+- **Host Monitoring** - Real-time status monitoring and management
+- **Responsive Design** - Works seamlessly across all devices
+- **Dark Mode Support** - Built-in theme switching
+- **Accessibility** - WCAG compliant with proper ARIA attributes
+
+## 🛠 Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **UI Components**: shadcn UI (built on Radix UI primitives)
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **State Management**: React Hooks
+- **Type Safety**: TypeScript
+- **Authentication**: Custom SSO implementation
+
+## 📦 Architecture
+
+### Core Components
+- `LoadingSpinner` - Consistent loading states across the application
+- `StatusIndicator` - Status badges with icons for host monitoring
+- `NotificationPanel` - Notification system using shadcn Popover
+- `ModeToggle` - Toggle component for mode switching
+
+### Key Features
+- **Portal-free Popovers** - Using shadcn Popover instead of manual portals
+- **Consistent Loading States** - Reusable LoadingSpinner component
+- **Status Management** - Proper status indicators with badges and icons
+- **Form Handling** - Ready for react-hook-form integration
+- **Error Boundaries** - Proper error handling throughout the app
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd remotemaster-server
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## Learn More
+## 📁 Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+remotemaster-server/
+├── app/                    # Next.js App Router pages
+│   ├── page.tsx           # Main dashboard
+│   ├── login/             # Authentication pages
+│   ├── admin/             # Admin panel
+│   └── layout.tsx         # Root layout
+├── components/
+│   └── ui/                # shadcn UI components
+│       ├── button.tsx
+│       ├── dialog.tsx
+│       ├── popover.tsx
+│       ├── loading-spinner.tsx
+│       ├── status-indicator.tsx
+│       ├── notification-panel.tsx
+│       └── mode-toggle.tsx
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utility functions and configurations
+├── contexts/              # React contexts
+└── public/                # Static assets
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎨 Design System
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project uses shadcn UI as the foundation for all UI components, ensuring:
 
-## Deploy on Vercel
+- **Consistency** - Unified design language across all components
+- **Accessibility** - Built-in ARIA attributes and keyboard navigation
+- **Customization** - Easy theming with Tailwind CSS
+- **Performance** - Optimized bundle size and rendering
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Component Usage
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```typescript
+// Loading states
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+<LoadingSpinner size="lg" text="Loading data..." />
+
+// Status indicators
+import { StatusIndicator } from '@/components/ui/status-indicator';
+<StatusIndicator status="online" showText size="md" />
+
+// Notifications
+import { NotificationPanel } from '@/components/ui/notification-panel';
+<NotificationPanel notifications={notifications} enabled={true} count={3} />
+
+// Mode toggles
+import { ModeToggle } from '@/components/ui/mode-toggle';
+<ModeToggle modes={modes} value={value} onValueChange={handleChange} />
+```
+
+## 🔧 Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+### Code Quality
+
+- **TypeScript** - Full type safety
+- **ESLint** - Code linting and formatting
+- **shadcn UI** - Consistent component patterns
+- **React Best Practices** - Modern React patterns and hooks
+
+## 🚀 Deployment
+
+### Build for Production
+
+```bash
+npm run build
+npm start
+```
+
+### Environment Variables
+
+Create a `.env.local` file with:
+
+```env
+# API Configuration
+NEXT_PUBLIC_API_URL=your-api-url
+NEXT_PUBLIC_USE_MOCK_API=true
+```
+
+## 🤝 Contributing
+
+1. Follow the existing code patterns
+2. Use shadcn UI components for new features
+3. Maintain TypeScript type safety
+4. Add proper error handling
+5. Test accessibility features
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For support and questions, please refer to:
+- [shadcn UI Documentation](https://ui.shadcn.com/)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)

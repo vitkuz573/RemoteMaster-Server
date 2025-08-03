@@ -1,14 +1,16 @@
 'use client';
 
 import React from 'react';
-import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { StatusIndicator } from '@/components/ui/status-indicator';
+import { NotificationPanel } from '@/components/ui/notification-panel';
 import Link from 'next/link';
-import { PanelLeftClose, PanelLeftOpen, ArrowLeftRight, Bell, BellOff, ChevronDown, ChevronRight, LogOut, User, Settings, Building2 } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, ArrowLeftRight, ChevronDown, ChevronRight, LogOut, User, Settings, Building2 } from 'lucide-react';
 import { appConfig } from '@/lib/app-config';
 import { useHeader } from '@/contexts/header-context';
 import { mockApiService } from '@/lib/api-service-mock';
@@ -21,7 +23,6 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [notificationCount, setNotificationCount] = React.useState(3);
-  const [notificationsOpen, setNotificationsOpen] = React.useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = React.useState(false);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
@@ -33,7 +34,6 @@ export default function Home() {
   const [dragStart, setDragStart] = React.useState<{ x: number; y: number } | null>(null);
   const [dragEnd, setDragEnd] = React.useState<{ x: number; y: number } | null>(null);
   const [containerRect, setContainerRect] = React.useState<DOMRect | null>(null);
-  const [notificationButtonRect, setNotificationButtonRect] = React.useState<DOMRect | null>(null);
 
   
   // Application configuration (imported from centralized config)
@@ -78,16 +78,30 @@ export default function Home() {
     localStorage.setItem('sidebarPosition', sidebarPosition);
   }, [sidebarPosition]);
 
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      setNotificationsOpen(false);
-    };
-
-    if (notificationsOpen) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+  // Notification data
+  const notifications = React.useMemo(() => [
+    {
+      id: '1',
+      title: 'System Update',
+      message: 'New version available',
+      time: '2 min ago',
+      type: 'info' as const
+    },
+    {
+      id: '2',
+      title: 'Connection Lost',
+      message: 'Server connection interrupted',
+      time: '5 min ago',
+      type: 'warning' as const
+    },
+    {
+      id: '3',
+      title: 'Task Completed',
+      message: 'Background task finished successfully',
+      time: '10 min ago',
+      type: 'success' as const
     }
-  }, [notificationsOpen]);
+  ], []);
 
   React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -188,13 +202,7 @@ export default function Home() {
     setSidebarOpen(prev => !prev);
   };
 
-  const toggleNotifications = (button?: HTMLElement) => {
-    if (button && !notificationsOpen) {
-      setNotificationButtonRect(button.getBoundingClientRect());
-    }
-    setNotificationsOpen(prev => !prev);
 
-  };
 
 
 
@@ -210,7 +218,6 @@ export default function Home() {
   const handleOrganizationalUnitClick = (unitId: string) => {
     setSelectedOrganizationalUnit(unitId);
     setSelectedHosts(new Set());
-    setNotificationsOpen(false);
   };
 
   const getSelectedOrganizationalUnit = () => {
@@ -278,22 +285,17 @@ export default function Home() {
     setSelectedHosts(new Set());
   };
 
-  const Portal = ({ children }: { children: React.ReactNode }) => {
-    if (typeof window === 'undefined') return null;
-    return createPortal(children, document.body);
-  };
+
 
   // Show loading state while checking authentication or loading data
   if (isCheckingAuth || isLoadingData) {
     return (
       <div className="bg-background flex flex-col min-h-screen">
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              {isCheckingAuth ? 'Checking authentication...' : 'Loading data...'}
-            </p>
-          </div>
+          <LoadingSpinner 
+            size="lg" 
+            text={isCheckingAuth ? 'Checking authentication...' : 'Loading data...'} 
+          />
         </div>
       </div>
     );
@@ -336,23 +338,12 @@ export default function Home() {
             
           <div className="flex items-center gap-2">
             {/* Notifications */}
-            <div className="relative">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleNotifications(e.currentTarget);
-                }}
-              >
-                {notificationsEnabled ? <Bell /> : <BellOff />}
-                {notificationsEnabled && notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </span>
-                )}
-              </Button>
-            </div>
+            <NotificationPanel
+              notifications={notifications}
+              enabled={notificationsEnabled}
+              count={notificationCount}
+              onToggleEnabled={() => setNotificationsEnabled(prev => !prev)}
+            />
             
             {/* User Profile */}
             <DropdownMenu>
@@ -556,65 +547,7 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Portals for panels */}
-      {notificationsOpen && notificationButtonRect && (
-        <Portal>
-          <div 
-            className="fixed w-80 rounded-md border bg-background shadow-lg"
-            style={{
-              top: notificationButtonRect.bottom + 8,
-              right: window.innerWidth - notificationButtonRect.right,
-              zIndex: 999999
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold">Notifications</h3>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setNotificationsEnabled(prev => !prev);
-                  }}
-                  className="h-6 px-2 text-xs"
-                >
-                  {notificationsEnabled ? 'Disable' : 'Enable'}
-                </Button>
-              </div>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {notificationsEnabled ? (
-                  <>
-                    <NotificationItem 
-                      title="System Update" 
-                      message="New version available" 
-                      time="2 min ago"
-                      type="info"
-                    />
-                    <NotificationItem 
-                      title="Connection Lost" 
-                      message="Server connection interrupted" 
-                      time="5 min ago"
-                      type="warning"
-                    />
-                    <NotificationItem 
-                      title="Task Completed" 
-                      message="Background task finished successfully" 
-                      time="10 min ago"
-                      type="success"
-                    />
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Notifications are disabled
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </Portal>
-      )}
+
 
 
     </div>
@@ -696,47 +629,13 @@ function TreeItem({ title, hosts, onClick, isSelected }: {
   );
 }
 
-function NotificationItem({ title, message, time, type }: {
-  title: string;
-  message: string;
-  time: string;
-  type: 'info' | 'warning' | 'success';
-}) {
-  const getTypeStyles = () => {
-    switch (type) {
-      case 'info':
-        return 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20';
-      case 'warning':
-        return 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/20';
-      case 'success':
-        return 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20';
-      default:
-        return 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950/20';
-    }
-  };
 
-  return (
-    <div className={`p-3 rounded-md border ${getTypeStyles()}`}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <h4 className="text-sm font-medium">{title}</h4>
-          <p className="text-xs text-muted-foreground mt-1">{message}</p>
-        </div>
-        <span className="text-xs text-muted-foreground">{time}</span>
-      </div>
-    </div>
-  );
-}
 
 function HostCard({ host, isSelected, onToggle }: {
   host: { id: string; name: string; status: string; type: string };
   isSelected: boolean;
   onToggle: () => void;
 }) {
-  const getStatusColor = (status: string) => {
-    return status === 'online' ? 'bg-green-500' : 'bg-red-500';
-  };
-
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'web': return '🌐';
@@ -766,7 +665,7 @@ function HostCard({ host, isSelected, onToggle }: {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${getStatusColor(host.status)}`} />
+          <StatusIndicator status={host.status} size="sm" />
           <Checkbox
             checked={isSelected}
             onCheckedChange={onToggle}
@@ -775,9 +674,7 @@ function HostCard({ host, isSelected, onToggle }: {
         </div>
       </div>
       <div className="text-xs">
-        <span className={`px-2 py-1 rounded-full ${host.status === 'online' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'}`}>
-          {host.status}
-        </span>
+        <StatusIndicator status={host.status} showText size="sm" />
       </div>
     </div>
   );
