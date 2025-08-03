@@ -372,43 +372,84 @@ export function SetupWizard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Progress Bar */}
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/20 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
+      <div className="absolute top-0 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      
+      <div className="container mx-auto px-4 py-8 max-w-4xl relative z-10">
+        {/* Enhanced Progress Bar */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">Organization Setup Wizard</h1>
-            <Badge variant="outline">Step {currentStepIndex + 1} of {steps.length}</Badge>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Organization Setup Wizard
+              </h1>
+              <p className="text-muted-foreground mt-1">Complete your organization configuration</p>
+            </div>
+            <Badge variant="secondary" className="text-sm px-4 py-2">
+              Step {currentStepIndex + 1} of {steps.length}
+            </Badge>
           </div>
-          <Progress value={progress} className="h-2" />
-                     <div className="flex justify-between mt-2 text-xs sm:text-sm text-muted-foreground">
-             {steps.map((step, index) => (
-               <div key={step.key} className="flex items-center gap-1 sm:gap-2">
-                 <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-xs ${
-                   index <= currentStepIndex 
-                     ? 'bg-primary text-primary-foreground' 
-                     : 'bg-muted text-muted-foreground'
-                 }`}>
-                   {index < currentStepIndex ? <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : index + 1}
-                 </div>
-                 <span className="hidden md:inline">{step.title}</span>
-               </div>
-             ))}
-           </div>
+          
+          {/* Enhanced Progress Bar */}
+          <div className="relative mb-6">
+            <Progress value={progress} className="h-3 bg-muted/50" />
+            <div className="absolute inset-0 h-3 bg-gradient-to-r from-primary/20 to-primary/10 rounded-full" />
+          </div>
+          
+          {/* Enhanced Step Indicators */}
+          <div className="flex justify-between mt-4">
+            {steps.map((step, index) => (
+              <div key={step.key} className="flex flex-col items-center gap-2">
+                <div className={`relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
+                  index <= currentStepIndex 
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' 
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {index < currentStepIndex ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : (
+                    <span>{index + 1}</span>
+                  )}
+                  {index === currentStepIndex && (
+                    <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                  )}
+                </div>
+                <div className="text-center">
+                  <span className={`text-xs font-medium ${
+                    index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'
+                  }`}>
+                    {step.title}
+                  </span>
+                  <p className="text-xs text-muted-foreground mt-1 hidden sm:block">
+                    {step.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Current Step Content */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {steps[currentStepIndex].icon}
-              {steps[currentStepIndex].title}
-            </CardTitle>
-            <CardDescription>
-              {steps[currentStepIndex].description}
-            </CardDescription>
+        {/* Enhanced Current Step Content */}
+        <Card className="mb-6 border-0 shadow-xl bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+          <CardHeader className="pb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                {steps[currentStepIndex].icon}
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-bold">
+                  {steps[currentStepIndex].title}
+                </CardTitle>
+                <CardDescription className="text-base mt-1">
+                  {steps[currentStepIndex].description}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {currentStep === 'organization' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -891,38 +932,38 @@ export function SetupWizard() {
           </CardContent>
         </Card>
 
-                {/* Navigation Buttons */}
+                {/* Enhanced Navigation Buttons */}
         {currentStep !== 'complete' && (
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6">
             <Button
               variant="outline"
               onClick={handleBack}
               disabled={currentStepIndex === 0 || isFormDisabled}
-              className="w-full sm:w-auto order-2 sm:order-1"
+              className="w-full sm:w-auto order-2 sm:order-1 h-12 px-6 text-base font-medium transition-all duration-200 hover:shadow-md"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-5 h-5 mr-2" />
               Back
             </Button>
             
             <Button
               onClick={handleNext}
               disabled={!validateCurrentStep() || isSubmitting || isFormDisabled}
-              className="w-full sm:w-auto order-1 sm:order-2"
+              className="w-full sm:w-auto order-1 sm:order-2 h-12 px-8 text-base font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 hover:shadow-lg hover:shadow-primary/25"
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   Setting up...
                 </>
               ) : currentStep === 'byoid' || (currentStep === 'pricing' && orgForm.selectedPlan === 'free') ? (
                 <>
                   Complete Setup
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               ) : (
                 <>
                   Next
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               )}
             </Button>
