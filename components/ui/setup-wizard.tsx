@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -393,43 +394,75 @@ export function SetupWizard() {
             </Badge>
           </div>
           
-          {/* Enhanced Progress Bar */}
-          <div className="relative mb-6">
-            <Progress value={progress} className="h-3 bg-muted/50" />
-            <div className="absolute inset-0 h-3 bg-gradient-to-r from-primary/20 to-primary/10 rounded-full" />
-          </div>
+                     {/* Enhanced Progress Bar */}
+           <div className="relative mb-6">
+             <Progress value={progress} className="h-3 bg-muted/50" />
+             <motion.div 
+               className="absolute inset-0 h-3 bg-gradient-to-r from-primary/20 to-primary/10 rounded-full"
+               initial={{ scaleX: 0 }}
+               animate={{ scaleX: progress / 100 }}
+               transition={{ duration: 0.8, ease: "easeOut" }}
+               style={{ transformOrigin: "left" }}
+             />
+           </div>
           
-          {/* Enhanced Step Indicators */}
-          <div className="flex justify-between mt-4">
-            {steps.map((step, index) => (
-              <div key={step.key} className="flex flex-col items-center gap-2">
-                <div className={`relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
-                  index <= currentStepIndex 
-                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' 
-                    : 'bg-muted text-muted-foreground'
-                }`}>
-                  {index < currentStepIndex ? (
-                    <CheckCircle className="w-5 h-5" />
-                  ) : (
-                    <span>{index + 1}</span>
-                  )}
-                  {index === currentStepIndex && (
-                    <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
-                  )}
-                </div>
-                <div className="text-center">
-                  <span className={`text-xs font-medium ${
-                    index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'
-                  }`}>
-                    {step.title}
-                  </span>
-                  <p className="text-xs text-muted-foreground mt-1 hidden sm:block">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+                     {/* Enhanced Step Indicators */}
+           <div className="flex justify-between mt-4">
+             {steps.map((step, index) => (
+               <motion.div 
+                 key={step.key} 
+                 className="flex flex-col items-center gap-2"
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ delay: index * 0.1, duration: 0.5 }}
+               >
+                 <motion.div 
+                   className={`relative w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+                     index <= currentStepIndex 
+                       ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' 
+                       : 'bg-muted text-muted-foreground'
+                   }`}
+                   whileHover={{ scale: 1.1 }}
+                   whileTap={{ scale: 0.95 }}
+                   transition={{ duration: 0.2 }}
+                 >
+                   {index < currentStepIndex ? (
+                     <motion.div
+                       initial={{ scale: 0, rotate: -180 }}
+                       animate={{ scale: 1, rotate: 0 }}
+                       transition={{ duration: 0.5, delay: 0.2 }}
+                     >
+                       <CheckCircle className="w-5 h-5" />
+                     </motion.div>
+                   ) : (
+                     <span>{index + 1}</span>
+                   )}
+                   {index === currentStepIndex && (
+                     <motion.div 
+                       className="absolute inset-0 rounded-full bg-primary/20"
+                       animate={{ scale: [1, 1.2, 1] }}
+                       transition={{ duration: 2, repeat: Infinity }}
+                     />
+                   )}
+                 </motion.div>
+                 <motion.div 
+                   className="text-center"
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   transition={{ delay: index * 0.1 + 0.3 }}
+                 >
+                   <span className={`text-xs font-medium ${
+                     index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'
+                   }`}>
+                     {step.title}
+                   </span>
+                   <p className="text-xs text-muted-foreground mt-1 hidden sm:block">
+                     {step.description}
+                   </p>
+                 </motion.div>
+               </motion.div>
+             ))}
+           </div>
         </div>
 
         {/* Enhanced Current Step Content */}
@@ -1007,43 +1040,58 @@ export function SetupWizard() {
           </CardContent>
         </Card>
 
-                {/* Enhanced Navigation Buttons */}
-        {currentStep !== 'complete' && (
-          <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStepIndex === 0 || isFormDisabled}
-              className="w-full sm:w-auto order-2 sm:order-1 h-12 px-6 text-base font-medium transition-all duration-200 hover:shadow-md"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back
-            </Button>
-            
-            <Button
-              onClick={handleNext}
-              disabled={!validateCurrentStep() || isSubmitting || isFormDisabled}
-              className="w-full sm:w-auto order-1 sm:order-2 h-12 px-8 text-base font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 hover:shadow-lg hover:shadow-primary/25"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Setting up...
-                </>
-              ) : currentStep === 'byoid' || (currentStep === 'pricing' && orgForm.selectedPlan === 'free') ? (
-                <>
-                  Complete Setup
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </>
-              ) : (
-                <>
-                  Next
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </>
-              )}
-            </Button>
-          </div>
-        )}
+                                 {/* Enhanced Navigation Buttons */}
+         {currentStep !== 'complete' && (
+           <motion.div 
+             className="flex flex-col sm:flex-row justify-between gap-4 pt-6"
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ delay: 0.5, duration: 0.5 }}
+           >
+             <motion.div
+               whileHover={{ scale: 1.02 }}
+               whileTap={{ scale: 0.98 }}
+             >
+               <Button
+                 variant="outline"
+                 onClick={handleBack}
+                 disabled={currentStepIndex === 0 || isFormDisabled}
+                 className="w-full sm:w-auto order-2 sm:order-1 h-12 px-6 text-base font-medium transition-all duration-200 hover:shadow-md"
+               >
+                 <ArrowLeft className="w-5 h-5 mr-2" />
+                 Back
+               </Button>
+             </motion.div>
+             
+             <motion.div
+               whileHover={{ scale: 1.02 }}
+               whileTap={{ scale: 0.98 }}
+             >
+               <Button
+                 onClick={handleNext}
+                 disabled={!validateCurrentStep() || isSubmitting || isFormDisabled}
+                 className="w-full sm:w-auto order-1 sm:order-2 h-12 px-8 text-base font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 hover:shadow-lg hover:shadow-primary/25"
+               >
+                 {isSubmitting ? (
+                   <>
+                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                     Setting up...
+                   </>
+                 ) : currentStep === 'byoid' || (currentStep === 'pricing' && orgForm.selectedPlan === 'free') ? (
+                   <>
+                     Complete Setup
+                     <ArrowRight className="w-5 h-5 ml-2" />
+                   </>
+                 ) : (
+                   <>
+                     Next
+                     <ArrowRight className="w-5 h-5 ml-2" />
+                   </>
+                 )}
+               </Button>
+             </motion.div>
+           </motion.div>
+         )}
       </div>
     </div>
   );
