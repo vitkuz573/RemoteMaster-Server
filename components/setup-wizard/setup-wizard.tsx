@@ -72,6 +72,9 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   // Confirmation dialog state
   const [showResetConfirmation, setShowResetConfirmation] = React.useState(false);
 
+  // Registration result state
+  const [registrationResult, setRegistrationResult] = React.useState<any>(null);
+
   // Load API data on component mount
   React.useEffect(() => {
     const loadData = async () => {
@@ -155,8 +158,8 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     },
     {
       key: 'complete',
-      title: 'Setup Complete',
-      description: 'Your organization is ready',
+      title: 'All Done!',
+      description: 'Your organization setup is complete',
       icon: <CheckCircle className="w-4 h-4" />
     }
   ];
@@ -296,6 +299,9 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     try {
       // Submit organization registration
       const result = await api.registerOrganization(orgForm);
+
+      // Store registration result for CompleteStep
+      setRegistrationResult(result);
 
       // Save organization data
       if (typeof window !== "undefined") {
@@ -481,7 +487,11 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
                 )}
 
                 {currentStep === 'complete' && (
-                  <CompleteStep orgForm={orgForm} onStartNew={handleStartNew} />
+                  <CompleteStep 
+                    orgForm={orgForm} 
+                    registrationResult={registrationResult}
+                    onStartNew={handleStartNew} 
+                  />
                 )}
               </motion.div>
             </AnimatePresence>

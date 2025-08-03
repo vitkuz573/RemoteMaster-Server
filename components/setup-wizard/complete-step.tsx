@@ -20,12 +20,14 @@ import { toast } from 'sonner';
 
 interface CompleteStepProps {
   orgForm: OrganizationForm;
+  registrationResult?: any;
   onStartNew?: () => void;
 }
 
-export function CompleteStep({ orgForm, onStartNew }: CompleteStepProps) {
+export function CompleteStep({ orgForm, registrationResult, onStartNew }: CompleteStepProps) {
   const handleDownloadInfo = () => {
     const data = {
+      // User provided information
       organization: {
         name: orgForm.name,
         domain: orgForm.domain,
@@ -39,8 +41,23 @@ export function CompleteStep({ orgForm, onStartNew }: CompleteStepProps) {
         expectedUsers: orgForm.expectedUsers,
         selectedPlan: orgForm.selectedPlan
       },
-      registrationDate: new Date().toISOString(),
-      note: 'Please save this information as it will not be available again.'
+      // System generated information
+      system: registrationResult ? {
+        organizationId: registrationResult.organization?.id,
+        organizationKey: registrationResult.organization?.key,
+        apiEndpoint: registrationResult.organization?.apiEndpoint,
+        dashboardUrl: registrationResult.organization?.dashboardUrl,
+        credentials: registrationResult.credentials,
+        byoidConfig: registrationResult.byoidConfig,
+        registrationTimestamp: new Date().toISOString(),
+        status: registrationResult.organization?.status || 'active'
+      } : null,
+      // Metadata
+      metadata: {
+        registrationDate: new Date().toISOString(),
+        version: '1.0',
+        note: 'Please save this information as it will not be available again. This file contains both user-provided and system-generated information needed for accessing your organization.'
+      }
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -98,7 +115,7 @@ export function CompleteStep({ orgForm, onStartNew }: CompleteStepProps) {
                 Important: Save Your Information
               </CardTitle>
               <CardDescription className="text-yellow-700 dark:text-yellow-300">
-                This setup information will not be available again. Please download and save it securely.
+                This setup information includes system-generated credentials and access details that will not be available again. Please download and save it securely.
               </CardDescription>
             </div>
           </div>
@@ -152,6 +169,51 @@ export function CompleteStep({ orgForm, onStartNew }: CompleteStepProps) {
               </div>
             </div>
           </div>
+          
+          {/* System Information */}
+          {registrationResult && (
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="text-sm font-medium text-muted-foreground mb-3">System Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {registrationResult.organization?.id && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <div>
+                      <p className="text-sm font-medium">Organization ID</p>
+                      <p className="text-xs text-muted-foreground font-mono">{registrationResult.organization.id}</p>
+                    </div>
+                  </div>
+                )}
+                {registrationResult.organization?.apiEndpoint && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                    <div>
+                      <p className="text-sm font-medium">API Endpoint</p>
+                      <p className="text-xs text-muted-foreground font-mono">{registrationResult.organization.apiEndpoint}</p>
+                    </div>
+                  </div>
+                )}
+                {registrationResult.credentials && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                    <div>
+                      <p className="text-sm font-medium">Credentials</p>
+                      <p className="text-xs text-muted-foreground">Available in download</p>
+                    </div>
+                  </div>
+                )}
+                {registrationResult.byoidConfig && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                    <div>
+                      <p className="text-sm font-medium">Identity Provider</p>
+                      <p className="text-xs text-muted-foreground">Configured</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
