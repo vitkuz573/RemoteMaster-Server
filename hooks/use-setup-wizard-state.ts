@@ -80,9 +80,11 @@ export const useSetupWizardState = () => {
     loadFromStorage(STORAGE_KEYS.TOTAL_MONTHLY, 0)
   );
 
-  const [registrationResult, setRegistrationResult] = useState<any>(() => 
-    loadFromStorage(STORAGE_KEYS.REGISTRATION_RESULT, null)
-  );
+  const [registrationResult, setRegistrationResult] = useState<any>(() => {
+    const loaded = loadFromStorage(STORAGE_KEYS.REGISTRATION_RESULT, null);
+    console.log('Hook: Loaded registrationResult from localStorage', loaded);
+    return loaded;
+  });
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
@@ -111,20 +113,26 @@ export const useSetupWizardState = () => {
 
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.REGISTRATION_RESULT, registrationResult);
+    console.log('Hook: Saved registrationResult to localStorage', registrationResult);
   }, [registrationResult]);
 
   // Utility function to clear all setup wizard state
   const clearSetupWizardState = useCallback(() => {
     if (typeof window !== 'undefined') {
       try {
-        Object.values(STORAGE_KEYS).forEach(key => {
+        // Don't clear registration result if we're on the complete step
+        const keysToClear = Object.values(STORAGE_KEYS).filter(key => 
+          key !== STORAGE_KEYS.REGISTRATION_RESULT || currentStep !== 'complete'
+        );
+        
+        keysToClear.forEach(key => {
           localStorage.removeItem(key);
         });
       } catch (error) {
         console.warn('Failed to clear localStorage:', error);
       }
     }
-  }, []);
+  }, [currentStep]);
 
   // Utility function to reset to initial state
   const resetSetupWizardState = useCallback(() => {

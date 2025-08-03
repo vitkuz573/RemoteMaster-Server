@@ -301,8 +301,9 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
 
       // Store registration result for CompleteStep
       setRegistrationResult(result);
+      console.log('SetupWizard: Stored registration result', result);
 
-      // Save organization data
+      // Save organization data to separate localStorage key (for backup)
       if (typeof window !== "undefined") {
         const registrationData = {
           ...orgForm,
@@ -323,9 +324,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
 
         localStorage.setItem("organizationRegistration", JSON.stringify(registrationData));
       }
-
-      // Clear setup wizard storage after successful completion
-      clearSetupWizardState();
 
       toast.success('Organization setup completed successfully!');
       setCurrentStep('complete');
