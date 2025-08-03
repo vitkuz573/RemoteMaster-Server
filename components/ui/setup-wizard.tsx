@@ -95,8 +95,8 @@ export function SetupWizard() {
   const [orgForm, setOrgForm] = React.useState<OrganizationForm>({
     name: '',
     domain: '',
-    industry: '',
-    size: '',
+    industry: 'loading',
+    size: 'loading',
     contactName: '',
     contactEmail: '',
     contactPhone: '',
@@ -146,6 +146,17 @@ export function SetupWizard() {
 
     loadData();
   }, [api]);
+
+  // Reset form values when data loads
+  React.useEffect(() => {
+    if (!isLoadingData) {
+      setOrgForm(prev => ({
+        ...prev,
+        industry: prev.industry === 'loading' ? '' : prev.industry,
+        size: prev.size === 'loading' ? '' : prev.size
+      }));
+    }
+  }, [isLoadingData]);
 
   // Show header on setup wizard
   React.useEffect(() => {
@@ -200,20 +211,21 @@ export function SetupWizard() {
 
   const handleDiscoverProvider = async () => {
     if (!byoidForm.issuerUrl.trim()) {
-      mockApiService.showWarning('Please enter an issuer URL first');
+      // Show warning using toast or alert
+      alert('Please enter an issuer URL first');
       return;
     }
 
     setIsDiscovering(true);
     try {
-      const result = await mockApiService.discoverOpenIDProvider(byoidForm.issuerUrl.trim());
+      const result = await api.discoverOpenIDProvider(byoidForm.issuerUrl.trim());
       setByoidForm(prev => ({ 
         ...prev, 
         discoveryData: result.discovery 
       }));
     } catch (error) {
       console.error('Discovery failed:', error);
-      mockApiService.showWarning('Failed to discover OpenID Connect provider. Please check the issuer URL.');
+      alert('Failed to discover OpenID Connect provider. Please check the issuer URL.');
     } finally {
       setIsDiscovering(false);
     }
@@ -225,7 +237,9 @@ export function SetupWizard() {
         return orgForm.name.trim() !== '' && 
                orgForm.domain.trim() !== '' && 
                orgForm.industry !== '' && 
-               orgForm.size !== '';
+               orgForm.industry !== 'loading' && 
+               orgForm.size !== '' && 
+               orgForm.size !== 'loading';
       case 'contact':
         return orgForm.contactName.trim() !== '' && 
                orgForm.contactEmail.trim() !== '' && 
@@ -267,7 +281,7 @@ export function SetupWizard() {
 
     try {
       // Submit organization registration
-      const result = await mockApiService.registerOrganization(orgForm);
+      const result = await api.registerOrganization(orgForm);
 
       // Save organization data
       if (typeof window !== "undefined") {
@@ -291,7 +305,7 @@ export function SetupWizard() {
         localStorage.setItem("organizationRegistration", JSON.stringify(registrationData));
       }
 
-      mockApiService.showSuccess('Organization setup completed successfully!');
+      alert('Organization setup completed successfully!');
       setCurrentStep('complete');
       
     } catch (error) {
@@ -302,8 +316,24 @@ export function SetupWizard() {
   };
 
   const selectedPlan = pricingPlans.find(plan => plan.id === orgForm.selectedPlan) || pricingPlans[0];
-          const costResponse = await api.calculateMonthlyCost(orgForm.selectedPlan, orgForm.expectedUsers);
-        const totalMonthly = costResponse.calculation.totalCost;
+  const [totalMonthly, setTotalMonthly] = React.useState<number>(0);
+
+  // Calculate monthly cost when plan or users change
+  React.useEffect(() => {
+    const calculateCost = async () => {
+      try {
+        const costResponse = await api.calculateMonthlyCost(orgForm.selectedPlan, orgForm.expectedUsers);
+        setTotalMonthly(costResponse.calculation.totalCost);
+      } catch (error) {
+        console.error('Failed to calculate cost:', error);
+        setTotalMonthly(0);
+      }
+    };
+
+    if (orgForm.selectedPlan && orgForm.expectedUsers > 0) {
+      calculateCost();
+    }
+  }, [orgForm.selectedPlan, orgForm.expectedUsers, api]);
 
   // Show loading state while checking API
   if (isCheckingApi) {
@@ -410,7 +440,7 @@ export function SetupWizard() {
                       </SelectTrigger>
                       <SelectContent>
                         {isLoadingData ? (
-                          <SelectItem value="" disabled>Loading industries...</SelectItem>
+                          <SelectItem value="loading" disabled>Loading industries...</SelectItem>
                         ) : (
                           industries.map((industry) => (
                             <SelectItem key={industry} value={industry}>
@@ -429,7 +459,7 @@ export function SetupWizard() {
                       </SelectTrigger>
                       <SelectContent>
                         {isLoadingData ? (
-                          <SelectItem value="" disabled>Loading company sizes...</SelectItem>
+                          <SelectItem value="loading" disabled>Loading company sizes...</SelectItem>
                         ) : (
                           companySizes.map((size) => (
                             <SelectItem key={size} value={size}>

@@ -326,6 +326,30 @@ class ApiService {
       body: JSON.stringify({ planId, expectedUsers }),
     });
   }
+
+  // Discover OpenID Connect provider
+  async discoverOpenIDProvider(issuerUrl: string) {
+    return this.request<{
+      success: boolean;
+      discovery: {
+        issuer: string;
+        authorization_endpoint: string;
+        token_endpoint: string;
+        userinfo_endpoint: string;
+        jwks_uri: string;
+        response_types_supported: string[];
+        subject_types_supported: string[];
+        id_token_signing_alg_values_supported: string[];
+        scopes_supported: string[];
+        claims_supported: string[];
+        end_session_endpoint?: string;
+      };
+      message: string;
+    }>('/auth/discover', {
+      method: 'POST',
+      body: JSON.stringify({ issuerUrl }),
+    });
+  }
 }
 
 // Export singleton instance
