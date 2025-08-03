@@ -13,6 +13,7 @@ import {
 import { useHeader } from '@/contexts/header-context';
 import { useApiAvailability } from '@/hooks/use-api-availability';
 import { useSetupWizardState } from '@/hooks/use-setup-wizard-state';
+import { toast } from 'sonner';
 import { 
   WizardStepConfig,
   SetupWizardProps 
@@ -22,11 +23,13 @@ import { OrganizationStep } from './organization-step';
 import { ContactStep } from './contact-step';
 import { PricingStep } from './pricing-step';
 import { BYOIDStep } from './byoid-step';
+import { ReviewStep } from './review-step';
 import { CompleteStep } from './complete-step';
 import { ProgressIndicator } from './progress-indicator';
 import { NavigationButtons } from './navigation-buttons';
 import { LoadingErrorStates } from './loading-error-states';
 import { DebugPanel } from './debug-panel';
+import { ConfirmationDialog } from './confirmation-dialog';
 
 export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   const { showHeader } = useHeader();
@@ -142,12 +145,27 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       icon: <Shield className="w-4 h-4" />
     }] : []),
     {
+      key: 'review',
+      title: 'Review & Complete',
+      description: 'Review your setup details and complete the process',
+      icon: <CheckCircle className="w-4 h-4" />
+    },
+    {
       key: 'complete',
       title: 'Setup Complete',
       description: 'Your organization is ready',
       icon: <CheckCircle className="w-4 h-4" />
     }
   ];
+
+  // Ensure currentStep is valid
+  React.useEffect(() => {
+    const stepExists = steps.some(step => step.key === currentStep);
+    if (!stepExists) {
+      console.warn('Current step not found in steps array, resetting to first step');
+      setCurrentStep('organization');
+    }
+  }, [currentStep]);
 
   const currentStepIndex = steps.findIndex(step => step.key === currentStep);
 
@@ -161,7 +179,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
 
   const handleDiscoverProvider = async () => {
     if (!byoidForm.issuerUrl.trim()) {
-      alert('Please enter an issuer URL first');
+      toast.error('Please enter an issuer URL first');
       return;
     }
 
@@ -172,9 +190,10 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
         ...prev, 
         discoveryData: result.discovery 
       }));
+      toast.success('OpenID Connect provider discovered successfully!');
     } catch (error) {
       console.error('Discovery failed:', error);
-      alert('Failed to discover OpenID Connect provider. Please check the issuer URL.');
+      toast.error('Failed to discover OpenID Connect provider. Please check the issuer URL.');
     } finally {
       setIsDiscovering(false);
     }
@@ -209,6 +228,8 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
           if (byoidForm.issuerUrl.trim() === '') return false;
           if (byoidForm.discoveryData === undefined) return false;
           return true;
+        case 'review':
+          return true; // Review step is always valid
         default:
           return true;
       }
@@ -220,6 +241,9 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
 
   const handleNext = () => {
     console.log('handleNext called for step:', currentStep);
+    console.log('Current steps:', steps.map(s => s.key));
+    console.log('Selected plan:', orgForm.selectedPlan);
+    
     const isValid = validateCurrentStep();
     console.log('Validation result:', isValid);
     
@@ -228,14 +252,28 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       return;
     }
 
-    if (currentStep === 'byoid' || (currentStep === 'pricing' && orgForm.selectedPlan === 'free')) {
+    if (currentStep === 'review') {
+      // Submit on review step
+      console.log('Submitting from review step');
       handleSubmit();
+    } else if (currentStep === 'pricing') {
+      // Always go to review after pricing, regardless of plan
+      console.log('Moving from pricing to review step');
+      setCurrentStep('review');
+      onStepChange?.('review');
     } else {
+      // Go to next step
       const currentIndex = steps.findIndex(step => step.key === currentStep);
+      console.log('Current step index:', currentIndex);
+      
       const nextStep = steps[currentIndex + 1];
+      console.log('Next step:', nextStep?.key);
+      
       if (nextStep) {
         setCurrentStep(nextStep.key as any);
         onStepChange?.(nextStep.key as any);
+      } else {
+        console.error('No next step found!');
       }
     }
   };
@@ -281,12 +319,13 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       // Clear setup wizard storage after successful completion
       clearSetupWizardState();
 
-      alert('Organization setup completed successfully!');
+      toast.success('Organization setup completed successfully!');
       setCurrentStep('complete');
       onComplete?.();
       
     } catch (error) {
       console.error('Setup error:', error);
+      toast.error('Failed to complete organization setup. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -402,6 +441,17 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
                   />
                 )}
 
+                {currentStep === 'review' && (
+                  <ReviewStep 
+                    orgForm={orgForm} 
+                    byoidForm={byoidForm} 
+                    totalMonthly={totalMonthly}
+                    pricingPlans={pricingPlans}
+                    industries={industries}
+                    companySizes={companySizes}
+                  />
+                )}
+
                 {currentStep === 'complete' && (
                   <CompleteStep orgForm={orgForm} />
                 )}
@@ -420,7 +470,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
             canGoNext={validateCurrentStep()}
             isSubmitting={isSubmitting}
             isFormDisabled={isFormDisabled}
-            isLastStep={currentStep === 'byoid' || (currentStep === 'pricing' && orgForm.selectedPlan === 'free')}
+            isLastStep={currentStep === 'review'}
           />
         )}
       </div>

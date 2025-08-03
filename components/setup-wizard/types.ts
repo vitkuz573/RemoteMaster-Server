@@ -18,7 +18,7 @@ export type BYOIDForm = z.infer<typeof byoidSchema> & {
   };
 };
 
-export type WizardStep = 'organization' | 'contact' | 'pricing' | 'byoid' | 'complete';
+export type WizardStep = 'organization' | 'contact' | 'pricing' | 'byoid' | 'review' | 'complete';
 
 export interface WizardStepConfig {
   key: WizardStep;
