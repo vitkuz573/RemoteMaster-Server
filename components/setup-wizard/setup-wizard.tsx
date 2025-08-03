@@ -12,10 +12,8 @@ import {
 } from "lucide-react";
 import { useHeader } from '@/contexts/header-context';
 import { useApiAvailability } from '@/hooks/use-api-availability';
+import { useSetupWizardState } from '@/hooks/use-setup-wizard-state';
 import { 
-  OrganizationForm, 
-  BYOIDForm, 
-  WizardStep, 
   WizardStepConfig,
   SetupWizardProps 
 } from './types';
@@ -28,6 +26,7 @@ import { CompleteStep } from './complete-step';
 import { ProgressIndicator } from './progress-indicator';
 import { NavigationButtons } from './navigation-buttons';
 import { LoadingErrorStates } from './loading-error-states';
+import { DebugPanel } from './debug-panel';
 
 export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   const { showHeader } = useHeader();
@@ -40,37 +39,32 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     api 
   } = useApiAvailability();
   
+  // Use custom hook for state management with persistence
+  const {
+    currentStep,
+    setCurrentStep,
+    isSubmitting,
+    setIsSubmitting,
+    isDiscovering,
+    setIsDiscovering,
+    orgForm,
+    setOrgForm,
+    byoidForm,
+    setByoidForm,
+    totalMonthly,
+    setTotalMonthly,
+    clearSetupWizardState,
+    resetSetupWizardState
+  } = useSetupWizardState();
+  
   // State for API data
   const [industries, setIndustries] = React.useState<string[]>([]);
   const [companySizes, setCompanySizes] = React.useState<string[]>([]);
   const [pricingPlans, setPricingPlans] = React.useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = React.useState(true);
   
-  const [currentStep, setCurrentStep] = React.useState<WizardStep>('organization');
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isDiscovering, setIsDiscovering] = React.useState(false);
-
-  // Organization form data
-  const [orgForm, setOrgForm] = React.useState<OrganizationForm>({
-    name: '',
-    domain: '',
-    industry: 'loading',
-    size: 'loading',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    address: '',
-    description: '',
-    expectedUsers: 10,
-    selectedPlan: 'free'
-  });
-
-  // BYOID form data
-  const [byoidForm, setByoidForm] = React.useState<BYOIDForm>({
-    issuerUrl: '',
-    clientId: '',
-    clientSecret: ''
-  });
+  // Debug panel state (only in development)
+  const [showDebugPanel, setShowDebugPanel] = React.useState(false);
 
   // Load API data on component mount
   React.useEffect(() => {
@@ -115,7 +109,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
         size: prev.size === 'loading' ? '' : prev.size
       }));
     }
-  }, [isLoadingData]);
+  }, [isLoadingData, setOrgForm]);
 
   // Show header on setup wizard
   React.useEffect(() => {
@@ -142,7 +136,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       icon: <CreditCard className="w-4 h-4" />
     },
     ...(orgForm.selectedPlan !== 'free' ? [{
-      key: 'byoid' as WizardStep,
+      key: 'byoid' as any,
       title: 'Identity Provider',
       description: 'Configure OpenID Connect (Optional)',
       icon: <Shield className="w-4 h-4" />
@@ -157,11 +151,11 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
 
   const currentStepIndex = steps.findIndex(step => step.key === currentStep);
 
-  const handleOrgInputChange = (field: keyof OrganizationForm, value: string | number) => {
+  const handleOrgInputChange = (field: keyof typeof orgForm, value: string | number) => {
     setOrgForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleByoidInputChange = (field: keyof BYOIDForm, value: string) => {
+  const handleByoidInputChange = (field: keyof typeof byoidForm, value: string) => {
     setByoidForm(prev => ({ ...prev, [field]: value }));
   };
 
@@ -240,8 +234,8 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       const currentIndex = steps.findIndex(step => step.key === currentStep);
       const nextStep = steps[currentIndex + 1];
       if (nextStep) {
-        setCurrentStep(nextStep.key);
-        onStepChange?.(nextStep.key);
+        setCurrentStep(nextStep.key as any);
+        onStepChange?.(nextStep.key as any);
       }
     }
   };
@@ -250,8 +244,8 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     const currentIndex = steps.findIndex(step => step.key === currentStep);
     const prevStep = steps[currentIndex - 1];
     if (prevStep) {
-      setCurrentStep(prevStep.key);
-      onStepChange?.(prevStep.key);
+      setCurrentStep(prevStep.key as any);
+      onStepChange?.(prevStep.key as any);
     }
   };
 
@@ -284,6 +278,9 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
         localStorage.setItem("organizationRegistration", JSON.stringify(registrationData));
       }
 
+      // Clear setup wizard storage after successful completion
+      clearSetupWizardState();
+
       alert('Organization setup completed successfully!');
       setCurrentStep('complete');
       onComplete?.();
@@ -294,8 +291,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       setIsSubmitting(false);
     }
   };
-
-  const [totalMonthly, setTotalMonthly] = React.useState<number>(0);
 
   // Calculate monthly cost when plan or users change
   React.useEffect(() => {
@@ -312,7 +307,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     if (orgForm.selectedPlan && orgForm.expectedUsers > 0) {
       calculateCost();
     }
-  }, [orgForm.selectedPlan, orgForm.expectedUsers, api]);
+  }, [orgForm.selectedPlan, orgForm.expectedUsers, api, setTotalMonthly]);
 
   // Check for loading/error states first
   if (isCheckingApi || !isApiAvailable) {
@@ -420,6 +415,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
           <NavigationButtons
             onBack={handleBack}
             onNext={handleNext}
+            onReset={resetSetupWizardState}
             canGoBack={currentStepIndex > 0}
             canGoNext={validateCurrentStep()}
             isSubmitting={isSubmitting}
