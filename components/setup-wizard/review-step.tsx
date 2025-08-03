@@ -40,6 +40,14 @@ export function ReviewStep({
   const selectedIndustry = industries.find(ind => ind === orgForm.industry);
   const selectedSize = companySizes.find(size => size === orgForm.size);
 
+  // Calculate the correct monthly cost based on plan
+  const getMonthlyCost = () => {
+    if (orgForm.selectedPlan === 'free') {
+      return 0;
+    }
+    return totalMonthly;
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -172,7 +180,7 @@ export function ReviewStep({
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-primary">
-                {formatCurrency(totalMonthly)}
+                {formatCurrency(getMonthlyCost())}
               </p>
               <p className="text-sm text-muted-foreground">per month</p>
             </div>
@@ -240,7 +248,7 @@ export function ReviewStep({
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Monthly Cost:</span>
-              <span className="font-bold text-primary">{formatCurrency(totalMonthly)}</span>
+              <span className="font-bold text-primary">{formatCurrency(getMonthlyCost())}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Users:</span>

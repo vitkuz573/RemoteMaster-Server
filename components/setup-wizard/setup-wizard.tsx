@@ -338,6 +338,12 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   React.useEffect(() => {
     const calculateCost = async () => {
       try {
+        // Free plan should always be $0
+        if (orgForm.selectedPlan === 'free') {
+          setTotalMonthly(0);
+          return;
+        }
+        
         const costResponse = await api.calculateMonthlyCost(orgForm.selectedPlan, orgForm.expectedUsers);
         setTotalMonthly(costResponse.calculation.totalCost);
       } catch (error) {
