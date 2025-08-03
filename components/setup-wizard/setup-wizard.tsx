@@ -57,7 +57,9 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     totalMonthly,
     setTotalMonthly,
     clearSetupWizardState,
-    resetSetupWizardState
+    resetSetupWizardState,
+    registrationResult,
+    setRegistrationResult
   } = useSetupWizardState();
   
   // State for API data
@@ -71,9 +73,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   
   // Confirmation dialog state
   const [showResetConfirmation, setShowResetConfirmation] = React.useState(false);
-
-  // Registration result state
-  const [registrationResult, setRegistrationResult] = React.useState<any>(null);
 
   // Load API data on component mount
   React.useEffect(() => {

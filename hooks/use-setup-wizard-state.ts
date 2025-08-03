@@ -8,7 +8,8 @@ const STORAGE_KEYS = {
   BYOID_FORM: 'setup-wizard-byoid-form',
   TOTAL_MONTHLY: 'setup-wizard-total-monthly',
   IS_SUBMITTING: 'setup-wizard-is-submitting',
-  IS_DISCOVERING: 'setup-wizard-is-discovering'
+  IS_DISCOVERING: 'setup-wizard-is-discovering',
+  REGISTRATION_RESULT: 'setup-wizard-registration-result'
 } as const;
 
 // Helper functions for localStorage
@@ -79,6 +80,10 @@ export const useSetupWizardState = () => {
     loadFromStorage(STORAGE_KEYS.TOTAL_MONTHLY, 0)
   );
 
+  const [registrationResult, setRegistrationResult] = useState<any>(() => 
+    loadFromStorage(STORAGE_KEYS.REGISTRATION_RESULT, null)
+  );
+
   // Save state to localStorage whenever it changes
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.CURRENT_STEP, currentStep);
@@ -103,6 +108,10 @@ export const useSetupWizardState = () => {
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.IS_DISCOVERING, isDiscovering);
   }, [isDiscovering]);
+
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.REGISTRATION_RESULT, registrationResult);
+  }, [registrationResult]);
 
   // Utility function to clear all setup wizard state
   const clearSetupWizardState = useCallback(() => {
@@ -141,6 +150,7 @@ export const useSetupWizardState = () => {
       clientSecret: ''
     });
     setTotalMonthly(0);
+    setRegistrationResult(null);
     clearSetupWizardState();
   }, [clearSetupWizardState]);
 
@@ -158,6 +168,8 @@ export const useSetupWizardState = () => {
     setByoidForm,
     totalMonthly,
     setTotalMonthly,
+    registrationResult,
+    setRegistrationResult,
     
     // Utilities
     clearSetupWizardState,
