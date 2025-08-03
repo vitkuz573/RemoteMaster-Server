@@ -244,7 +244,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
         const registrationData = {
           ...orgForm,
           ...result.organization,
-          credentials: result.credentials,
+          credentials: (result as any).credentials,
           registrationTimestamp: new Date().toISOString(),
         };
 
