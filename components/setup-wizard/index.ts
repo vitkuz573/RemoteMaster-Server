@@ -7,4 +7,5 @@ export { CompleteStep } from './complete-step';
 export { ProgressIndicator } from './progress-indicator';
 export { NavigationButtons } from './navigation-buttons';
 export { LoadingErrorStates } from './loading-error-states';
-export * from './types'; 
+export * from './types';
+export * from './validation-schemas'; 

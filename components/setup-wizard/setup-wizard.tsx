@@ -19,6 +19,7 @@ import {
   WizardStepConfig,
   SetupWizardProps 
 } from './types';
+import { organizationSchema, contactSchema, byoidSchema } from './validation-schemas';
 import { OrganizationStep } from './organization-step';
 import { ContactStep } from './contact-step';
 import { PricingStep } from './pricing-step';
@@ -186,30 +187,52 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   };
 
   const validateCurrentStep = (): boolean => {
-    switch (currentStep) {
-      case 'organization':
-        return orgForm.name.trim() !== '' && 
-               orgForm.domain.trim() !== '' && 
-               orgForm.industry !== '' && 
-               orgForm.industry !== 'loading' && 
-               orgForm.size !== '' && 
-               orgForm.size !== 'loading';
-      case 'contact':
-        return orgForm.contactName.trim() !== '' && 
-               orgForm.contactEmail.trim() !== '' && 
-               orgForm.contactPhone.trim() !== '' && 
-               orgForm.address.trim() !== '';
-      case 'pricing':
-        return orgForm.selectedPlan !== '';
-      case 'byoid':
-        return byoidForm.issuerUrl.trim() !== '' && byoidForm.discoveryData !== undefined;
-      default:
-        return true;
+    try {
+      switch (currentStep) {
+        case 'organization':
+          const orgData = {
+            name: orgForm.name,
+            domain: orgForm.domain,
+            industry: orgForm.industry,
+            size: orgForm.size,
+            description: orgForm.description || ''
+          };
+          organizationSchema.parse(orgData);
+          return true;
+        case 'contact':
+          const contactData = {
+            contactName: orgForm.contactName,
+            contactEmail: orgForm.contactEmail,
+            contactPhone: orgForm.contactPhone,
+            address: orgForm.address,
+            expectedUsers: orgForm.expectedUsers
+          };
+          contactSchema.parse(contactData);
+          return true;
+        case 'pricing':
+          return orgForm.selectedPlan !== '';
+        case 'byoid':
+          if (byoidForm.issuerUrl.trim() === '') return false;
+          if (byoidForm.discoveryData === undefined) return false;
+          return true;
+        default:
+          return true;
+      }
+    } catch (error) {
+      console.log('Validation error:', error);
+      return false;
     }
   };
 
   const handleNext = () => {
-    if (!validateCurrentStep()) return;
+    console.log('handleNext called for step:', currentStep);
+    const isValid = validateCurrentStep();
+    console.log('Validation result:', isValid);
+    
+    if (!isValid) {
+      console.log('Validation failed, cannot proceed');
+      return;
+    }
 
     if (currentStep === 'byoid' || (currentStep === 'pricing' && orgForm.selectedPlan === 'free')) {
       handleSubmit();

@@ -1,21 +1,8 @@
-export interface OrganizationForm {
-  name: string;
-  domain: string;
-  industry: string;
-  size: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  address: string;
-  description: string;
-  expectedUsers: number;
-  selectedPlan: string;
-}
+import { z } from 'zod';
+import { organizationFormSchema, byoidSchema } from './validation-schemas';
 
-export interface BYOIDForm {
-  issuerUrl: string;
-  clientId: string;
-  clientSecret: string;
+export type OrganizationForm = z.infer<typeof organizationFormSchema>;
+export type BYOIDForm = z.infer<typeof byoidSchema> & {
   discoveryData?: {
     issuer: string;
     authorization_endpoint: string;
@@ -29,7 +16,7 @@ export interface BYOIDForm {
     claims_supported: string[];
     end_session_endpoint?: string;
   };
-}
+};
 
 export type WizardStep = 'organization' | 'contact' | 'pricing' | 'byoid' | 'complete';
 
@@ -43,4 +30,12 @@ export interface WizardStepConfig {
 export interface SetupWizardProps {
   onStepChange?: (step: WizardStep) => void;
   onComplete?: () => void;
+}
+
+// Form validation types
+export interface FormValidationProps {
+  form: any;
+  onFormChange: (field: string, value: any) => void;
+  errors: Record<string, any>;
+  isFormDisabled: boolean;
 } 
