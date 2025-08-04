@@ -1,19 +1,19 @@
 import { http, HttpResponse, delay } from 'msw'
+import { faker } from '@faker-js/faker'
 import { 
   generateMockOrganizations, 
   generateMockUser, 
+  generateMockUsers,
   generateMockOrganizationalUnits,
   generateMockPricingPlans,
-  generateConsistentMockData,
   type MockOrganization,
   type MockUser
 } from './faker-utils'
 
 // Generate consistent mock data for the session
-const mockData = generateConsistentMockData();
-let mockOrganizations = mockData.organizations;
-let mockUsers = mockData.users;
-let mockUnits = mockData.units;
+let mockOrganizations = generateMockOrganizations(3);
+let mockUsers = mockOrganizations.flatMap(org => generateMockUsers(org.id, 5));
+let mockUnits = mockOrganizations.flatMap(org => generateMockOrganizationalUnits(3));
 
 const mockPricingPlans = generateMockPricingPlans();
 
@@ -56,6 +56,7 @@ export const handlers = [
 
   // Organizations
   http.get('http://localhost:3001/organizations', async ({ request }) => {
+    console.log('🎯 MSW: Intercepted GET /organizations')
     await delay(200)
     const url = new URL(request.url)
     const domain = url.searchParams.get('domain')
@@ -71,10 +72,21 @@ export const handlers = [
       organizations = organizations.filter(org => org.id === id)
     }
     
+    console.log('🎯 MSW: Returning organizations:', organizations)
+    
+    // Map companySize to size for frontend compatibility
+    const mappedOrganizations = organizations.map(org => ({
+      ...org,
+      size: org.companySize,
+      contactName: org.contactEmail ? org.contactEmail.split('@')[0] : undefined
+    }));
+
+    console.log('🎯 MSW: Returning organizations:', mappedOrganizations)
+    
     return HttpResponse.json({
       success: true,
-      organizations,
-      total: organizations.length,
+      organizations: mappedOrganizations,
+      total: mappedOrganizations.length,
       message: 'Organizations retrieved successfully'
     })
   }),
@@ -96,8 +108,14 @@ export const handlers = [
       status: 'active',
       plan: data.selectedPlan,
       registeredAt: new Date().toISOString(),
-      industry: data.industry,
-      companySize: data.companySize,
+      industry: data.industry || faker.helpers.arrayElement([
+        'Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing',
+        'Retail', 'Consulting', 'Government', 'Non-profit', 'Other'
+      ]),
+      companySize: data.companySize || faker.helpers.arrayElement([
+        '1-10 employees', '11-50 employees', '51-200 employees',
+        '201-500 employees', '501-1000 employees', '1000+ employees'
+      ]),
       contactEmail: data.contactEmail,
       address: data.address
     }

@@ -9,7 +9,7 @@ export interface MockOrganization {
   plan: 'free' | 'pro' | 'enterprise';
   registeredAt: string;
   industry?: string;
-  companySize?: string;
+  companySize: string;
   contactEmail?: string;
   address?: {
     street: string;
@@ -107,7 +107,7 @@ export const generateMockUser = (organizationId: string): MockUser => {
     name: `${firstName} ${lastName}`,
     email: faker.internet.email({ firstName, lastName }),
     role: faker.helpers.arrayElement(['admin', 'user', 'manager']),
-    avatar: faker.helpers.maybe(() => faker.image.avatar(), { probability: 0.7 }),
+    avatar: faker.helpers.maybe(() => faker.image.avatar(), { probability: 0.7 }) || null,
     organizationId,
     lastLogin: faker.helpers.maybe(() => faker.date.recent({ days: 30 }).toISOString()),
     isActive: faker.datatype.boolean({ probability: 0.9 })
@@ -145,9 +145,9 @@ export const generateMockHost = (): MockHost => {
     ipAddress: faker.internet.ip(),
     os: faker.helpers.arrayElement(['Ubuntu 22.04', 'CentOS 8', 'Windows Server 2022', 'Debian 11', 'RHEL 9']),
     lastSeen: faker.date.recent({ days: 7 }).toISOString(),
-    cpuUsage: faker.number.float({ min: 5, max: 95, precision: 0.1 }),
-    memoryUsage: faker.number.float({ min: 10, max: 90, precision: 0.1 }),
-    diskUsage: faker.number.float({ min: 20, max: 85, precision: 0.1 })
+    cpuUsage: faker.number.float({ min: 5, max: 95, fractionDigits: 1 }),
+    memoryUsage: faker.number.float({ min: 10, max: 90, fractionDigits: 1 }),
+    diskUsage: faker.number.float({ min: 20, max: 85, fractionDigits: 1 })
   };
 };
 
