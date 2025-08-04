@@ -1,30 +1,30 @@
 import { faker } from '@faker-js/faker';
 
 // Constants for consistent data generation
-const STATUS_WEIGHTS = {
+export const STATUS_WEIGHTS = {
   online: 0.7,
   offline: 0.15,
   maintenance: 0.1,
   error: 0.05
 } as const;
 
-const ORGANIZATION_STATUS_WEIGHTS = {
+export const ORGANIZATION_STATUS_WEIGHTS = {
   active: 0.8,
   inactive: 0.15,
   suspended: 0.05
 } as const;
 
-const HOST_TYPES = ['web', 'database', 'application', 'development', 'staging', 'production'] as const;
-const OPERATING_SYSTEMS = ['Ubuntu 22.04', 'CentOS 8', 'Windows Server 2022', 'Debian 11', 'RHEL 9'] as const;
-const UNIT_TYPES = [
+export const HOST_TYPES = ['web', 'database', 'application', 'development', 'staging', 'production'] as const;
+export const OPERATING_SYSTEMS = ['Ubuntu 22.04', 'CentOS 8', 'Windows Server 2022', 'Debian 11', 'RHEL 9'] as const;
+export const UNIT_TYPES = [
   'Production', 'Development', 'Staging', 'Testing', 'QA', 'UAT',
   'Marketing', 'Sales', 'Support', 'Engineering', 'Operations'
 ] as const;
-const INDUSTRIES = [
+export const INDUSTRIES = [
   'Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing',
   'Retail', 'Consulting', 'Government', 'Non-profit', 'Other'
 ] as const;
-const ORGANIZATION_SIZES = [
+export const ORGANIZATION_SIZES = [
   '1-10 employees', '11-50 employees', '51-200 employees',
   '201-500 employees', '501-1000 employees', '1000+ employees'
 ] as const;

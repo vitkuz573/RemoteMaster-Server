@@ -7,7 +7,9 @@ import {
   generateMockOrganizationalUnits,
   generateMockPricingPlans,
   type MockOrganization,
-  type MockUser
+  type MockUser,
+  INDUSTRIES,
+  ORGANIZATION_SIZES
 } from './faker-utils'
 
 // Generate consistent mock data for the session
@@ -16,16 +18,6 @@ let mockUsers = mockOrganizations.flatMap(org => generateMockUsers(org.id, 5));
 let mockUnits = mockOrganizations.flatMap(org => generateMockOrganizationalUnits(3));
 
 const mockPricingPlans = generateMockPricingPlans();
-
-const mockIndustries = [
-  'Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing',
-  'Retail', 'Consulting', 'Government', 'Non-profit', 'Other'
-]
-
-const mockOrganizationSizes = [
-  '1-10 employees', '11-50 employees', '51-200 employees',
-  '201-500 employees', '501-1000 employees', '1000+ employees'
-]
 
 // Helper functions
 const generateId = (prefix: string = 'id') => 
@@ -95,14 +87,8 @@ export const handlers = [
       status: 'active',
       plan: data.selectedPlan,
       registeredAt: new Date().toISOString(),
-      industry: data.industry || faker.helpers.arrayElement([
-        'Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing',
-        'Retail', 'Consulting', 'Government', 'Non-profit', 'Other'
-      ]),
-      size: data.size || faker.helpers.arrayElement([
-        '1-10 employees', '11-50 employees', '51-200 employees',
-        '201-500 employees', '501-1000 employees', '1000+ employees'
-      ]),
+      industry: data.industry || faker.helpers.arrayElement(INDUSTRIES),
+      size: data.size || faker.helpers.arrayElement(ORGANIZATION_SIZES),
       contactName: data.contactName,
       contactEmail: data.contactEmail,
       address: data.address
@@ -235,7 +221,7 @@ export const handlers = [
     await delay(50)
     return HttpResponse.json({
       success: true,
-      industries: mockIndustries,
+      industries: INDUSTRIES,
       message: 'Industries retrieved successfully'
     })
   }),
@@ -244,7 +230,7 @@ export const handlers = [
     await delay(50) 
     return HttpResponse.json({
       success: true,
-      companySizes: mockOrganizationSizes,
+      companySizes: ORGANIZATION_SIZES,
       message: 'Company sizes retrieved successfully'
     })
   }),
