@@ -28,7 +28,6 @@ import { CompleteStep } from './complete-step';
 import { ProgressIndicator } from './progress-indicator';
 import { NavigationButtons } from './navigation-buttons';
 import { LoadingErrorStates } from './loading-error-states';
-import { DebugPanel } from './debug-panel';
 import { ConfirmationDialog } from './confirmation-dialog';
 import { 
   ApiProvider, 
@@ -67,16 +66,21 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     setRegistrationResult
   } = useSetupWizardState();
   
-  // Debug panel state (only in development)
-  const [showDebugPanel, setShowDebugPanel] = React.useState(false);
-  
   // Confirmation dialog state
   const [showResetConfirmation, setShowResetConfirmation] = React.useState(false);
+
+  // Client-side hydration state
+  const [isClient, setIsClient] = React.useState(false);
 
   // Show header on setup wizard
   React.useEffect(() => {
     showHeader();
   }, [showHeader]);
+
+  // Set client-side flag
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const steps: WizardStepConfig[] = [
     {
@@ -126,7 +130,8 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     }
   }, [currentStep]);
 
-  const currentStepIndex = steps.findIndex(step => step.key === currentStep);
+  // Calculate currentStepIndex only on client side to prevent hydration mismatch
+  const currentStepIndex = isClient ? steps.findIndex(step => step.key === currentStep) : 0;
 
   const handleOrgInputChange = (field: keyof typeof orgForm, value: string | number) => {
     setOrgForm(prev => ({ ...prev, [field]: value }));
@@ -253,7 +258,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       console.log('SetupWizard: Stored registration result', result);
 
       // Save organization data to separate localStorage key (for backup)
-      if (typeof window !== "undefined") {
+      if (isClient && typeof window !== "undefined") {
         const registrationData = {
           ...orgForm,
           ...result.organization,
@@ -355,6 +360,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
             steps={steps}
             currentStep={currentStep}
             currentStepIndex={currentStepIndex}
+            isLoading={!isClient}
           />
 
           {/* Enhanced Current Step Content */}

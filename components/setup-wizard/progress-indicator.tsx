@@ -11,14 +11,32 @@ interface ProgressIndicatorProps {
   steps: WizardStepConfig[];
   currentStep: WizardStep;
   currentStepIndex: number;
+  isLoading?: boolean;
 }
 
 export function ProgressIndicator({
   steps,
   currentStep,
-  currentStepIndex
+  currentStepIndex,
+  isLoading = false
 }: ProgressIndicatorProps) {
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
+
+  // Show skeleton during loading to prevent hydration mismatch
+  if (isLoading) {
+    return (
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="h-8 w-64 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-48 bg-muted rounded animate-pulse mt-1" />
+          </div>
+          <div className="h-6 w-20 bg-muted rounded animate-pulse" />
+        </div>
+        <div className="h-3 bg-muted rounded animate-pulse mb-6" />
+      </div>
+    );
+  }
 
   return (
     <div className="mb-8">

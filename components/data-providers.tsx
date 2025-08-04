@@ -135,8 +135,10 @@ function fetchOrganizationsList(api: typeof apiService | typeof mockApiService):
   }
 
   const promise = api.getOrganizations().then(response => {
-    if (response.success) {
-      return (response.organizations || []).map((org: any) => ({
+    // Handle both API service (no success property) and mock service (has success property)
+    const organizations = 'success' in response ? response.organizations : response.organizations;
+    if (organizations) {
+      return (organizations || []).map((org: any) => ({
         ...org,
         status: org.status as 'pending' | 'active' | 'suspended',
         createdAt: org.registeredAt || org.createdAt
