@@ -215,13 +215,8 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       // Submit on review step
       console.log('Submitting from review step');
       handleSubmit();
-    } else if (currentStep === 'pricing') {
-      // Always go to review after pricing, regardless of plan
-      console.log('Moving from pricing to review step');
-      setCurrentStep('review');
-      onStepChange?.('review');
     } else {
-      // Go to next step
+      // Go to next step based on configured steps array
       const currentIndex = steps.findIndex(step => step.key === currentStep);
       console.log('Current step index:', currentIndex);
       
