@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,6 +16,11 @@ import { useHeader } from '@/contexts/header-context';
 import { mockApiService } from '@/lib/api-service-mock';
 import { apiService } from '@/lib/api-service';
 import { API_CONFIG } from '@/lib/api-config';
+import { 
+  ApiProvider, 
+  HomePageDataProvider, 
+  HomePageDataLoading 
+} from '@/components/data-providers';
 
 export default function Home() {
   const router = useRouter();
@@ -35,35 +40,8 @@ export default function Home() {
   const [dragEnd, setDragEnd] = React.useState<{ x: number; y: number } | null>(null);
   const [containerRect, setContainerRect] = React.useState<DOMRect | null>(null);
 
-  
-  // Application configuration (imported from centralized config)
-  // Note: Import moved to top of file
-
   // API service instance based on configuration
   const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
-
-  // State for API data
-  const [currentUser, setCurrentUser] = React.useState<{
-    name: string;
-    email: string;
-    role: string;
-    avatar: string | null;
-  } | null>(null);
-  
-  const [organizations, setOrganizations] = React.useState<Record<string, {
-    name: string;
-    organizationalUnits: Record<string, {
-      name: string;
-      hosts: Array<{
-        id: string;
-        name: string;
-        status: string;
-        type: string;
-      }>;
-    }>;
-  }>>({});
-  
-  const [isLoadingData, setIsLoadingData] = React.useState(true);
 
   React.useEffect(() => {
     // Load sidebar position from localStorage
@@ -103,23 +81,24 @@ export default function Home() {
     }
   ], []);
 
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging && dragStart && containerRect) {
+      const currentX = e.clientX - containerRect.left;
+      const currentY = e.clientY - containerRect.top;
+      setDragEnd({ x: currentX, y: currentY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging && dragStart && dragEnd) {
+      updateSelection(dragStart, dragEnd);
+    }
+    setIsDragging(false);
+    setDragStart(null);
+    setDragEnd(null);
+  };
+
   React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging && dragStart) {
-        setDragEnd({ x: e.clientX, y: e.clientY });
-        updateSelection(dragStart, { x: e.clientX, y: e.clientY });
-      }
-    };
-
-    const handleMouseUp = () => {
-      if (isDragging) {
-        setIsDragging(false);
-        setDragStart(null);
-        setDragEnd(null);
-        setContainerRect(null);
-      }
-    };
-
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
@@ -128,69 +107,23 @@ export default function Home() {
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, dragStart]);
+  }, [isDragging, dragStart, containerRect]);
 
-  // Hide header on main dashboard page
-  React.useEffect(() => {
-    hideHeader();
-    return () => {
-      // Show header when leaving this page
-      // This will be handled by other pages
-    };
-  }, [hideHeader]);
-
-  // Load API data on component mount
-  React.useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoadingData(true);
-        
-        // Load current user
-        const userResponse = await api.getCurrentUser();
-        if (userResponse.success) {
-          setCurrentUser(userResponse.user);
-        }
-        
-        // Load organizations with units
-        const orgsResponse = await api.getOrganizationsWithUnits();
-        if (orgsResponse.success) {
-          setOrganizations(orgsResponse.organizations);
-        }
-        
-      } catch (error) {
-        console.error('Failed to load data:', error);
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-
-    loadData();
-  }, [api]);
-
-  // Check authentication on component mount
-  React.useEffect(() => {
-    const checkAuth = () => {
-      setIsCheckingAuth(true);
-      try {
-        const authToken = localStorage.getItem('authToken');
-        const organizationData = localStorage.getItem('organizationRegistration');
-        
-        if (authToken && organizationData) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-          // Redirect to login if not authenticated
-          router.push('/login');
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        setIsAuthenticated(false);
+  const checkAuth = () => {
+    // Simulate authentication check
+    setTimeout(() => {
+      const authToken = localStorage.getItem('authToken');
+      if (authToken) {
+        setIsAuthenticated(true);
+      } else {
+        // Redirect to login if not authenticated
         router.push('/login');
-      } finally {
-        setIsCheckingAuth(false);
       }
-    };
+      setIsCheckingAuth(false);
+    }, 1000);
+  };
 
+  React.useEffect(() => {
     checkAuth();
   }, [router]);
 
@@ -202,64 +135,63 @@ export default function Home() {
     setSidebarOpen(prev => !prev);
   };
 
-
-
-
-
   const handleLogout = () => {
-    setLogoutModalOpen(false);
-    // Clear authentication data
     localStorage.removeItem('authToken');
-    localStorage.removeItem('organizationRegistration');
-    // Redirect to login
+    setIsAuthenticated(false);
     router.push('/login');
   };
 
   const handleOrganizationalUnitClick = (unitId: string) => {
     setSelectedOrganizationalUnit(unitId);
-    setSelectedHosts(new Set());
   };
 
   const getSelectedOrganizationalUnit = () => {
-    if (!selectedOrganizationalUnit || !organizations['acme-corp']) return null;
-    return organizations['acme-corp'].organizationalUnits[selectedOrganizationalUnit];
+    return selectedOrganizationalUnit;
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return; // Only left click
+    if (!containerRect) return;
     
-    e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
-    setContainerRect(rect);
-    setDragStart({ x: e.clientX, y: e.clientY });
-    setDragEnd({ x: e.clientX, y: e.clientY });
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    setDragStart({ x, y });
+    setDragEnd({ x, y });
     setIsDragging(true);
   };
 
   const updateSelection = (start: { x: number; y: number }, end: { x: number; y: number }) => {
-    const hostCards = document.querySelectorAll('[data-host-id]');
-    const newSelectedHosts = new Set<string>();
+    if (!containerRect) return;
 
     const minX = Math.min(start.x, end.x);
     const maxX = Math.max(start.x, end.x);
     const minY = Math.min(start.y, end.y);
     const maxY = Math.max(start.y, end.y);
 
-    hostCards.forEach((card) => {
-      const rect = card.getBoundingClientRect();
-      const cardCenterX = rect.left + rect.width / 2;
-      const cardCenterY = rect.top + rect.height / 2;
+    // Find hosts within the selection rectangle
+    const hostElements = document.querySelectorAll('[data-host-id]');
+    const newSelection = new Set<string>();
 
-      if (cardCenterX >= minX && cardCenterX <= maxX && 
-          cardCenterY >= minY && cardCenterY <= maxY) {
-        const hostId = card.getAttribute('data-host-id');
+    hostElements.forEach((element) => {
+      const rect = element.getBoundingClientRect();
+      const elementX = rect.left - containerRect.left;
+      const elementY = rect.top - containerRect.top;
+
+      if (
+        elementX >= minX &&
+        elementX + rect.width <= maxX &&
+        elementY >= minY &&
+        elementY + rect.height <= maxY
+      ) {
+        const hostId = element.getAttribute('data-host-id');
         if (hostId) {
-          newSelectedHosts.add(hostId);
+          newSelection.add(hostId);
         }
       }
     });
 
-    setSelectedHosts(newSelectedHosts);
+    setSelectedHosts(newSelection);
   };
 
   const handleHostToggle = (hostId: string) => {
@@ -275,315 +207,278 @@ export default function Home() {
   };
 
   const selectAllHosts = () => {
-    const unit = getSelectedOrganizationalUnit();
-    if (unit?.hosts) {
-      setSelectedHosts(new Set(unit.hosts.map((host: any) => host.id)));
-    }
+    const hostElements = document.querySelectorAll('[data-host-id]');
+    const allHostIds = Array.from(hostElements).map(el => el.getAttribute('data-host-id')).filter(Boolean) as string[];
+    setSelectedHosts(new Set(allHostIds));
   };
 
   const clearSelection = () => {
     setSelectedHosts(new Set());
   };
 
-
-
-  // Show loading state while checking authentication or loading data
-  if (isCheckingAuth || isLoadingData) {
+  if (isCheckingAuth) {
     return (
-      <div className="bg-background flex flex-col min-h-screen">
-        <div className="flex-1 flex items-center justify-center">
-          <LoadingSpinner 
-            size="lg" 
-            text={isCheckingAuth ? 'Checking authentication...' : 'Loading data...'} 
-          />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-muted-foreground">Checking authentication...</p>
         </div>
       </div>
     );
   }
 
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return null; // Router will handle redirect
-  }
-
-  // Show error if user data failed to load
-  if (!currentUser) {
-    return (
-      <div className="bg-background flex flex-col min-h-screen">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-muted-foreground">Failed to load user data</p>
-          </div>
-        </div>
-      </div>
-    );
+    return null; // Will redirect to login
   }
 
   return (
-    <div className="bg-background flex flex-col">
-      {/* Header / App Bar */}
-      <header className="border-b bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50 sticky top-0 z-50">
-        <div className="flex h-16 items-center px-6">
-          <div className="flex items-center gap-4">
-            {/* Left sidebar toggle button positioned to the left of title */}
-            {sidebarPosition === 'left' && (
-              <Button size="sm" variant="outline" onClick={toggleSidebarOpen}>
-                {sidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
-              </Button>
-            )}
-            <h1 className="text-xl font-semibold">{appConfig.name}</h1>
-          </div>
-          
-          <div className="flex-1"></div>
-            
-          <div className="flex items-center gap-2">
-            {/* Notifications */}
-            <NotificationPanel
-              notifications={notifications}
-              enabled={notificationsEnabled}
-              count={notificationCount}
-              onToggleEnabled={() => setNotificationsEnabled(prev => !prev)}
-            />
-            
-            {/* User Profile */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="flex items-center gap-2"
+    <ApiProvider>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b bg-card">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSidebarOpen}
+                className="lg:hidden"
               >
-                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                  {currentUser.avatar ? (
-                    <img src={currentUser.avatar} alt="Avatar" className="w-6 h-6 rounded-full" />
-                  ) : (
-                    <User size={14} className="text-primary" />
-                  )}
-                </div>
-                <span className="text-sm font-medium">{currentUser.name}</span>
+                {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
               </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <div className="flex items-center gap-3 p-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    {currentUser.avatar ? (
-                      <img src={currentUser.avatar} alt="Avatar" className="w-10 h-10 rounded-full" />
-                    ) : (
-                      <User size={20} className="text-primary" />
+              
+              <div className="flex items-center space-x-2">
+                <Building2 className="h-6 w-6 text-primary" />
+                                 <h1 className="text-xl font-semibold">{appConfig.name}</h1>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              {/* Notification Panel */}
+                             <NotificationPanel
+                 notifications={notifications}
+                 count={notificationCount}
+                 enabled={notificationsEnabled}
+                 onToggleEnabled={() => setNotificationsEnabled(!notificationsEnabled)}
+               />
+
+              {/* User Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <span>User</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem>
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setLogoutModalOpen(true)}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex h-[calc(100vh-4rem)]">
+          {/* Sidebar */}
+          <aside className={`
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            ${sidebarPosition === 'right' ? 'lg:order-last' : ''}
+            fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out lg:transform-none
+          `}>
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between p-4 border-b">
+                <h2 className="font-semibold">Organizations</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleSidebar}
+                  className="hidden lg:flex"
+                >
+                  <ArrowLeftRight className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-4">
+                <Suspense fallback={<HomePageDataLoading />}>
+                  <HomePageDataProvider>
+                    {({ organizations }) => (
+                      <div className="space-y-2">
+                        {Object.entries(organizations).map(([orgId, org]) => (
+                          <div key={orgId} className="space-y-2">
+                            <h3 className="font-medium text-sm text-muted-foreground">{org.name}</h3>
+                            <div className="space-y-1">
+                              {Object.entries(org.organizationalUnits).map(([unitId, unit]) => (
+                                <TreeItem
+                                  key={unitId}
+                                  title={unit.name}
+                                  hosts={unit.hosts.length}
+                                  onClick={() => handleOrganizationalUnitClick(unitId)}
+                                  isSelected={selectedOrganizationalUnit === unitId}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </HomePageDataProvider>
+                </Suspense>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 overflow-hidden">
+            <div className="h-full flex flex-col">
+              {/* Toolbar */}
+              <div className="border-b bg-card p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <h2 className="text-lg font-semibold">
+                      {getSelectedOrganizationalUnit() ? 'Host Management' : 'Select an Organizational Unit'}
+                    </h2>
+                    {selectedHosts.size > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        {selectedHosts.size} host{selectedHosts.size !== 1 ? 's' : ''} selected
+                      </span>
                     )}
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold">{currentUser.name}</h3>
-                    <p className="text-xs text-muted-foreground">{currentUser.email}</p>
-                    <p className="text-xs text-primary font-medium">{currentUser.role}</p>
-                  </div>
-            </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/login')}>
-                  <Building2 size={16} className="mr-2" />
-                  Switch Organization
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings size={16} className="mr-2" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={() => setLogoutModalOpen(true)}
-                  className="text-red-600 focus:text-red-700 dark:text-red-400 dark:focus:text-red-300"
-                >
-                  <LogOut size={16} className="mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <Button size="sm" variant="outline" onClick={toggleSidebar}>
-              <ArrowLeftRight />
-            </Button>
-            
-            {sidebarPosition === 'right' && (
-              <Button size="sm" variant="outline" onClick={toggleSidebarOpen}>
-                {sidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - positioned at true left edge */}
-        {sidebarPosition === 'left' && (
-          <div className={`transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-64' : 'w-0'}`}>
-            {sidebarOpen && <Sidebar onLogoutClick={() => setLogoutModalOpen(true)} />}
-          </div>
-        )}
-
-        {/* Fixed Tree Panel */}
-        <div className="w-64 border-r bg-accent/5 p-4 overflow-y-auto flex-shrink-0">
-          <h2 className="text-lg font-semibold mb-4">Organizational Units</h2>
-          <div className="space-y-2">
-            <TreeItem
-              title="Production"
-              hosts={3}
-              onClick={() => handleOrganizationalUnitClick('production')}
-              isSelected={selectedOrganizationalUnit === 'production'}
-            />
-            <TreeItem
-              title="Development"
-              hosts={2}
-              onClick={() => handleOrganizationalUnitClick('development')}
-              isSelected={selectedOrganizationalUnit === 'development'}
-            />
-            <TreeItem
-              title="Testing"
-              hosts={3}
-              onClick={() => handleOrganizationalUnitClick('testing')}
-              isSelected={selectedOrganizationalUnit === 'testing'}
-            />
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col min-w-0">
-          <div 
-            className="flex-1 overflow-auto p-6 select-none"
-            onMouseDown={handleMouseDown}
-          >
-            {selectedOrganizationalUnit ? (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-semibold">
-                    {getSelectedOrganizationalUnit()?.name} Hosts
-                  </h2>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={selectAllHosts}
-                      disabled={!getSelectedOrganizationalUnit()?.hosts?.length}
-                    >
-                      Select All ({getSelectedOrganizationalUnit()?.hosts?.length || 0})
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" onClick={selectAllHosts}>
+                      Select All
                     </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={clearSelection}
-                      disabled={selectedHosts.size === 0}
-                    >
-                      Clear Selection ({selectedHosts.size})
+                    <Button variant="outline" size="sm" onClick={clearSelection}>
+                      Clear
                     </Button>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {getSelectedOrganizationalUnit()?.hosts?.map((host: any) => (
-                    <HostCard
-                      key={host.id}
-                      host={host}
-                      isSelected={selectedHosts.has(host.id)}
-                      onToggle={() => handleHostToggle(host.id)}
-                    />
-                  ))}
-                </div>
-                
-                {/* Selection Rectangle */}
-                {isDragging && dragStart && dragEnd && (
-                  <div
-                    className="absolute border-2 border-blue-500 bg-blue-200/20 pointer-events-none"
-                    style={{
-                      position: 'fixed',
-                      left: Math.min(dragStart.x, dragEnd.x),
-                      top: Math.min(dragStart.y, dragEnd.y),
-                      width: Math.abs(dragEnd.x - dragStart.x),
-                      height: Math.abs(dragEnd.y - dragStart.y),
-                      zIndex: 1000
+              </div>
+
+              {/* Content Area */}
+              <div className="flex-1 overflow-auto p-4">
+                <Suspense fallback={<HomePageDataLoading />}>
+                  <HomePageDataProvider>
+                    {({ organizations }) => {
+                      const selectedUnit = getSelectedOrganizationalUnit();
+                      const currentOrg = Object.values(organizations).find(org => 
+                        Object.keys(org.organizationalUnits).includes(selectedUnit || '')
+                      );
+                      const currentUnit = selectedUnit && currentOrg ? currentOrg.organizationalUnits[selectedUnit] : null;
+
+                      if (!selectedUnit || !currentUnit) {
+                        return (
+                          <div className="flex items-center justify-center h-full">
+                            <div className="text-center">
+                              <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                              <h3 className="text-lg font-semibold mb-2">No Organizational Unit Selected</h3>
+                              <p className="text-muted-foreground">
+                                Please select an organizational unit from the sidebar to view its hosts.
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div 
+                          className="relative min-h-full"
+                          onMouseDown={handleMouseDown}
+                          ref={(el) => {
+                            if (el && !containerRect) {
+                              setContainerRect(el.getBoundingClientRect());
+                            }
+                          }}
+                        >
+                          {/* Selection Rectangle */}
+                          {isDragging && dragStart && dragEnd && (
+                            <div
+                              className="absolute border-2 border-primary bg-primary/10 pointer-events-none z-10"
+                              style={{
+                                left: Math.min(dragStart.x, dragEnd.x),
+                                top: Math.min(dragStart.y, dragEnd.y),
+                                width: Math.abs(dragEnd.x - dragStart.x),
+                                height: Math.abs(dragEnd.y - dragStart.y),
+                              }}
+                            />
+                          )}
+
+                          {/* Host Grid */}
+                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {currentUnit.hosts.map((host) => (
+                              <HostCard
+                                key={host.id}
+                                host={host}
+                                isSelected={selectedHosts.has(host.id)}
+                                onToggle={() => handleHostToggle(host.id)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
                     }}
-                  />
-                )}
+                  </HomePageDataProvider>
+                </Suspense>
               </div>
-            ) : (
-              <div>
-                <h2 className="text-2xl font-semibold mb-4">Dashboard</h2>
-                <p className="text-muted-foreground">Select an organizational unit to view hosts.</p>
-              </div>
-            )}
-          </div>
-        </main>
+            </div>
+          </main>
+        </div>
 
-        {/* Right Sidebar - positioned at true right edge */}
-        {sidebarPosition === 'right' && (
-          <div className={`transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 ${sidebarOpen ? 'w-64' : 'w-0'}`}>
-            {sidebarOpen && <Sidebar onLogoutClick={() => setLogoutModalOpen(true)} />}
-          </div>
-        )}
-      </div>
-
-
-
-      {/* Logout Dialog */}
-      <Dialog open={logoutModalOpen} onOpenChange={setLogoutModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirm Logout</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to logout? You will need to login again to access the application.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setLogoutModalOpen(false)}
-              >
+        {/* Logout Confirmation Dialog */}
+        <Dialog open={logoutModalOpen} onOpenChange={setLogoutModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Logout</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to logout? You will need to log in again to access the system.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setLogoutModalOpen(false)}>
                 Cancel
               </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleLogout}
-              >
+              <Button onClick={handleLogout}>
                 Logout
               </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-
-
-
-    </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </ApiProvider>
   );
 }
 
 function Sidebar({ onLogoutClick }: { onLogoutClick: () => void }) {
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col gap-2 border-r bg-accent/10 p-4 dark:bg-accent/20 lg:gap-4 lg:p-6">
-      <nav className="flex flex-col gap-2 flex-1">
-        <SidebarLink href="/admin">Tenant Management</SidebarLink>
-        <SidebarLink href="/example">Footer Demo</SidebarLink>
-        <SidebarLink href="/mock-info">Mock Info</SidebarLink>
-        {/* Add more links here */}
-      </nav>
-      
-      {/* Logout section */}
-      <div className="border-t pt-4">
-        <button
-          onClick={onLogoutClick}
-          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/20 dark:hover:text-red-300 transition-colors"
-        >
-          <LogOut size={16} />
-          Logout
-        </button>
+    <div className="w-64 bg-card border-r h-full">
+      <div className="p-4">
+        <h2 className="font-semibold mb-4">Navigation</h2>
+        <nav className="space-y-2">
+          <SidebarLink href="/">Dashboard</SidebarLink>
+          <SidebarLink href="/admin">Admin</SidebarLink>
+          <SidebarLink href="/setup">Setup</SidebarLink>
+        </nav>
       </div>
-    </aside>
+    </div>
   );
 }
 
 function SidebarLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link 
-      href={href} 
-      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-    >
+    <Link href={href} className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted">
       {children}
     </Link>
   );
@@ -595,41 +490,27 @@ function TreeItem({ title, hosts, onClick, isSelected }: {
   onClick: () => void; 
   isSelected: boolean;
 }) {
-  const [isExpanded, setIsExpanded] = React.useState(false);
-
   return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="h-6 w-6 p-0"
-        >
-          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-        </Button>
-        <Button
-          variant="ghost"
-          onClick={onClick}
-          className={`flex-1 justify-start h-8 px-2 text-sm font-normal ${
-            isSelected ? 'bg-primary/10 text-primary font-medium hover:bg-primary/15' : ''
-          }`}
-        >
-          📁 {title} ({hosts} hosts)
-        </Button>
-      </div>
-      {isExpanded && (
-        <div className="ml-6 space-y-1">
-          <div className="text-xs text-muted-foreground px-2 py-1">
-            🖥️ {hosts} hosts available
-          </div>
-        </div>
-      )}
-    </div>
+    <button
+      onClick={onClick}
+      className={`
+        w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors
+        ${isSelected 
+          ? 'bg-primary text-primary-foreground' 
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+        }
+      `}
+    >
+      <span className="flex items-center">
+        <ChevronRight className="h-3 w-3 mr-2" />
+        {title}
+      </span>
+      <span className="text-xs bg-muted px-2 py-1 rounded">
+        {hosts}
+      </span>
+    </button>
   );
 }
-
-
 
 function HostCard({ host, isSelected, onToggle }: {
   host: { id: string; name: string; status: string; type: string };
@@ -637,44 +518,42 @@ function HostCard({ host, isSelected, onToggle }: {
   onToggle: () => void;
 }) {
   const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'web': return '🌐';
-      case 'database': return '🗄️';
-      case 'application': return '📱';
-      case 'development': return '💻';
-      case 'testing': return '🧪';
-      default: return '🖥️';
+    switch (type.toLowerCase()) {
+      case 'web':
+        return <Building2 className="h-4 w-4" />;
+      case 'database':
+        return <Building2 className="h-4 w-4" />;
+      case 'application':
+        return <Building2 className="h-4 w-4" />;
+      default:
+        return <Building2 className="h-4 w-4" />;
     }
   };
 
   return (
-    <div 
-      className={`p-4 rounded-lg border transition-all cursor-pointer ${
-        isSelected 
-          ? 'border-primary bg-primary/5 shadow-md' 
-          : 'border-border bg-card hover:border-primary/50 hover:shadow-sm'
-      }`}
+    <div
       data-host-id={host.id}
+      className={`
+        relative p-4 border rounded-lg cursor-pointer transition-all
+        ${isSelected 
+          ? 'border-primary bg-primary/5 ring-2 ring-primary/20' 
+          : 'border-border hover:border-primary/50'
+        }
+      `}
+      onClick={onToggle}
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{getTypeIcon(host.type)}</span>
+      <div className="flex items-start justify-between">
+        <div className="flex items-center space-x-3">
+          <Checkbox checked={isSelected} onChange={onToggle} />
           <div>
-            <h3 className="font-medium text-sm">{host.name}</h3>
-            <p className="text-xs text-muted-foreground capitalize">{host.type}</p>
+            <h3 className="font-medium">{host.name}</h3>
+            <p className="text-sm text-muted-foreground">{host.type}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <StatusIndicator status={host.status} size="sm" />
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={onToggle}
-            onClick={(e) => e.stopPropagation()}
-          />
+        <div className="flex items-center space-x-2">
+          {getTypeIcon(host.type)}
+          <StatusIndicator status={host.status} />
         </div>
-      </div>
-      <div className="text-xs">
-        <StatusIndicator status={host.status} showText size="sm" />
       </div>
     </div>
   );

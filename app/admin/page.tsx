@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,10 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RefreshCw, Users, Building2, Globe, Mail, Calendar, Lock, AlertTriangle } from 'lucide-react';
-import { API_CONFIG } from '@/lib/api-config';
-import { mockApiService } from '@/lib/api-service-mock';
-import { apiService } from '@/lib/api-service';
 import { useHeader } from '@/contexts/header-context';
+import { 
+  ApiProvider, 
+  AdminPageDataProvider, 
+  AdminPageDataLoading 
+} from '@/components/data-providers';
 
 interface Organization {
   id: string;
@@ -40,8 +42,6 @@ interface Organization {
 export default function AdminPage() {
   const router = useRouter();
   const { showHeader } = useHeader();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -49,32 +49,6 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState('');
   const [isApiAvailable, setIsApiAvailable] = useState(true);
   const [isCheckingApi, setIsCheckingApi] = useState(true);
-
-  const fetchOrganizations = async () => {
-    try {
-      // Use the appropriate API service based on configuration
-      const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
-      const data = await api.getOrganizations();
-      const orgs = (data.organizations || []).map((org: any) => ({
-        ...org,
-        status: org.status as 'pending' | 'active' | 'suspended',
-        createdAt: org.registeredAt || org.createdAt
-      }));
-      setOrganizations(orgs);
-      
-      if (orgs.length === 0) {
-        // Use the appropriate API service based on configuration
-        const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
-        api.showInfo('No organizations found');
-      }
-    } catch (error) {
-      console.error('Error fetching organizations:', error);
-      // Error notification is already handled by apiService
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   // Show header on admin page
   useEffect(() => {
@@ -86,9 +60,8 @@ export default function AdminPage() {
     const checkApiAvailability = async () => {
       setIsCheckingApi(true);
       try {
-        // Use the appropriate API service based on configuration
-        const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
-        await api.getOrganizations();
+        // Simulate API check
+        await new Promise(resolve => setTimeout(resolve, 500));
         setIsApiAvailable(true);
       } catch (err) {
         console.error('API check failed:', err);
@@ -106,10 +79,8 @@ export default function AdminPage() {
     const adminAuth = localStorage.getItem('adminAuthenticated');
     if (adminAuth === 'true') {
       setIsAuthenticated(true);
-      fetchOrganizations();
     } else {
       setShowLogin(true);
-      setLoading(false);
     }
   }, []);
 
@@ -122,7 +93,6 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       setShowLogin(false);
       localStorage.setItem('adminAuthenticated', 'true');
-      fetchOrganizations();
     } else {
       setLoginError('Invalid admin password');
     }
@@ -132,12 +102,12 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     setShowLogin(true);
     localStorage.removeItem('adminAuthenticated');
-    setOrganizations([]);
   };
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchOrganizations();
+    // Simulate refresh
+    setTimeout(() => setRefreshing(false), 1000);
   };
 
   const getStatusBadge = (status: string) => {
@@ -182,39 +152,6 @@ export default function AdminPage() {
       return 'Invalid Date';
     }
   };
-
-  if (loading) {
-    return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <Skeleton className="h-10 w-24" />
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-32 mb-2" />
-            <Skeleton className="h-4 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   if (showLogin) {
     return (
@@ -274,181 +211,191 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Loading State */}
-      {isCheckingApi && (
-        <Card className="border-2 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20">
-          <CardHeader>
-            <CardTitle className="text-lg text-blue-800 dark:text-blue-200 flex items-center gap-2">
-              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              Checking Service Status
-            </CardTitle>
-            <CardDescription className="text-blue-700 dark:text-blue-300">
-              Verifying connection to admin service...
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
+    <ApiProvider>
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Loading State */}
+        {isCheckingApi && (
+          <Card className="border-2 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20">
+            <CardHeader>
+              <CardTitle className="text-lg text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                Checking Service Status
+              </CardTitle>
+              <CardDescription className="text-blue-700 dark:text-blue-300">
+                Verifying connection to admin service...
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
 
-      {/* API Status Check */}
-      {!isCheckingApi && !isApiAvailable && (
-        <Card className="border-2 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
-          <CardHeader>
-            <CardTitle className="text-lg text-red-800 dark:text-red-200 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5" />
-              Service Unavailable
-            </CardTitle>
-            <CardDescription className="text-red-700 dark:text-red-300">
-              Unable to connect to the admin service. Please check your connection and try again later.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
+        {/* API Status Check */}
+        {!isCheckingApi && !isApiAvailable && (
+          <Card className="border-2 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
+            <CardHeader>
+              <CardTitle className="text-lg text-red-800 dark:text-red-200 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                Service Unavailable
+              </CardTitle>
+              <CardDescription className="text-red-700 dark:text-red-300">
+                Unable to connect to the admin service. Please check your connection and try again later.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">System Administrator Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage and monitor registered organizations
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">System Administrator Dashboard</h1>
+            <p className="text-muted-foreground">
+              Manage and monitor registered organizations
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={handleRefresh} 
+              disabled={refreshing || isCheckingApi || !isApiAvailable} 
+              variant="outline"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {isCheckingApi ? 'Checking...' : !isApiAvailable ? 'Service Unavailable' : 'Refresh'}
+            </Button>
+            <Button onClick={handleLogout} variant="outline" className="text-red-600 hover:text-red-700">
+              Logout
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            onClick={handleRefresh} 
-            disabled={refreshing || isCheckingApi || !isApiAvailable} 
-            variant="outline"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            {isCheckingApi ? 'Checking...' : !isApiAvailable ? 'Service Unavailable' : 'Refresh'}
-          </Button>
-          <Button onClick={handleLogout} variant="outline" className="text-red-600 hover:text-red-700">
-            Logout
-          </Button>
-        </div>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Organizations</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{organizations.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Organizations</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {organizations.filter(org => org.status === 'active').length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Organizations</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {organizations.filter(org => org.status === 'pending').length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Free Plan Users</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {organizations.filter(org => org.plan === 'free').length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <Suspense fallback={<AdminPageDataLoading />}>
+          <AdminPageDataProvider>
+            {({ organizations }) => (
+              <>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Organizations</CardTitle>
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{organizations.length}</div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Active Organizations</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {organizations.filter(org => org.status === 'active').length}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Pending Organizations</CardTitle>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {organizations.filter(org => org.status === 'pending').length}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Free Plan Users</CardTitle>
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {organizations.filter(org => org.plan === 'free').length}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Registered Organizations</CardTitle>
-          <CardDescription>
-            A list of all organizations that have registered with the platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {organizations.length === 0 ? (
-            <div className="text-center py-8">
-              <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No organizations found</h3>
-              <p className="text-muted-foreground">
-                Organizations will appear here once they register through the platform.
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Organization</TableHead>
-                    <TableHead>Domain</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Plan</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Industry</TableHead>
-                    <TableHead>Size</TableHead>
-                    <TableHead>Registered</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {organizations.map((org) => (
-                    <TableRow key={org.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{org.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            ID: {org.id}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Globe className="h-4 w-4 mr-1 text-muted-foreground" />
-                          {org.domain}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{org.contactName}</div>
-                          <div className="text-sm text-muted-foreground flex items-center">
-                            <Mail className="h-3 w-3 mr-1" />
-                            {org.contactEmail}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getPlanBadge(org.plan)}</TableCell>
-                      <TableCell>{getStatusBadge(org.status)}</TableCell>
-                      <TableCell>{org.industry}</TableCell>
-                      <TableCell>{org.size}</TableCell>
-                      <TableCell>
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(org.createdAt)}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Registered Organizations</CardTitle>
+                    <CardDescription>
+                      A list of all organizations that have registered with the platform
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {organizations.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No organizations found</h3>
+                        <p className="text-muted-foreground">
+                          Organizations will appear here once they register through the platform.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Organization</TableHead>
+                              <TableHead>Domain</TableHead>
+                              <TableHead>Contact</TableHead>
+                              <TableHead>Plan</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Industry</TableHead>
+                              <TableHead>Size</TableHead>
+                              <TableHead>Registered</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {organizations.map((org) => (
+                              <TableRow key={org.id}>
+                                <TableCell>
+                                  <div>
+                                    <div className="font-medium">{org.name}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                      ID: {org.id}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center">
+                                    <Globe className="h-4 w-4 mr-1 text-muted-foreground" />
+                                    {org.domain}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div>
+                                    <div className="font-medium">{org.contactName}</div>
+                                    <div className="text-sm text-muted-foreground flex items-center">
+                                      <Mail className="h-3 w-3 mr-1" />
+                                      {org.contactEmail}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>{getPlanBadge(org.plan)}</TableCell>
+                                <TableCell>{getStatusBadge(org.status)}</TableCell>
+                                <TableCell>{org.industry}</TableCell>
+                                <TableCell>{org.size}</TableCell>
+                                <TableCell>
+                                  <div className="text-sm text-muted-foreground">
+                                    {formatDate(org.createdAt)}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </AdminPageDataProvider>
+        </Suspense>
+      </div>
+    </ApiProvider>
   );
 }
