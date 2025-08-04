@@ -1,5 +1,49 @@
 import { faker } from '@faker-js/faker';
 
+// Constants for consistent data generation
+const STATUS_WEIGHTS = {
+  online: 0.7,
+  offline: 0.15,
+  maintenance: 0.1,
+  error: 0.05
+} as const;
+
+const ORGANIZATION_STATUS_WEIGHTS = {
+  active: 0.8,
+  inactive: 0.15,
+  suspended: 0.05
+} as const;
+
+const HOST_TYPES = ['web', 'database', 'application', 'development', 'staging', 'production'] as const;
+const OPERATING_SYSTEMS = ['Ubuntu 22.04', 'CentOS 8', 'Windows Server 2022', 'Debian 11', 'RHEL 9'] as const;
+const UNIT_TYPES = [
+  'Production', 'Development', 'Staging', 'Testing', 'QA', 'UAT',
+  'Marketing', 'Sales', 'Support', 'Engineering', 'Operations'
+] as const;
+const INDUSTRIES = [
+  'Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing',
+  'Retail', 'Consulting', 'Government', 'Non-profit', 'Other'
+] as const;
+const COMPANY_SIZES = [
+  '1-10 employees', '11-50 employees', '51-200 employees',
+  '201-500 employees', '501-1000 employees', '1000+ employees'
+] as const;
+
+// Helper functions for weighted random selection
+const weightedRandom = <T extends string>(weights: Record<T, number>): T => {
+  const random = Math.random();
+  let cumulative = 0;
+  
+  for (const [key, weight] of Object.entries(weights)) {
+    cumulative += weight as number;
+    if (random <= cumulative) {
+      return key as T;
+    }
+  }
+  
+  return Object.keys(weights)[0] as T;
+};
+
 export interface MockOrganization {
   id: string;
   tenantId: string;
@@ -43,7 +87,7 @@ export interface MockHost {
   id: string;
   name: string;
   status: 'online' | 'offline' | 'maintenance' | 'error';
-  type: 'web' | 'database' | 'application' | 'development' | 'staging' | 'production';
+  type: typeof HOST_TYPES[number];
   ipAddress?: string;
   os?: string;
   lastSeen?: string;
@@ -75,17 +119,11 @@ export const generateMockOrganization = (): MockOrganization => {
     tenantId: faker.string.alphanumeric(12),
     name: companyName,
     domain: domain,
-    status: faker.helpers.arrayElement(['active', 'active', 'active', 'inactive', 'suspended']), // Bias towards active
+    status: weightedRandom(ORGANIZATION_STATUS_WEIGHTS),
     plan: faker.helpers.arrayElement(['free', 'pro', 'enterprise']),
     registeredAt: faker.date.past({ years: 2 }).toISOString(),
-    industry: faker.helpers.arrayElement([
-      'Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing',
-      'Retail', 'Consulting', 'Government', 'Non-profit', 'Other'
-    ]),
-    companySize: faker.helpers.arrayElement([
-      '1-10 employees', '11-50 employees', '51-200 employees',
-      '201-500 employees', '501-1000 employees', '1000+ employees'
-    ]),
+    industry: faker.helpers.arrayElement(INDUSTRIES),
+    companySize: faker.helpers.arrayElement(COMPANY_SIZES),
     contactEmail: faker.internet.email({ firstName: 'admin', lastName: 'user', provider: domain }),
     address: {
       street: faker.location.streetAddress(),
@@ -116,12 +154,7 @@ export const generateMockUser = (organizationId: string): MockUser => {
 
 // Generate realistic organizational unit data
 export const generateMockOrganizationalUnit = (): MockOrganizationalUnit => {
-  const unitTypes = [
-    'Production', 'Development', 'Staging', 'Testing', 'QA', 'UAT',
-    'Marketing', 'Sales', 'Support', 'Engineering', 'Operations'
-  ];
-  
-  const unitName = faker.helpers.arrayElement(unitTypes);
+  const unitName = faker.helpers.arrayElement(UNIT_TYPES);
   
   return {
     id: faker.string.alphanumeric(8),
@@ -134,16 +167,15 @@ export const generateMockOrganizationalUnit = (): MockOrganizationalUnit => {
 
 // Generate realistic host data
 export const generateMockHost = (): MockHost => {
-  const hostTypes = ['web', 'database', 'application', 'development', 'staging', 'production'];
-  const hostType = faker.helpers.arrayElement(hostTypes);
+  const hostType = faker.helpers.arrayElement(HOST_TYPES);
   
   return {
     id: faker.string.alphanumeric(8),
     name: `${hostType}-${faker.helpers.arrayElement(['server', 'node', 'instance'])}-${faker.number.int({ min: 1, max: 99 })}`,
-    status: faker.helpers.arrayElement(['online', 'online', 'online', 'offline', 'maintenance', 'error']), // Bias towards online
-    type: hostType as any,
+    status: weightedRandom(STATUS_WEIGHTS),
+    type: hostType,
     ipAddress: faker.internet.ip(),
-    os: faker.helpers.arrayElement(['Ubuntu 22.04', 'CentOS 8', 'Windows Server 2022', 'Debian 11', 'RHEL 9']),
+    os: faker.helpers.arrayElement(OPERATING_SYSTEMS),
     lastSeen: faker.date.recent({ days: 7 }).toISOString(),
     cpuUsage: faker.number.float({ min: 5, max: 95, fractionDigits: 1 }),
     memoryUsage: faker.number.float({ min: 10, max: 90, fractionDigits: 1 }),
