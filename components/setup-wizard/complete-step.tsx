@@ -27,7 +27,7 @@ interface CompleteStepProps {
 export function CompleteStep({ orgForm, registrationResult, onStartNew }: CompleteStepProps) {
   // Debug logging
   React.useEffect(() => {
-    console.log('CompleteStep: registrationResult', registrationResult);
+  
   }, [registrationResult]);
 
   const handleDownloadInfo = () => {

@@ -10,10 +10,4 @@ export const API_CONFIG = {
     EMAIL: 'admin@acme.com',
     PASSWORD: 'password123'
   }
-};
-
-// Helper function to get the appropriate API service
-export async function getApiService() {
-  // Use the original api service - MSW will handle mocking automatically in development
-  return (await import('./api-service')).apiService;
-} 
+}; 

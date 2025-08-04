@@ -131,12 +131,10 @@ interface ApiProviderProps {
 export function ApiProvider({ children }: ApiProviderProps) {
   const [state, dispatch] = useReducer(apiReducer, initialState);
 
-  // Initialize API state based on configuration
+  // Initialize API state
   React.useEffect(() => {
-    // Import API_CONFIG dynamically to avoid SSR issues
-    import('@/lib/api-config').then(({ API_CONFIG }) => {
-      setMockApi(API_CONFIG.USE_MOCK_API);
-    });
+    // MSW handles mocking automatically in development
+    setMockApi(process.env.NODE_ENV === 'development');
   }, []);
 
   const setConnected = (connected: boolean) => {

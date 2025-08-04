@@ -102,7 +102,7 @@ export const useSetupWizardState = () => {
     const savedResult = loadFromStorage(STORAGE_KEYS.REGISTRATION_RESULT, null);
     setTotalMonthly(savedTotal);
     setRegistrationResult(savedResult);
-    console.log('Hook: Loaded registrationResult from localStorage', savedResult);
+    
   }, []);
 
   // Save state to localStorage whenever it changes
@@ -132,7 +132,7 @@ export const useSetupWizardState = () => {
 
   useEffect(() => {
     saveToStorage(STORAGE_KEYS.REGISTRATION_RESULT, registrationResult);
-    console.log('Hook: Saved registrationResult to localStorage', registrationResult);
+    
   }, [registrationResult]);
 
   // Utility function to clear all setup wizard state

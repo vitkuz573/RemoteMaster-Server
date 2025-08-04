@@ -3,11 +3,11 @@
 import React from 'react';
 import { appConfig } from '@/lib/app-config';
 import { useFooter } from '@/contexts/footer-context';
-import { getCachedSystemStatus, type SystemStatus } from '@/lib/system-status';
+
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ExternalLink } from 'lucide-react';
-import { apiService } from '@/lib/api-service';
+
 
 interface FooterProps {
   /**
@@ -20,87 +20,12 @@ export function Footer({
   className = ""
 }: FooterProps) {
   const { isFooterVisible, footerConfig } = useFooter();
-  const [systemStatus, setSystemStatus] = React.useState<SystemStatus | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  
-  const { showSystemStatus, showBuildDate } = footerConfig;
-  
-  // Load system status on mount
-  React.useEffect(() => {
-    let mounted = true;
-    
-    const loadStatus = async () => {
-      try {
-        // Fetch from external API
-        const data = await apiService.getHealth();
-        
-        if (mounted) {
-          setSystemStatus({
-            status: data.status === 'healthy' ? 'online' : 
-                    data.status === 'degraded' ? 'degraded' : 'offline',
-            message: data.message || 'System is operational',
-            timestamp: Date.now(),
-            services: data.services || {},
-            checkResults: data.checkResults || {}
-          });
-          setIsLoading(false);
-        }
-      } catch (error) {
-        if (mounted) {
-          setSystemStatus({
-            status: 'offline',
-            message: 'Unable to check system status',
-            timestamp: Date.now(),
-            services: {},
-            checkResults: {}
-          });
-          setIsLoading(false);
-          
-          // Show warning notification for system status check failure
-          apiService.showWarning('Unable to check system status. Please check your connection.');
-        }
-      }
-    };
-    
-    loadStatus();
-    
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // Helper function to get status color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return 'bg-green-500';
-      case 'unhealthy':
-        return 'bg-red-500';
-      case 'degraded':
-        return 'bg-yellow-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  // Helper function to get status text
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return 'Passed';
-      case 'unhealthy':
-        return 'Failed';
-      case 'degraded':
-        return 'Degraded';
-      default:
-        return 'Unknown';
-    }
-  };
+  const { showBuildDate } = footerConfig;
 
   if (!isFooterVisible) return null;
 
   return (
-    <footer className={`border-t bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50 ${className}`}>
+         <footer className={`border-t bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50 relative z-10 ${className}`}>
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Left section - App info and version */}
@@ -111,10 +36,10 @@ export function Footer({
               </div>
               <span className="text-sm font-medium">{appConfig.name}</span>
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground relative">
                v{appConfig.buildVersion}
                {/* Enhanced Environment Indicator */}
-               <Tooltip>
+               <Tooltip delayDuration={300}>
                  <TooltipTrigger asChild>
                    <span className={`
                      ml-2 px-2 py-0.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-help
@@ -144,7 +69,7 @@ export function Footer({
                      {appConfig.environment.toUpperCase()}
                    </span>
                  </TooltipTrigger>
-                 <TooltipContent side="top" className="max-w-xs">
+                 <TooltipContent side="top" className="max-w-xs z-50">
                    <div className="space-y-2">
                      <div className="font-medium flex items-center gap-2">
                        <span>Environment</span>
@@ -251,97 +176,8 @@ export function Footer({
             </p>
           </div>
 
-          {/* Right section - System status and build info */}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                         {showSystemStatus && (
-               <div className="flex items-center gap-2">
-                  {isLoading ? (
-                    <>
-                      <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
-                      <span className="text-xs">Checking...</span>
-                    </>
-                  ) : systemStatus ? (
-                    <>
-                      {/* Overall status indicator */}
-                      <div className="flex items-center gap-1">
-                        <div 
-                          className={`w-2 h-2 rounded-full ${
-                            systemStatus.status === 'online' ? 'bg-green-500' :
-                            systemStatus.status === 'degraded' ? 'bg-yellow-500' :
-                            'bg-red-500'
-                          }`}
-                        />
-                        <span className="text-xs font-medium">
-                          {systemStatus.status === 'online' ? 'System Online' :
-                           systemStatus.status === 'degraded' ? 'System Degraded' :
-                           'System Offline'}
-                        </span>
-                      </div>
-
-                      {/* Individual check results - compact version */}
-                      {systemStatus.checkResults && Object.keys(systemStatus.checkResults).length > 0 && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1 cursor-help">
-                              <span className="text-xs text-muted-foreground">•</span>
-                              <div className="flex items-center gap-1">
-                                {/* Show only failed checks as red dots */}
-                                {Object.entries(systemStatus.checkResults)
-                                  .filter(([_, check]) => check.status === 'unhealthy')
-                                  .map(([key, check]) => (
-                                    <div 
-                                      key={key}
-                                      className="w-1.5 h-1.5 rounded-full bg-red-500"
-                                      title={`${check.name}: Failed`}
-                                    />
-                                  ))}
-                                {/* Show success indicator if all checks passed */}
-                                {Object.values(systemStatus.checkResults).every(check => check.status === 'healthy') && (
-                                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" title="All checks passed" />
-                                )}
-                              </div>
-                              {/* Show count of failed checks */}
-                              {(() => {
-                                const failedCount = Object.values(systemStatus.checkResults).filter(check => check.status === 'unhealthy').length;
-                                const totalCount = Object.keys(systemStatus.checkResults).length;
-                                return failedCount > 0 && (
-                                  <span className="text-xs text-red-500 font-medium">
-                                    {failedCount}/{totalCount}
-                                  </span>
-                                );
-                              })()}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs">
-                            <div className="space-y-2">
-                              <div className="font-medium">Health Check Details</div>
-                                                             {Object.entries(systemStatus.checkResults).map(([key, check]) => (
-                                 <div key={key} className="flex items-center justify-between gap-4">
-                                   <div className="flex items-center gap-2">
-                                     <div className={`w-2 h-2 rounded-full ${getStatusColor(check.status)}`} />
-                                     <span className="text-xs font-medium">{check.name}</span>
-                                   </div>
-                                   <Badge 
-                                     variant={check.status === 'healthy' ? 'default' : 'destructive'}
-                                     className="text-xs"
-                                   >
-                                     {getStatusText(check.status)}
-                                   </Badge>
-                                 </div>
-                               ))}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-2 h-2 rounded-full bg-gray-500"></div>
-                      <span className="text-xs">Status Unknown</span>
-                    </>
-                                     )}
-                 </div>
-             )}
+                     {/* Right section - Build info */}
+           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             {showBuildDate && (
               <div className="hidden lg:flex items-center gap-2">
                 <span>Build:</span>

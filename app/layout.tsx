@@ -9,8 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApiProvider } from "@/contexts/api-context";
 import { Toaster } from "@/components/ui/sonner";
 import { appConfig } from "@/lib/app-config";
-import { initializeDefaultHealthChecks } from "@/lib/system-status";
-import { initializeCustomHealthChecks } from "@/lib/custom-health-checks";
+
 import { ConditionalHeaderWrapper } from "@/components/ui/conditional-header-wrapper";
 import { MSWProvider } from "@/components/msw-provider";
 
@@ -29,11 +28,7 @@ export const metadata: Metadata = {
   description: appConfig.description,
 };
 
-// Initialize health checks on server side
-if (typeof window === 'undefined') {
-  initializeDefaultHealthChecks();
-  initializeCustomHealthChecks();
-}
+
 
 export default function RootLayout({
   children,

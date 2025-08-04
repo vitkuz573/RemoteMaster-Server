@@ -125,7 +125,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   React.useEffect(() => {
     const stepExists = steps.some(step => step.key === currentStep);
     if (!stepExists) {
-      console.warn('Current step not found in steps array, resetting to first step');
       setCurrentStep('organization');
     }
   }, [currentStep]);
@@ -198,41 +197,28 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
           return true;
       }
     } catch (error) {
-      console.log('Validation error:', error);
       return false;
     }
   };
 
   const handleNext = () => {
-    console.log('handleNext called for step:', currentStep);
-    console.log('Current steps:', steps.map(s => s.key));
-    console.log('Selected plan:', orgForm.selectedPlan);
-    
     const isValid = validateCurrentStep();
-    console.log('Validation result:', isValid);
     
     if (!isValid) {
-      console.log('Validation failed, cannot proceed');
       return;
     }
 
     if (currentStep === 'review') {
       // Submit on review step
-      console.log('Submitting from review step');
       handleSubmit();
     } else {
       // Go to next step based on configured steps array
       const currentIndex = steps.findIndex(step => step.key === currentStep);
-      console.log('Current step index:', currentIndex);
-      
       const nextStep = steps[currentIndex + 1];
-      console.log('Next step:', nextStep?.key);
       
       if (nextStep) {
         setCurrentStep(nextStep.key as any);
         onStepChange?.(nextStep.key as any);
-      } else {
-        console.error('No next step found!');
       }
     }
   };
@@ -255,7 +241,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
 
       // Store registration result for CompleteStep
       setRegistrationResult(result);
-      console.log('SetupWizard: Stored registration result', result);
 
       // Save organization data to separate localStorage key (for backup)
       if (isClient && typeof window !== "undefined") {
@@ -284,7 +269,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       onComplete?.();
       
     } catch (error) {
-      console.error('Setup error:', error);
       toast.error('Failed to complete organization setup. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -304,7 +288,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
         const costResponse = await api.calculateMonthlyCost(orgForm.selectedPlan, orgForm.expectedUsers);
         setTotalMonthly(costResponse.calculation.totalCost);
       } catch (error) {
-        console.error('Failed to calculate cost:', error);
         setTotalMonthly(0);
       }
     };

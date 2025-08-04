@@ -7,8 +7,7 @@ interface FooterContextType {
   hideFooter: () => void;
   showFooter: () => void;
   footerConfig: {
-    showSystemStatus: boolean;
-    showBuildDate: boolean;
+      showBuildDate: boolean;
   };
   updateFooterConfig: (config: Partial<FooterContextType['footerConfig']>) => void;
 }
@@ -22,7 +21,6 @@ interface FooterProviderProps {
 export function FooterProvider({ children }: FooterProviderProps) {
   const [isFooterVisible, setIsFooterVisible] = useState(true);
   const [footerConfig, setFooterConfig] = useState({
-    showSystemStatus: true,
     showBuildDate: true,
   });
 

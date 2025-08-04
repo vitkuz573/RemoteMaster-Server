@@ -60,11 +60,11 @@ export default function LoginPage() {
           idp: org.idpConfig?.provider || 'Internal',
           byoidConfig: org.byoidConfig || null
         }));
-        console.log('Loaded organizations:', tenants);
+  
         setKnownTenants(tenants);
         setIsApiAvailable(true);
       } catch (err) {
-        console.error('Failed to load organizations:', err);
+  
         setIsApiAvailable(false);
       } finally {
         setIsCheckingApi(false);
@@ -106,8 +106,7 @@ export default function LoginPage() {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Check if tenant exists by ID or domain
-        console.log('Searching for tenant:', trimmed);
-        console.log('Available tenants:', knownTenants);
+        
         const tenant = knownTenants.find(t => 
           t.id === trimmed || 
           t.domain === trimmed || 
@@ -129,7 +128,7 @@ export default function LoginPage() {
 
         // Check if organization has BYOID configuration
         if (tenant.byoidConfig && tenant.byoidConfig.status === 'active') {
-          console.log(`Redirecting to BYOID IdP: ${tenant.byoidConfig.issuerUrl} for tenant: ${tenant.name}`);
+  
           
           // In a real implementation, this would redirect to the IdP's authorization endpoint
           // For demo purposes, we'll show a message and redirect to a demo page
@@ -142,7 +141,7 @@ export default function LoginPage() {
           router.push("/mock-info");
         } else {
           // No BYOID configuration, redirect to main app
-          console.log(`No BYOID config found for tenant: ${tenant.name}, redirecting to main app`);
+  
           
           // Simulate SSO redirect delay
           await new Promise(resolve => setTimeout(resolve, 500));
