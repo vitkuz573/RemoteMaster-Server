@@ -24,7 +24,7 @@ const INDUSTRIES = [
   'Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing',
   'Retail', 'Consulting', 'Government', 'Non-profit', 'Other'
 ] as const;
-const COMPANY_SIZES = [
+const ORGANIZATION_SIZES = [
   '1-10 employees', '11-50 employees', '51-200 employees',
   '201-500 employees', '501-1000 employees', '1000+ employees'
 ] as const;
@@ -53,7 +53,8 @@ export interface MockOrganization {
   plan: 'free' | 'pro' | 'enterprise';
   registeredAt: string;
   industry?: string;
-  companySize: string;
+  size: string;
+  contactName?: string;
   contactEmail?: string;
   address?: {
     street: string;
@@ -123,7 +124,8 @@ export const generateMockOrganization = (): MockOrganization => {
     plan: faker.helpers.arrayElement(['free', 'pro', 'enterprise']),
     registeredAt: faker.date.past({ years: 2 }).toISOString(),
     industry: faker.helpers.arrayElement(INDUSTRIES),
-    companySize: faker.helpers.arrayElement(COMPANY_SIZES),
+    size: faker.helpers.arrayElement(ORGANIZATION_SIZES),
+    contactName: faker.person.fullName(),
     contactEmail: faker.internet.email({ firstName: 'admin', lastName: 'user', provider: domain }),
     address: {
       street: faker.location.streetAddress(),

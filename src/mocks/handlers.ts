@@ -22,7 +22,7 @@ const mockIndustries = [
   'Retail', 'Consulting', 'Government', 'Non-profit', 'Other'
 ]
 
-const mockCompanySizes = [
+const mockOrganizationSizes = [
   '1-10 employees', '11-50 employees', '51-200 employees',
   '201-500 employees', '501-1000 employees', '1000+ employees'
 ]
@@ -69,18 +69,11 @@ export const handlers = [
     if (id) {
       organizations = organizations.filter(org => org.id === id)
     }
-    
-    // Map companySize to size for frontend compatibility
-    const mappedOrganizations = organizations.map(org => ({
-      ...org,
-      size: org.companySize,
-      contactName: org.contactEmail ? org.contactEmail.split('@')[0] : undefined
-    }));
 
     return HttpResponse.json({
       success: true,
-      organizations: mappedOrganizations,
-      total: mappedOrganizations.length,
+      organizations: organizations,
+      total: organizations.length,
       message: 'Organizations retrieved successfully'
     })
   }),
@@ -106,10 +99,11 @@ export const handlers = [
         'Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing',
         'Retail', 'Consulting', 'Government', 'Non-profit', 'Other'
       ]),
-      companySize: data.companySize || faker.helpers.arrayElement([
+      size: data.size || faker.helpers.arrayElement([
         '1-10 employees', '11-50 employees', '51-200 employees',
         '201-500 employees', '501-1000 employees', '1000+ employees'
       ]),
+      contactName: data.contactName,
       contactEmail: data.contactEmail,
       address: data.address
     }
@@ -250,7 +244,7 @@ export const handlers = [
     await delay(50) 
     return HttpResponse.json({
       success: true,
-      companySizes: mockCompanySizes,
+      companySizes: mockOrganizationSizes,
       message: 'Company sizes retrieved successfully'
     })
   }),
