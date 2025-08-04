@@ -4,20 +4,23 @@ export const MOCK_API_CONFIG = {
   // Enable/disable mock API (set to true to use mock API)
   ENABLED: true,
   
-  // Delay settings for simulating network latency
+  // Development mode - disable delays for instant loading
+  DEV_MODE: process.env.NODE_ENV === 'development',
+  
+  // Delay settings for simulating network latency - REDUCED for better performance
   DELAYS: {
-    DEFAULT: 1000,
-    REGISTRATION: 1500,
-    LOGIN: 1200,
-    BYOID: 2000,
-    HEALTH: 300,
-    ORGANIZATIONS: 800,
-    PRICING_PLANS: 600,
-    INDUSTRIES: 300,
-    COMPANY_SIZES: 300,
-    COST_CALCULATION: 200,
-    CURRENT_USER: 500,
-    ORGANIZATIONS_WITH_UNITS: 800
+    DEFAULT: 100, // Reduced from 1000ms
+    REGISTRATION: 500, // Reduced from 1500ms
+    LOGIN: 300, // Reduced from 1200ms
+    BYOID: 800, // Reduced from 2000ms
+    HEALTH: 50, // Reduced from 300ms
+    ORGANIZATIONS: 200, // Reduced from 800ms
+    PRICING_PLANS: 150, // Reduced from 600ms
+    INDUSTRIES: 50, // Reduced from 300ms
+    COMPANY_SIZES: 50, // Reduced from 300ms
+    COST_CALCULATION: 50, // Reduced from 200ms
+    CURRENT_USER: 100, // Reduced from 500ms
+    ORGANIZATIONS_WITH_UNITS: 200 // Reduced from 800ms
   },
   
   // Mock credentials for testing
@@ -256,8 +259,11 @@ export const MOCK_API_CONFIG = {
 
 // Helper functions for mock configuration
 export const MockConfigHelpers = {
-  // Get delay for specific operation
+  // Get delay for specific operation - returns 0 in development mode for instant loading
   getDelay(operation: keyof typeof MOCK_API_CONFIG.DELAYS): number {
+    if (MOCK_API_CONFIG.DEV_MODE) {
+      return 0; // Instant loading in development
+    }
     return MOCK_API_CONFIG.DELAYS[operation] || MOCK_API_CONFIG.DELAYS.DEFAULT;
   },
   

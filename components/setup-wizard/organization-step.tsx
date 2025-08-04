@@ -16,7 +16,6 @@ interface OrganizationStepProps {
   onFormChange: (field: keyof OrganizationForm, value: string | number) => void;
   industries: string[];
   companySizes: string[];
-  isLoadingData: boolean;
   isFormDisabled: boolean;
 }
 
@@ -25,7 +24,6 @@ export function OrganizationStep({
   onFormChange,
   industries,
   companySizes,
-  isLoadingData,
   isFormDisabled
 }: OrganizationStepProps) {
   const {
@@ -39,8 +37,8 @@ export function OrganizationStep({
     defaultValues: {
       name: form.name,
       domain: form.domain,
-      industry: form.industry === 'loading' ? '' : form.industry,
-      size: form.size === 'loading' ? '' : form.size,
+      industry: form.industry,
+      size: form.size,
       description: form.description
     }
   });
@@ -156,20 +154,11 @@ export function OrganizationStep({
               <SelectValue placeholder="Select industry" />
             </SelectTrigger>
             <SelectContent className="bg-background/95 backdrop-blur-sm border-2 border-primary/20">
-              {isLoadingData ? (
-                <SelectItem value="loading" disabled className="text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    Loading industries...
-                  </div>
+              {industries.map((industry) => (
+                <SelectItem key={industry} value={industry} className="hover:bg-primary/10">
+                  {industry}
                 </SelectItem>
-              ) : (
-                industries.map((industry) => (
-                  <SelectItem key={industry} value={industry} className="hover:bg-primary/10">
-                    {industry}
-                  </SelectItem>
-                ))
-              )}
+              ))}
             </SelectContent>
           </Select>
           {renderFieldError('industry')}
@@ -190,20 +179,11 @@ export function OrganizationStep({
               <SelectValue placeholder="Select size" />
             </SelectTrigger>
             <SelectContent className="bg-background/95 backdrop-blur-sm border-2 border-primary/20">
-              {isLoadingData ? (
-                <SelectItem value="loading" disabled className="text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    Loading company sizes...
-                  </div>
+              {companySizes.map((size) => (
+                <SelectItem key={size} value={size} className="hover:bg-primary/10">
+                  {size}
                 </SelectItem>
-              ) : (
-                companySizes.map((size) => (
-                  <SelectItem key={size} value={size} className="hover:bg-primary/10">
-                    {size}
-                  </SelectItem>
-                ))
-              )}
+              ))}
             </SelectContent>
           </Select>
           {renderFieldError('size')}
