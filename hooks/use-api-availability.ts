@@ -1,9 +1,8 @@
 import { useApiContext } from '@/contexts/api-context';
 import { API_CONFIG } from '@/lib/api-config';
-import { mockApiService } from '@/lib/api-service-mock';
 import { apiService } from '@/lib/api-service';
 import { useNotifications } from '@/hooks/use-notifications';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 import React from 'react';
 
 export function useApiAvailability() {
@@ -13,10 +12,8 @@ export function useApiAvailability() {
   // Track if we've already initialized
   const [hasInitialized, setHasInitialized] = React.useState(false);
 
-  // Get the appropriate API service based on configuration
-  const api = useMemo(() => {
-    return API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
-  }, []);
+  // Use the single API service - MSW will handle mocking if enabled
+  const api = apiService;
 
   // Check API availability
   const checkApiAvailability = useCallback(async () => {
@@ -44,13 +41,8 @@ export function useApiAvailability() {
     
     setHasInitialized(true);
     
-    if (API_CONFIG.USE_MOCK_API) {
-      // Mock API is always available
-      setApiAvailable(true);
-    } else {
-      // Check real API availability
-      checkApiAvailability();
-    }
+    // Check API availability (MSW will handle mocking if enabled)
+    checkApiAvailability();
   }, [checkApiAvailability, setApiAvailable, hasInitialized]);
 
   // Helper function to determine if forms should be disabled

@@ -2,17 +2,17 @@
 
 import { use, createContext, useContext, useMemo } from 'react';
 import { API_CONFIG } from '@/lib/api-config';
-import { mockApiService } from '@/lib/api-service-mock';
+// Removed mock API import - using single API service
 import { apiService } from '@/lib/api-service';
 
 // API context for data fetching
-const ApiContext = createContext<typeof apiService | typeof mockApiService | null>(null);
+const ApiContext = createContext<typeof apiService | null>(null);
 
 // Global cache for data fetching - this ensures promises are created once and reused
 const dataCache = new Map<string, Promise<any>>();
 
 // Data fetching functions that return promises (not async functions)
-function fetchIndustries(api: typeof apiService | typeof mockApiService): Promise<string[]> {
+function fetchIndustries(api: typeof apiService): Promise<string[]> {
   const cacheKey = 'industries';
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey) as Promise<string[]>;
@@ -34,7 +34,7 @@ function fetchIndustries(api: typeof apiService | typeof mockApiService): Promis
   return promise;
 }
 
-function fetchCompanySizes(api: typeof apiService | typeof mockApiService): Promise<string[]> {
+function fetchCompanySizes(api: typeof apiService): Promise<string[]> {
   const cacheKey = 'companySizes';
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey) as Promise<string[]>;
@@ -56,7 +56,7 @@ function fetchCompanySizes(api: typeof apiService | typeof mockApiService): Prom
   return promise;
 }
 
-function fetchPricingPlans(api: typeof apiService | typeof mockApiService): Promise<any[]> {
+function fetchPricingPlans(api: typeof apiService): Promise<any[]> {
   const cacheKey = 'pricingPlans';
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey) as Promise<any[]>;
@@ -150,7 +150,7 @@ export function SetupWizardDataProvider({ children }: { children: (data: {
 // API Provider component
 export function ApiProvider({ children }: { children: React.ReactNode }) {
   const api = useMemo(() => {
-    return API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
+    return apiService;
   }, []);
   
   return (

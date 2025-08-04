@@ -12,6 +12,7 @@ import { appConfig } from "@/lib/app-config";
 import { initializeDefaultHealthChecks } from "@/lib/system-status";
 import { initializeCustomHealthChecks } from "@/lib/custom-health-checks";
 import { ConditionalHeaderWrapper } from "@/components/ui/conditional-header-wrapper";
+import { MSWProvider } from "@/components/msw-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,20 +45,22 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
-        <TooltipProvider>
-          <ApiProvider>
-            <HeaderProvider>
-              <FooterProvider>
-                <ConditionalHeaderWrapper />
-                <div className="flex-1">
-                  {children}
-                </div>
-                <Footer />
-              </FooterProvider>
-            </HeaderProvider>
-          </ApiProvider>
-        </TooltipProvider>
-        <Toaster />
+        <MSWProvider>
+          <TooltipProvider>
+            <ApiProvider>
+              <HeaderProvider>
+                <FooterProvider>
+                  <ConditionalHeaderWrapper />
+                  <div className="flex-1">
+                    {children}
+                  </div>
+                  <Footer />
+                </FooterProvider>
+              </HeaderProvider>
+            </ApiProvider>
+          </TooltipProvider>
+          <Toaster />
+        </MSWProvider>
       </body>
     </html>
   );

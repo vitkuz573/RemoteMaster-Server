@@ -2,17 +2,17 @@
 
 import { use, createContext, useContext, useMemo } from 'react';
 import { API_CONFIG } from '@/lib/api-config';
-import { mockApiService } from '@/lib/api-service-mock';
+// Removed mock API import - using single API service
 import { apiService } from '@/lib/api-service';
 
 // API context for data fetching
-const ApiContext = createContext<typeof apiService | typeof mockApiService | null>(null);
+const ApiContext = createContext<typeof apiService | null>(null);
 
 // Global cache for data fetching - this ensures promises are created once and reused
 const dataCache = new Map<string, Promise<any>>();
 
 // Data fetching functions that return promises (not async functions)
-function fetchCurrentUser(api: typeof apiService | typeof mockApiService): Promise<{
+function fetchCurrentUser(api: typeof apiService): Promise<{
   name: string;
   email: string;
   role: string;
@@ -44,7 +44,7 @@ function fetchCurrentUser(api: typeof apiService | typeof mockApiService): Promi
   return promise;
 }
 
-function fetchOrganizations(api: typeof apiService | typeof mockApiService): Promise<Record<string, {
+function fetchOrganizations(api: typeof apiService): Promise<Record<string, {
   name: string;
   organizationalUnits: Record<string, {
     name: string;
@@ -88,7 +88,7 @@ function fetchOrganizations(api: typeof apiService | typeof mockApiService): Pro
   return promise;
 }
 
-function fetchOrganizationsList(api: typeof apiService | typeof mockApiService): Promise<Array<{
+function fetchOrganizationsList(api: typeof apiService): Promise<Array<{
   id: string;
   tenantId?: string;
   name: string;
@@ -156,7 +156,7 @@ function fetchOrganizationsList(api: typeof apiService | typeof mockApiService):
   return promise;
 }
 
-function fetchIndustries(api: typeof apiService | typeof mockApiService): Promise<string[]> {
+function fetchIndustries(api: typeof apiService): Promise<string[]> {
   const cacheKey = 'industries';
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey) as Promise<string[]>;
@@ -178,7 +178,7 @@ function fetchIndustries(api: typeof apiService | typeof mockApiService): Promis
   return promise;
 }
 
-function fetchCompanySizes(api: typeof apiService | typeof mockApiService): Promise<string[]> {
+function fetchCompanySizes(api: typeof apiService): Promise<string[]> {
   const cacheKey = 'companySizes';
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey) as Promise<string[]>;
@@ -200,7 +200,7 @@ function fetchCompanySizes(api: typeof apiService | typeof mockApiService): Prom
   return promise;
 }
 
-function fetchPricingPlans(api: typeof apiService | typeof mockApiService): Promise<any[]> {
+function fetchPricingPlans(api: typeof apiService): Promise<any[]> {
   const cacheKey = 'pricingPlans';
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey) as Promise<any[]>;
@@ -418,7 +418,7 @@ export {
 // API Provider component
 export function ApiProvider({ children }: { children: React.ReactNode }) {
   const api = useMemo(() => {
-    return API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
+    return apiService;
   }, []);
   
   return (

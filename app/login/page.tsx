@@ -22,7 +22,7 @@ import {
 import { appConfig } from '@/lib/app-config';
 import { useHeader } from '@/contexts/header-context';
 import { API_CONFIG } from '@/lib/api-config';
-import { mockApiService } from '@/lib/api-service-mock';
+// Removed mock API import - using single API service
 import { apiService } from '@/lib/api-service';
 
 export default function LoginPage() {
@@ -50,7 +50,7 @@ export default function LoginPage() {
       setIsCheckingApi(true);
       try {
         // Use the appropriate API service based on configuration
-        const api = API_CONFIG.USE_MOCK_API ? mockApiService : apiService;
+        const api = apiService;
         const data = await api.getOrganizations();
         const organizations = data.organizations || [];
         const tenants = organizations.map((org: any) => ({
@@ -182,7 +182,7 @@ export default function LoginPage() {
         }
 
         // Call the external login API
-        const result = await mockApiService.login({
+        const result = await apiService.login({
           email: email.trim(),
           password: password,
           domain: tenantId.trim()
@@ -196,7 +196,7 @@ export default function LoginPage() {
         }
 
         // Show success message
-        mockApiService.showSuccess(result.message || 'Login successful!');
+        apiService.showSuccess(result.message || 'Login successful!');
         
         // Redirect to main dashboard
         router.push("/");

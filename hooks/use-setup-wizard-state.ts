@@ -38,53 +38,72 @@ const loadFromStorage = (key: string, defaultValue: any) => {
 
 export const useSetupWizardState = () => {
   // Initialize state from localStorage
-  const [currentStep, setCurrentStep] = useState<WizardStep>(() => 
-    loadFromStorage(STORAGE_KEYS.CURRENT_STEP, 'organization')
-  );
+  const [currentStep, setCurrentStep] = useState<WizardStep>('organization');
   
-  const [isSubmitting, setIsSubmitting] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.IS_SUBMITTING, false)
-  );
+  // Load from localStorage after client-side hydration
+  useEffect(() => {
+    const savedStep = loadFromStorage(STORAGE_KEYS.CURRENT_STEP, 'organization');
+    setCurrentStep(savedStep);
+  }, []);
   
-  const [isDiscovering, setIsDiscovering] = useState(() => 
-    loadFromStorage(STORAGE_KEYS.IS_DISCOVERING, false)
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  
+  // Load from localStorage after client-side hydration
+  useEffect(() => {
+    const savedSubmitting = loadFromStorage(STORAGE_KEYS.IS_SUBMITTING, false);
+    const savedDiscovering = loadFromStorage(STORAGE_KEYS.IS_DISCOVERING, false);
+    setIsSubmitting(savedSubmitting);
+    setIsDiscovering(savedDiscovering);
+  }, []);
 
-  const [orgForm, setOrgForm] = useState<OrganizationForm>(() => {
+  const [orgForm, setOrgForm] = useState<OrganizationForm>({
+    name: '',
+    domain: '',
+    industry: 'loading',
+    size: 'loading',
+    contactName: '',
+    contactEmail: '',
+    contactPhone: '',
+    address: '',
+    description: '',
+    expectedUsers: 10,
+    selectedPlan: 'free'
+  });
+  
+  // Load from localStorage after client-side hydration
+  useEffect(() => {
     const saved = loadFromStorage(STORAGE_KEYS.ORG_FORM, null);
-    return saved || {
-      name: '',
-      domain: '',
-      industry: 'loading',
-      size: 'loading',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      address: '',
-      description: '',
-      expectedUsers: 10,
-      selectedPlan: 'free'
-    };
-  });
+    if (saved) {
+      setOrgForm(saved);
+    }
+  }, []);
 
-  const [byoidForm, setByoidForm] = useState<BYOIDForm>(() => {
+  const [byoidForm, setByoidForm] = useState<BYOIDForm>({
+    issuerUrl: '',
+    clientId: '',
+    clientSecret: ''
+  });
+  
+  // Load from localStorage after client-side hydration
+  useEffect(() => {
     const saved = loadFromStorage(STORAGE_KEYS.BYOID_FORM, null);
-    return saved || {
-      issuerUrl: '',
-      clientId: '',
-      clientSecret: ''
-    };
-  });
+    if (saved) {
+      setByoidForm(saved);
+    }
+  }, []);
 
-  const [totalMonthly, setTotalMonthly] = useState<number>(() => 
-    loadFromStorage(STORAGE_KEYS.TOTAL_MONTHLY, 0)
-  );
-
-  const [registrationResult, setRegistrationResult] = useState<any>(() => {
-    const loaded = loadFromStorage(STORAGE_KEYS.REGISTRATION_RESULT, null);
-    console.log('Hook: Loaded registrationResult from localStorage', loaded);
-    return loaded;
-  });
+  const [totalMonthly, setTotalMonthly] = useState<number>(0);
+  const [registrationResult, setRegistrationResult] = useState<any>(null);
+  
+  // Load from localStorage after client-side hydration
+  useEffect(() => {
+    const savedTotal = loadFromStorage(STORAGE_KEYS.TOTAL_MONTHLY, 0);
+    const savedResult = loadFromStorage(STORAGE_KEYS.REGISTRATION_RESULT, null);
+    setTotalMonthly(savedTotal);
+    setRegistrationResult(savedResult);
+    console.log('Hook: Loaded registrationResult from localStorage', savedResult);
+  }, []);
 
   // Save state to localStorage whenever it changes
   useEffect(() => {

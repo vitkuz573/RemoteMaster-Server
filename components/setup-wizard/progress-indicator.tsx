@@ -20,10 +20,16 @@ export function ProgressIndicator({
   currentStepIndex,
   isLoading = false
 }: ProgressIndicatorProps) {
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
-  // Show skeleton during loading to prevent hydration mismatch
-  if (isLoading) {
+  // Show skeleton during loading or until client-side hydration
+  if (isLoading || !isClient) {
     return (
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
