@@ -39,7 +39,6 @@ const generateTempPassword = () =>
 export const handlers = [
   // Health check
   http.get('http://localhost:3001/health', async () => {
-    console.log('🎯 MSW: Intercepted GET /health')
     await delay(50)
     return HttpResponse.json({
       status: 'healthy',
@@ -56,7 +55,6 @@ export const handlers = [
 
   // Organizations
   http.get('http://localhost:3001/organizations', async ({ request }) => {
-    console.log('🎯 MSW: Intercepted GET /organizations')
     await delay(200)
     const url = new URL(request.url)
     const domain = url.searchParams.get('domain')
@@ -72,8 +70,6 @@ export const handlers = [
       organizations = organizations.filter(org => org.id === id)
     }
     
-    console.log('🎯 MSW: Returning organizations:', organizations)
-    
     // Map companySize to size for frontend compatibility
     const mappedOrganizations = organizations.map(org => ({
       ...org,
@@ -81,8 +77,6 @@ export const handlers = [
       contactName: org.contactEmail ? org.contactEmail.split('@')[0] : undefined
     }));
 
-    console.log('🎯 MSW: Returning organizations:', mappedOrganizations)
-    
     return HttpResponse.json({
       success: true,
       organizations: mappedOrganizations,
@@ -202,7 +196,6 @@ export const handlers = [
 
   // Pricing
   http.get('http://localhost:3001/pricing/plans', async () => {
-    console.log('🎯 MSW: Intercepted GET /pricing/plans')
     await delay(150)
     return HttpResponse.json({
       success: true,
@@ -245,7 +238,6 @@ export const handlers = [
 
   // Reference data
   http.get('http://localhost:3001/reference/industries', async () => {
-    console.log('🎯 MSW: Intercepted GET /reference/industries')
     await delay(50)
     return HttpResponse.json({
       success: true,
@@ -255,7 +247,6 @@ export const handlers = [
   }),
 
   http.get('http://localhost:3001/reference/company-sizes', async () => {
-    console.log('🎯 MSW: Intercepted GET /reference/company-sizes')
     await delay(50) 
     return HttpResponse.json({
       success: true,

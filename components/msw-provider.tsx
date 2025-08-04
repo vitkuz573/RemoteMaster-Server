@@ -21,7 +21,6 @@ export function MSWProvider({ children }: MSWProviderProps) {
       // Only run in development
       if (process.env.NODE_ENV === 'development') {
         try {
-          console.log('MSW Provider: Starting MSW...')
           const { worker } = await import('../src/mocks/browser')
           await worker.start({
             onUnhandledRequest: 'bypass',
@@ -29,12 +28,9 @@ export function MSWProvider({ children }: MSWProviderProps) {
               url: '/mockServiceWorker.js'
             }
           })
-          console.log('✅ MSW ready and intercepting requests')
         } catch (error) {
           console.error('❌ Failed to start MSW:', error)
         }
-      } else {
-        console.log('MSW Provider: MSW disabled (not in development mode)')
       }
       setIsMSWReady(true)
     }
