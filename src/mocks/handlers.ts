@@ -1,62 +1,21 @@
 import { http, HttpResponse, delay } from 'msw'
+import { 
+  generateMockOrganizations, 
+  generateMockUser, 
+  generateMockOrganizationalUnits,
+  generateMockPricingPlans,
+  generateConsistentMockData,
+  type MockOrganization,
+  type MockUser
+} from './faker-utils'
 
-// Mock data
-const mockOrganizations = [
-  {
-    id: 'org_1',
-    tenantId: 'tenant_1', 
-    name: 'Acme Corporation',
-    domain: 'acme.com',
-    status: 'active',
-    plan: 'pro',
-    registeredAt: '2024-01-15T10:30:00Z'
-  },
-  {
-    id: 'org_2',
-    tenantId: 'tenant_2',
-    name: 'TechStart Inc', 
-    domain: 'techstart.io',
-    status: 'active',
-    plan: 'free',
-    registeredAt: '2024-01-20T14:45:00Z'
-  }
-]
+// Generate consistent mock data for the session
+const mockData = generateConsistentMockData();
+let mockOrganizations = mockData.organizations;
+let mockUsers = mockData.users;
+let mockUnits = mockData.units;
 
-const mockPricingPlans = [
-  {
-    id: 'free',
-    name: 'Free',
-    description: 'Perfect for small teams getting started',
-    price: 0,
-    billingCycle: 'monthly',
-    features: ['Up to 2 organizational units', 'Up to 10 hosts', 'Basic monitoring', 'Email support'],
-    maxOrganizationalUnits: 2,
-    maxHosts: 10,
-    maxUsers: 5
-  },
-  {
-    id: 'pro', 
-    name: 'Professional',
-    description: 'Ideal for growing businesses',
-    price: 29,
-    billingCycle: 'monthly',
-    features: ['Up to 10 organizational units', 'Up to 50 hosts', 'Advanced monitoring', 'Priority support', 'Custom integrations'],
-    maxOrganizationalUnits: 10,
-    maxHosts: 50,
-    maxUsers: 25
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise', 
-    description: 'For large-scale deployments',
-    price: 299,
-    billingCycle: 'monthly',
-    features: ['Unlimited organizational units', 'Unlimited hosts', 'Enterprise-grade monitoring', 'Dedicated support', 'Advanced analytics', 'Custom branding', 'SLA guarantees'],
-    maxOrganizationalUnits: -1,
-    maxHosts: -1, 
-    maxUsers: -1
-  }
-]
+const mockPricingPlans = generateMockPricingPlans();
 
 const mockIndustries = [
   'Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing',
@@ -128,15 +87,28 @@ export const handlers = [
     const tenantId = generateId('tenant')
     const tempPassword = generateTempPassword()
     
+    // Create a new organization with Faker.js data
+    const newOrganization: MockOrganization = {
+      id: orgId,
+      tenantId: tenantId,
+      name: data.name,
+      domain: data.domain,
+      status: 'active',
+      plan: data.selectedPlan,
+      registeredAt: new Date().toISOString(),
+      industry: data.industry,
+      companySize: data.companySize,
+      contactEmail: data.contactEmail,
+      address: data.address
+    }
+    
+    // Add to mock data
+    mockOrganizations.push(newOrganization)
+    
     return HttpResponse.json({
       success: true,
       organization: {
-        id: orgId,
-        tenantId: tenantId,
-        name: data.name,
-        domain: data.domain,
-        status: 'active',
-        plan: data.selectedPlan,
+        ...newOrganization,
         idpConfig: data.selectedPlan === 'free' ? {
           provider: 'built-in',
           type: 'internal', 
@@ -158,20 +130,24 @@ export const handlers = [
     await delay(300)
     const data = await request.json() as any
     
+    // Check against mock credentials or find user in mock data
     if (data.email === 'admin@acme.com' && data.password === 'password123') {
+      const mockUser = mockUsers.find(u => u.email === data.email) || generateMockUser('org_1');
+      const mockOrg = mockOrganizations.find(o => o.id === mockUser.organizationId) || mockOrganizations[0];
+      
       return HttpResponse.json({
         success: true,
         token: generateId('token'),
         user: {
-          id: 'user_1',
-          email: data.email,
-          name: 'Admin User',
-          role: 'admin',
+          id: mockUser.id,
+          email: mockUser.email,
+          name: mockUser.name,
+          role: mockUser.role,
           organization: {
-            id: 'org_1',
-            name: 'Acme Corporation', 
-            domain: 'acme.com',
-            tenantId: 'tenant_1'
+            id: mockOrg.id,
+            name: mockOrg.name, 
+            domain: mockOrg.domain,
+            tenantId: mockOrg.tenantId
           }
         },
         message: 'Login successful'
@@ -186,15 +162,21 @@ export const handlers = [
 
   http.get('http://localhost:3001/user/current', async () => {
     await delay(100)
+    
+    // Get a random user from mock data or generate one
+    const mockUser = mockUsers[0] || generateMockUser('org_1');
+    
     return HttpResponse.json({
       success: true,
       user: {
-        id: 'user_1',
-        name: 'John Doe',
-        email: 'john.doe@company.com',
-        role: 'Administrator',
-        avatar: null,
-        organizationId: 'acme-corp'
+        id: mockUser.id,
+        name: mockUser.name,
+        email: mockUser.email,
+        role: mockUser.role,
+        avatar: mockUser.avatar,
+        organizationId: mockUser.organizationId,
+        lastLogin: mockUser.lastLogin,
+        isActive: mockUser.isActive
       },
       message: 'Current user retrieved successfully'
     })
@@ -331,34 +313,55 @@ export const handlers = [
   // Organizations with units
   http.get('http://localhost:3001/organizations/with-units', async () => {
     await delay(200)
+    
+    // Convert mock units to the expected format
+    const organizationsWithUnits: Record<string, any> = {};
+    
+    mockOrganizations.forEach(org => {
+      const orgUnits = mockUnits.filter(unit => 
+        unit.hosts.some(host => host.id.includes(org.id) || org.id.includes(host.id))
+      );
+      
+      if (orgUnits.length === 0) {
+        // Generate some units for this organization
+        const generatedUnits = generateMockOrganizationalUnits(2);
+        orgUnits.push(...generatedUnits);
+      }
+      
+      const unitsMap: Record<string, any> = {};
+      orgUnits.forEach(unit => {
+        unitsMap[unit.name.toLowerCase()] = {
+          id: unit.id,
+          name: unit.name,
+          description: unit.description,
+          hosts: unit.hosts.map(host => ({
+            id: host.id,
+            name: host.name,
+            status: host.status,
+            type: host.type,
+            ipAddress: host.ipAddress,
+            os: host.os,
+            lastSeen: host.lastSeen,
+            cpuUsage: host.cpuUsage,
+            memoryUsage: host.memoryUsage,
+            diskUsage: host.diskUsage
+          }))
+        };
+      });
+      
+      organizationsWithUnits[org.id] = {
+        id: org.id,
+        name: org.name,
+        domain: org.domain,
+        status: org.status,
+        plan: org.plan,
+        organizationalUnits: unitsMap
+      };
+    });
+    
     return HttpResponse.json({
       success: true,
-      organizations: {
-        'acme-corp': {
-          id: 'acme-corp',
-          name: 'Acme Corp',
-          domain: 'acme.com',
-          status: 'active',
-          plan: 'pro',
-          organizationalUnits: {
-            'production': {
-              id: 'production',
-              name: 'Production',
-              hosts: [
-                { id: 'web-server-01', name: 'web-server-01', status: 'online', type: 'web' },
-                { id: 'db-server-01', name: 'db-server-01', status: 'online', type: 'database' }
-              ]
-            },
-            'development': {
-              id: 'development', 
-              name: 'Development',
-              hosts: [
-                { id: 'dev-server-01', name: 'dev-server-01', status: 'online', type: 'development' }
-              ]
-            }
-          }
-        }
-      },
+      organizations: organizationsWithUnits,
       message: 'Organizations with units retrieved successfully'
     })
   })
