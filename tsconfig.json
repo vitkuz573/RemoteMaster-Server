@@ -1,27 +1,109 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
+    // Modern JavaScript target
+    "target": "ES2022",
+    // Modern library definitions
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es2022"
+    ],
+    // Module settings
     "module": "esnext",
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    // JSX settings
     "jsx": "preserve",
+    // EXTREMELY STRICT Type checking
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    // Advanced strict checks
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "exactOptionalPropertyTypes": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "useUnknownInCatchVariables": true,
+    // Unused code detection
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    // Performance and quality optimizations
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    "disableSourceOfProjectReferenceRedirect": true,
+    "noEmitOnError": true,
+    "preserveSymlinks": true,
+    "preserveWatchOutput": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    // Disable all suppressions for maximum strictness
+    "suppressImplicitAnyIndexErrors": false,
+    "suppressExcessPropertyErrors": false,
+    // Emit settings
+    "noEmit": true,
     "incremental": true,
+    // Interop settings
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    // Path mapping
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@/lib/*": [
+        "./lib/*"
+      ],
+      "@/hooks/*": [
+        "./hooks/*"
+      ],
+      "@/contexts/*": [
+        "./contexts/*"
+      ],
+      "@/stores/*": [
+        "./lib/stores/*"
+      ],
+      "@/ui/*": [
+        "./components/ui/*"
+      ],
+      "@/types/*": [
+        "./types/*"
+      ]
+    },
+    // Next.js plugin
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "allowJs": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "components/**/*",
+    "lib/**/*",
+    "hooks/**/*",
+    "contexts/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    "dist",
+    "build"
+  ]
 }
