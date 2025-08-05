@@ -1,15 +1,10 @@
 'use client';
 
 import { use, useMemo } from 'react';
-import { API_CONFIG } from '@/lib/api-config';
-// Removed mock API import - using single API service
 import { apiService } from '@/lib/api-service';
-import { useApiStore } from '@/lib/stores';
 
-// Global cache for data fetching - this ensures promises are created once and reused
 const dataCache = new Map<string, Promise<any>>();
 
-// Data fetching functions that return promises (not async functions)
 function fetchCurrentUser(api: typeof apiService): Promise<{
   name: string;
   email: string;
@@ -33,7 +28,6 @@ function fetchCurrentUser(api: typeof apiService): Promise<{
       throw new Error('Failed to fetch current user');
     }
   }).catch(error => {
-    // Remove from cache on error so we can retry
     dataCache.delete(cacheKey);
     throw error;
   });
@@ -77,7 +71,6 @@ function fetchOrganizations(api: typeof apiService): Promise<Record<string, {
       throw new Error('Failed to fetch organizations');
     }
   }).catch(error => {
-    // Remove from cache on error so we can retry
     dataCache.delete(cacheKey);
     throw error;
   });
@@ -133,10 +126,8 @@ function fetchOrganizationsList(api: typeof apiService): Promise<Array<{
   }
 
   const promise = api.getOrganizations().then(response => {
-    // Handle both API service (no success property) and mock service (has success property)
-    const organizations = 'success' in response ? response.organizations : response.organizations;
-    if (organizations) {
-      return (organizations || []).map((org: any) => ({
+    if (response.organizations) {
+      return (response.organizations || []).map((org: any) => ({
         ...org,
         status: org.status as 'pending' | 'active' | 'suspended',
         createdAt: org.registeredAt || org.createdAt
@@ -145,7 +136,6 @@ function fetchOrganizationsList(api: typeof apiService): Promise<Array<{
       throw new Error('Failed to fetch organizations list');
     }
   }).catch(error => {
-    // Remove from cache on error so we can retry
     dataCache.delete(cacheKey);
     throw error;
   });
@@ -167,7 +157,6 @@ function fetchIndustries(api: typeof apiService): Promise<string[]> {
       throw new Error('Failed to fetch industries');
     }
   }).catch(error => {
-    // Remove from cache on error so we can retry
     dataCache.delete(cacheKey);
     throw error;
   });
@@ -189,7 +178,6 @@ function fetchCompanySizes(api: typeof apiService): Promise<string[]> {
       throw new Error('Failed to fetch company sizes');
     }
   }).catch(error => {
-    // Remove from cache on error so we can retry
     dataCache.delete(cacheKey);
     throw error;
   });
@@ -211,7 +199,6 @@ function fetchPricingPlans(api: typeof apiService): Promise<any[]> {
       throw new Error('Failed to fetch pricing plans');
     }
   }).catch(error => {
-    // Remove from cache on error so we can retry
     dataCache.delete(cacheKey);
     throw error;
   });
@@ -220,23 +207,13 @@ function fetchPricingPlans(api: typeof apiService): Promise<any[]> {
   return promise;
 }
 
-// Hook to get API service from Zustand store
-function useApiService() {
-  const { isMockApi } = useApiStore();
-  return apiService;
-}
-
-// Individual data provider components
 export function CurrentUserProvider({ children }: { children: (user: {
   name: string;
   email: string;
   role: string;
   avatar: string | null;
 }) => React.ReactNode }) {
-  const api = useApiService();
-  
-  // Create the promise once and memoize it
-  const userPromise = useMemo(() => fetchCurrentUser(api), [api]);
+  const userPromise = useMemo(() => fetchCurrentUser(apiService), []);
   const user = use(userPromise);
   
   return <>{children(user)}</>;
@@ -254,10 +231,7 @@ export function OrganizationsProvider({ children }: { children: (organizations: 
     }>;
   }>;
 }>) => React.ReactNode }) {
-  const api = useApiService();
-  
-  // Create the promise once and memoize it
-  const organizationsPromise = useMemo(() => fetchOrganizations(api), [api]);
+  const organizationsPromise = useMemo(() => fetchOrganizations(apiService), []);
   const organizations = use(organizationsPromise);
   
   return <>{children(organizations)}</>;
@@ -284,46 +258,33 @@ export function OrganizationsListProvider({ children }: { children: (organizatio
   };
   byoidConfig?: any;
 }>) => React.ReactNode }) {
-  const api = useApiService();
-  
-  // Create the promise once and memoize it
-  const organizationsPromise = useMemo(() => fetchOrganizationsList(api), [api]);
+  const organizationsPromise = useMemo(() => fetchOrganizationsList(apiService), []);
   const organizations = use(organizationsPromise);
   
   return <>{children(organizations)}</>;
 }
 
 export function IndustriesProvider({ children }: { children: (industries: string[]) => React.ReactNode }) {
-  const api = useApiService();
-  
-  // Create the promise once and memoize it
-  const industriesPromise = useMemo(() => fetchIndustries(api), [api]);
+  const industriesPromise = useMemo(() => fetchIndustries(apiService), []);
   const industries = use(industriesPromise);
   
   return <>{children(industries)}</>;
 }
 
 export function CompanySizesProvider({ children }: { children: (companySizes: string[]) => React.ReactNode }) {
-  const api = useApiService();
-  
-  // Create the promise once and memoize it
-  const companySizesPromise = useMemo(() => fetchCompanySizes(api), [api]);
+  const companySizesPromise = useMemo(() => fetchCompanySizes(apiService), []);
   const companySizes = use(companySizesPromise);
   
   return <>{children(companySizes)}</>;
 }
 
 export function PricingPlansProvider({ children }: { children: (pricingPlans: any[]) => React.ReactNode }) {
-  const api = useApiService();
-  
-  // Create the promise once and memoize it
-  const pricingPlansPromise = useMemo(() => fetchPricingPlans(api), [api]);
+  const pricingPlansPromise = useMemo(() => fetchPricingPlans(apiService), []);
   const pricingPlans = use(pricingPlansPromise);
   
   return <>{children(pricingPlans)}</>;
 }
 
-// Combined data providers for common use cases
 export function HomePageDataProvider({ children }: { children: (data: {
   currentUser: {
     name: string;
@@ -344,13 +305,9 @@ export function HomePageDataProvider({ children }: { children: (data: {
     }>;
   }>;
 }) => React.ReactNode }) {
-  const api = useApiService();
-  
-  // Create all promises once and memoize them
-  const currentUserPromise = useMemo(() => fetchCurrentUser(api), [api]);
-  const organizationsPromise = useMemo(() => fetchOrganizations(api), [api]);
+  const currentUserPromise = useMemo(() => fetchCurrentUser(apiService), []);
+  const organizationsPromise = useMemo(() => fetchOrganizations(apiService), []);
 
-  // Use all promises
   const currentUser = use(currentUserPromise);
   const organizations = use(organizationsPromise);
 
@@ -387,10 +344,7 @@ export function AdminPageDataProvider({ children }: { children: (data: {
     byoidConfig?: any;
   }>;
 }) => React.ReactNode }) {
-  const api = useApiService();
-  
-  // Create the promise once and memoize it
-  const organizationsPromise = useMemo(() => fetchOrganizationsList(api), [api]);
+  const organizationsPromise = useMemo(() => fetchOrganizationsList(apiService), []);
   const organizations = use(organizationsPromise);
 
   return (
@@ -402,7 +356,6 @@ export function AdminPageDataProvider({ children }: { children: (data: {
   );
 }
 
-// Setup Wizard specific provider (re-export from existing file)
 export { 
   SetupWizardDataProvider,
   IndustriesProvider as SetupWizardIndustriesProvider,
@@ -410,7 +363,6 @@ export {
   PricingPlansProvider as SetupWizardPricingPlansProvider
 } from './setup-wizard/data-providers';
 
-// Loading components for Suspense fallbacks
 export function CurrentUserLoading() {
   return (
     <div className="flex items-center space-x-3">
