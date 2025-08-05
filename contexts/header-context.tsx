@@ -36,9 +36,9 @@ export function HeaderProvider({ children }: { children: React.ReactNode }) {
   const hideHeader = () => setIsVisible(false);
   const toggleHeader = () => setIsVisible(prev => !prev);
   
-  const updateConfig = (newConfig: Partial<HeaderConfig>) => {
+  const updateConfig = React.useCallback((newConfig: Partial<HeaderConfig>) => {
     setConfig(prev => ({ ...prev, ...newConfig }));
-  };
+  }, []);
   
   const resetConfig = () => {
     setConfig(defaultConfig);

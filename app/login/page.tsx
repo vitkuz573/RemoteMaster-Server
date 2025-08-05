@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
 import { useHeader } from '@/contexts/header-context';
+import { useAuth } from '@/hooks/use-auth';
 import { apiService } from '@/lib/api-service';
 
 export default function LoginPage() {
@@ -34,6 +35,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isNavigatingToSetup, setIsNavigatingToSetup] = React.useState(false);
   const [error, setError] = React.useState("");
+
+  // Auth store
+  const auth = useAuth();
   const [isApiAvailable, setIsApiAvailable] = React.useState(true);
   const [isCheckingApi, setIsCheckingApi] = React.useState(true);
 
@@ -172,10 +176,16 @@ export default function LoginPage() {
           domain: domain.trim()
         });
 
-        // Save auth data to localStorage
+        // Persist auth in zustand store (with localStorage fallback handled by middleware)
+        auth.login(result.token, {
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role,
+          avatar: null,
+        });
+
+        // Optionally keep raw response in localStorage for debugging
         if (typeof window !== "undefined") {
-          localStorage.setItem("authToken", result.token);
-          localStorage.setItem("user", JSON.stringify(result.user));
           localStorage.setItem("tenant", domain.trim());
         }
 
