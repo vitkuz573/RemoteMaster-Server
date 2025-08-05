@@ -49,7 +49,8 @@ export function useRegistrationGuard(redirectTo: string = '/register') {
   useEffect(() => {
     // Redirect if no valid registration data
     if (!isLoading && !isValidAccess) {
-      router.push(redirectTo);
+      // Use replace to prevent back navigation to protected pages
+      router.replace(redirectTo);
     }
   }, [isLoading, isValidAccess, router, redirectTo]);
 

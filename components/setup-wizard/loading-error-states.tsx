@@ -4,6 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface LoadingErrorStatesProps {
   isCheckingApi: boolean;
@@ -18,6 +19,7 @@ export function LoadingErrorStates({
   getLoadingText,
   getStatusMessage
 }: LoadingErrorStatesProps) {
+  const router = useRouter();
   // Show loading state while checking API
   if (isCheckingApi) {
     return (
@@ -45,7 +47,7 @@ export function LoadingErrorStates({
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={() => window.location.reload()} className="w-full">
+            <Button onClick={() => router.refresh()} className="w-full">
               Retry
             </Button>
           </CardContent>

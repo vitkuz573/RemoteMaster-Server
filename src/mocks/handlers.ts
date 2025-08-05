@@ -19,6 +19,14 @@ let mockUnits = mockOrganizations.flatMap(org => generateMockOrganizationalUnits
 
 const mockPricingPlans = generateMockPricingPlans();
 
+// Mock credentials for testing
+const mockCredentials = {
+  'admin@acme.com': { password: 'password123', role: 'admin' as const },
+  'user@acme.com': { password: 'password123', role: 'user' as const },
+  'john@example.com': { password: 'password123', role: 'admin' as const },
+  'jane@example.com': { password: 'password123', role: 'user' as const }
+};
+
 // Helper functions
 const generateId = (prefix: string = 'id') => 
   `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
@@ -55,7 +63,12 @@ export const handlers = [
     let organizations = mockOrganizations
     
     if (domain) {
-      organizations = organizations.filter(org => org.domain === domain)
+      organizations = organizations.filter(org => 
+        org.domain === domain || 
+        org.id === domain ||
+        org.domain.toLowerCase() === domain.toLowerCase() ||
+        org.id.toLowerCase() === domain.toLowerCase()
+      )
     }
     
     if (id) {
@@ -117,15 +130,32 @@ export const handlers = [
     })
   }),
 
-  // Authentication
+  // Enhanced Authentication
   http.post('http://localhost:3001/auth/login', async ({ request }) => {
     await delay(300)
     const data = await request.json() as any
     
-    // Check against mock credentials or find user in mock data
-    if (data.email === 'admin@acme.com' && data.password === 'password123') {
-      const mockUser = mockUsers.find(u => u.email === data.email) || generateMockUser('org_1');
+    // Check against mock credentials
+    const credentials = mockCredentials[data.email as keyof typeof mockCredentials];
+    
+    if (credentials && credentials.password === data.password) {
+      // Find or generate user
+      let mockUser = mockUsers.find(u => u.email === data.email);
+      if (!mockUser) {
+        mockUser = generateMockUser('org_1');
+        mockUser.email = data.email;
+        mockUser.role = credentials.role;
+        mockUsers.push(mockUser);
+      }
+      
       const mockOrg = mockOrganizations.find(o => o.id === mockUser.organizationId) || mockOrganizations[0];
+      
+      if (!mockOrg) {
+        return HttpResponse.json(
+          { error: 'Organization not found' },
+          { status: 404 }
+        )
+      }
       
       return HttpResponse.json({
         success: true,
@@ -150,6 +180,41 @@ export const handlers = [
         { status: 401 }
       )
     }
+  }),
+
+  // SSO Authentication
+  http.post('http://localhost:3001/auth/sso', async ({ request }) => {
+    await delay(500)
+    const data = await request.json() as any
+    
+    // Simulate SSO authentication
+    const mockUser = generateMockUser('org_1');
+    const mockOrg = mockOrganizations.find(o => o.domain === data.domain) || mockOrganizations[0];
+    
+    if (!mockOrg) {
+      return HttpResponse.json(
+        { error: 'Organization not found' },
+        { status: 404 }
+      )
+    }
+    
+    return HttpResponse.json({
+      success: true,
+      token: generateId('token'),
+      user: {
+        id: mockUser.id,
+        email: mockUser.email,
+        name: mockUser.name,
+        role: 'admin' as const,
+        organization: {
+          id: mockOrg.id,
+          name: mockOrg.name,
+          domain: mockOrg.domain,
+          tenantId: mockOrg.tenantId
+        }
+      },
+      message: 'SSO authentication successful'
+    })
   }),
 
   http.get('http://localhost:3001/user/current', async () => {

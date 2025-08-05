@@ -91,9 +91,8 @@ export default function LoginPage() {
     e.preventDefault();
     
     if (loginMode === 'sso') {
-      const trimmed = organizationId.trim().toLowerCase();
-      
-      if (!trimmed) {
+      // SSO login
+      if (!domain.trim()) {
         setError("Please enter your organization ID");
         return;
       }
@@ -102,16 +101,13 @@ export default function LoginPage() {
       setError("");
 
       try {
-        // Simulate tenant validation
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Check if tenant exists by ID or domain
-        
+        // First check if organization exists
+        const trimmedDomain = domain.trim();
         const tenant = knownTenants.find(t => 
-          t.id === trimmed || 
-          t.domain === trimmed || 
-          t.id.toLowerCase() === trimmed.toLowerCase() ||
-          t.domain.toLowerCase() === trimmed.toLowerCase()
+          t.id === trimmedDomain || 
+          t.domain === trimmedDomain || 
+          t.id.toLowerCase() === trimmedDomain.toLowerCase() ||
+          t.domain.toLowerCase() === trimmedDomain.toLowerCase()
         );
         
         if (!tenant) {
@@ -120,16 +116,7 @@ export default function LoginPage() {
           return;
         }
 
-        // Save tenant info to localStorage
-        if (typeof window !== "undefined") {
-          localStorage.setItem("tenant", trimmed);
-          localStorage.setItem("tenantInfo", JSON.stringify(tenant));
-        }
-
-        // Check if organization has BYOID configuration
         if (tenant.byoidConfig && tenant.byoidConfig.status === 'active') {
-  
-          
           // In a real implementation, this would redirect to the IdP's authorization endpoint
           // For demo purposes, we'll show a message and redirect to a demo page
           alert(`Redirecting to your Identity Provider: ${tenant.byoidConfig.issuerUrl}`);
@@ -141,8 +128,6 @@ export default function LoginPage() {
           router.push("/mock-info");
         } else {
           // No BYOID configuration, redirect to main app
-  
-          
           // Simulate SSO redirect delay
           await new Promise(resolve => setTimeout(resolve, 500));
           
@@ -419,7 +404,8 @@ export default function LoginPage() {
                 variant="outline" 
                 onClick={() => {
                   setIsNavigatingToSetup(true);
-                  router.push('/setup');
+                  // Use replace to avoid back button issues
+                  router.replace('/setup');
                 }}
                 className="w-full"
                 disabled={isNavigatingToSetup || isCheckingApi || !isApiAvailable}

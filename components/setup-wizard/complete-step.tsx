@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { OrganizationForm } from './types';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface CompleteStepProps {
   orgForm: OrganizationForm;
@@ -25,6 +26,8 @@ interface CompleteStepProps {
 }
 
 export function CompleteStep({ orgForm, registrationResult, onStartNew }: CompleteStepProps) {
+  const router = useRouter();
+  
   // Debug logging
   React.useEffect(() => {
   
@@ -82,8 +85,8 @@ export function CompleteStep({ orgForm, registrationResult, onStartNew }: Comple
     if (onStartNew) {
       onStartNew();
     } else {
-      // Fallback: reload the page to start fresh
-      window.location.reload();
+      // Fallback: refresh the page to start fresh
+      router.refresh();
     }
   };
 
@@ -242,7 +245,7 @@ export function CompleteStep({ orgForm, registrationResult, onStartNew }: Comple
               </div>
             </Button>
             <Button 
-              onClick={() => window.location.href = '/'}
+              onClick={() => router.push('/')}
               className="h-auto p-4 flex flex-col items-center gap-2"
             >
               <CheckCircle className="w-6 h-6" />

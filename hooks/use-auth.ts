@@ -18,7 +18,8 @@ export function useAuth() {
 
   const logout = useCallback(() => {
     logoutAction();
-    router.push('/login');
+    // Use replace to prevent back navigation to authenticated pages
+    router.replace('/login');
   }, [logoutAction, router]);
 
   const checkAuth = useCallback(async () => {
@@ -37,12 +38,14 @@ export function useAuth() {
           });
         }
       } else {
-        router.push('/login');
+        // Use replace to prevent back navigation to authenticated pages
+        router.replace('/login');
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       logoutAction();
-      router.push('/login');
+      // Use replace to prevent back navigation to authenticated pages
+      router.replace('/login');
     } finally {
       setCheckingAuth(false);
     }

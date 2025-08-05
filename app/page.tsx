@@ -61,7 +61,6 @@ const Sidebar = React.memo(function Sidebar() {
           <SidebarLink href="/">Dashboard</SidebarLink>
           <SidebarLink href="/admin">Admin</SidebarLink>
           <SidebarLink href="/setup">Setup</SidebarLink>
-          <SidebarLink href="/header-demo">Header Demo</SidebarLink>
         </nav>
       </div>
     </div>

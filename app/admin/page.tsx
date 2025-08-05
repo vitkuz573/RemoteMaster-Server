@@ -201,7 +201,8 @@ export default function AdminPage() {
                 variant="ghost" 
                 onClick={() => {
                   setIsNavigatingToHome(true);
-                  router.push('/');
+                  // Use replace to avoid back button issues
+                  router.replace('/');
                 }}
                 className="text-sm"
                 disabled={isNavigatingToHome}
