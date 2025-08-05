@@ -19,13 +19,51 @@ let mockUnits = mockOrganizations.flatMap(org => generateMockOrganizationalUnits
 
 const mockPricingPlans = generateMockPricingPlans();
 
-// Mock credentials for testing
-const mockCredentials = {
-  'admin@acme.com': { password: 'password123', role: 'admin' as const },
-  'user@acme.com': { password: 'password123', role: 'user' as const },
-  'john@example.com': { password: 'password123', role: 'admin' as const },
-  'jane@example.com': { password: 'password123', role: 'user' as const }
-};
+// Credential storage populated once per dev session
+// Each organization gets two default users:
+//   admin@<domain> / password123 (role: admin)
+//   user@<domain>  / password123 (role: user)
+
+type Credential = { password: string; role: 'admin' | 'user' };
+
+let mockCredentials: Record<string, Credential> = {};
+
+const DEFAULT_PASSWORD = 'password123';
+
+mockOrganizations.forEach(org => {
+  const adminEmail = `admin@${org.domain}`;
+  const userEmail = `user@${org.domain}`;
+
+  mockCredentials[adminEmail] = { password: DEFAULT_PASSWORD, role: 'admin' };
+  mockCredentials[userEmail] = { password: DEFAULT_PASSWORD, role: 'user' };
+
+  // Ensure deterministic users for login tests
+  const adminUser = generateMockUser(org.id);
+  adminUser.email = adminEmail;
+  adminUser.role = 'admin';
+  mockUsers.push(adminUser);
+
+  const normalUser = generateMockUser(org.id);
+  normalUser.email = userEmail;
+  normalUser.role = 'user';
+  mockUsers.push(normalUser);
+});
+
+// ---------------------------------------------------------------------------
+// Dev helper: log generated credentials (will appear in browser console once)
+// ---------------------------------------------------------------------------
+if (typeof console !== 'undefined' && Object.keys(mockCredentials).length) {
+  // Delay a tick to avoid interleaving with other logs
+  setTimeout(() => {
+    console.groupCollapsed('[MSW] Generated dev credentials');
+    // eslint-disable-next-line no-console
+    console.table(
+      Object.entries(mockCredentials).map(([email, { password, role }]) => ({ email, password, role }))
+    );
+    console.groupEnd();
+  }, 0);
+}
+
 
 // Helper functions
 const generateId = (prefix: string = 'id') => 
@@ -109,7 +147,24 @@ export const handlers = [
     
     // Add to mock data
     mockOrganizations.push(newOrganization)
-    
+
+    // Generate default credentials for the newly registered organization
+    const adminEmail = `admin@${data.domain}`;
+    const userEmail = `user@${data.domain}`;
+    mockCredentials[adminEmail] = { password: tempPassword, role: 'admin' };
+    mockCredentials[userEmail] = { password: 'password123', role: 'user' };
+
+    // Create deterministic users linked to these credentials
+    const adminUser = generateMockUser(orgId);
+    adminUser.email = adminEmail;
+    adminUser.role = 'admin';
+    mockUsers.push(adminUser);
+
+    const normalUser = generateMockUser(orgId);
+    normalUser.email = userEmail;
+    normalUser.role = 'user';
+    mockUsers.push(normalUser);
+
     return HttpResponse.json({
       success: true,
       organization: {
@@ -142,7 +197,7 @@ export const handlers = [
       // Find or generate user
       let mockUser = mockUsers.find(u => u.email === data.email);
       if (!mockUser) {
-        mockUser = generateMockUser('org_1');
+        mockUser = generateMockUser((mockOrganizations.find(o => o.domain === data?.domain)?.id) || mockOrganizations[0].id);
         mockUser.email = data.email;
         mockUser.role = credentials.role;
         mockUsers.push(mockUser);
@@ -188,7 +243,7 @@ export const handlers = [
     const data = await request.json() as any
     
     // Simulate SSO authentication
-    const mockUser = generateMockUser('org_1');
+    const mockUser = generateMockUser((mockOrganizations.find(o => o.domain === data?.domain)?.id) || mockOrganizations[0].id);
     const mockOrg = mockOrganizations.find(o => o.domain === data.domain) || mockOrganizations[0];
     
     if (!mockOrg) {
@@ -221,7 +276,7 @@ export const handlers = [
     await delay(100)
     
     // Get a random user from mock data or generate one
-    const mockUser = mockUsers[0] || generateMockUser('org_1');
+    const mockUser = mockUsers[0] || generateMockUser(mockOrganizations[0].id);
     
     return HttpResponse.json({
       success: true,
