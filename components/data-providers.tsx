@@ -223,8 +223,6 @@ function fetchPricingPlans(api: typeof apiService): Promise<any[]> {
 // Hook to get API service from Zustand store
 function useApiService() {
   const { isMockApi } = useApiStore();
-  // For now, we'll use the apiService directly since the store doesn't expose the API service
-  // In a more complete implementation, we might want to store the API service in the Zustand store
   return apiService;
 }
 

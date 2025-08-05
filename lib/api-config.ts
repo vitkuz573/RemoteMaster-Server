@@ -5,7 +5,6 @@ export const API_CONFIG = {
   // API base URL
   BASE_URL: appConfig.endpoints.api,
   
-  // Mock credentials for testing
   MOCK_CREDENTIALS: {
     EMAIL: 'admin@acme.com',
     PASSWORD: 'password123'

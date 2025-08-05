@@ -28,7 +28,6 @@ export function useAuth() {
       // Simulate authentication check
       if (token) {
         // In a real app, you would validate the token with your API
-        // For now, we'll simulate a successful auth check
         if (!user) {
           login(token, {
             name: 'John Doe',

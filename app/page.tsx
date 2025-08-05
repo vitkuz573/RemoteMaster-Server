@@ -279,7 +279,6 @@ export default function Home() {
                           onMouseDown={hostSelection.handleMouseDown}
                           ref={(el) => {
                             if (el && !hostSelection.containerRect) {
-                              // This will be handled by the useHostSelection hook
                             }
                           }}
                         >
