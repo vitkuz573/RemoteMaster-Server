@@ -35,6 +35,9 @@ export function useAuth() {
             email: 'john@example.com',
             role: 'admin',
             avatar: null,
+            organizationId: '',
+            organizationDomain: '',
+            organizationName: '',
           });
         }
       } else {

@@ -124,7 +124,7 @@ export default function Home() {
           `}>
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="font-semibold">Organizations</h2>
+                <h2 className="font-semibold">Units</h2>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -139,23 +139,24 @@ export default function Home() {
                 <Suspense fallback={<HomePageDataLoading />}>
                   <HomePageDataProvider>
                     {({ organizations }) => (
-                      <div className="space-y-2">
-                        {Object.entries(organizations).map(([orgId, org]) => (
-                          <div key={orgId} className="space-y-2">
-                            <h3 className="font-medium text-sm text-muted-foreground">{org.name}</h3>
-                            <div className="space-y-1">
-                              {Object.entries(org.organizationalUnits).map(([unitId, unit]) => (
-                                <TreeItem
-                                  key={unitId}
-                                  title={unit.name}
-                                  hosts={unit.hosts.length}
-                                  onClick={() => hostSelection.setSelectedOrganizationalUnit(unitId)}
-                                  isSelected={hostSelection.selectedOrganizationalUnit === unitId}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        ))}
+                      <div className="space-y-1">
+                        {(() => {
+                          const unitsArray = Object.entries(organizations).flatMap(([, org]: any) =>
+                            Object.entries(org.organizationalUnits)
+                          );
+                          if (unitsArray.length === 0) {
+                            return <p className="text-sm text-muted-foreground">No units available</p>;
+                          }
+                          return unitsArray.map(([unitId, unit]: any) => (
+                            <TreeItem
+                              key={unitId}
+                              title={unit.name}
+                              hosts={unit.hosts.length}
+                              onClick={() => hostSelection.setSelectedOrganizationalUnit(unitId)}
+                              isSelected={hostSelection.selectedOrganizationalUnit === unitId}
+                            />
+                          ));
+                        })()}
                       </div>
                     )}
                   </HomePageDataProvider>

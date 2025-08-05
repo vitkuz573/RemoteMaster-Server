@@ -8,46 +8,70 @@ import {
   generateMockPricingPlans,
   type MockOrganization,
   type MockUser,
+  type MockOrganizationalUnit,
   INDUSTRIES,
   ORGANIZATION_SIZES
 } from './faker-utils'
 
-// Generate consistent mock data for the session
-let mockOrganizations = generateMockOrganizations(3);
-let mockUsers = mockOrganizations.flatMap(org => generateMockUsers(org.id, 5));
-let mockUnits = mockOrganizations.flatMap(org => generateMockOrganizationalUnits(3));
+// Shared credential type used across handlers
+type Credential = { password: string; role: 'admin' | 'user' }
 
-const mockPricingPlans = generateMockPricingPlans();
+// -----------------------------
+// Mock DB initialization (runs once per dev session)
+// -----------------------------
+const globalAny = globalThis as any;
 
-// Credential storage populated once per dev session
-// Each organization gets two default users:
-//   admin@<domain> / password123 (role: admin)
-//   user@<domain>  / password123 (role: user)
+interface MockDatabase {
+  organizations: MockOrganization[];
+  users: MockUser[];
+  units: MockOrganizationalUnit[];
+  pricingPlans: ReturnType<typeof generateMockPricingPlans>;
+  credentials: Record<string, Credential>;
+}
 
-type Credential = { password: string; role: 'admin' | 'user' };
+function createMockDatabase(): MockDatabase {
+  const organizations = generateMockOrganizations(3);
+  const users = organizations.flatMap(org => generateMockUsers(org.id, 5));
+  const units = organizations.flatMap(org => generateMockOrganizationalUnits(3));
+  const pricingPlans = generateMockPricingPlans();
 
-let mockCredentials: Record<string, Credential> = {};
+  const credentials: Record<string, Credential> = {};
+  const DEFAULT_PASSWORD = 'password123';
 
-const DEFAULT_PASSWORD = 'password123';
+  organizations.forEach(org => {
+    const adminEmail = `admin@${org.domain}`;
+    const userEmail = `user@${org.domain}`;
 
-mockOrganizations.forEach(org => {
-  const adminEmail = `admin@${org.domain}`;
-  const userEmail = `user@${org.domain}`;
+    credentials[adminEmail] = { password: DEFAULT_PASSWORD, role: 'admin' };
+    credentials[userEmail] = { password: DEFAULT_PASSWORD, role: 'user' };
 
-  mockCredentials[adminEmail] = { password: DEFAULT_PASSWORD, role: 'admin' };
-  mockCredentials[userEmail] = { password: DEFAULT_PASSWORD, role: 'user' };
+    // Deterministic users for login tests
+    const adminUser = generateMockUser(org.id);
+    adminUser.email = adminEmail;
+    adminUser.role = 'admin';
+    users.push(adminUser);
 
-  // Ensure deterministic users for login tests
-  const adminUser = generateMockUser(org.id);
-  adminUser.email = adminEmail;
-  adminUser.role = 'admin';
-  mockUsers.push(adminUser);
+    const normalUser = generateMockUser(org.id);
+    normalUser.email = userEmail;
+    normalUser.role = 'user';
+    users.push(normalUser);
+  });
 
-  const normalUser = generateMockUser(org.id);
-  normalUser.email = userEmail;
-  normalUser.role = 'user';
-  mockUsers.push(normalUser);
-});
+  return { organizations, users, units, pricingPlans, credentials };
+}
+
+if (!globalAny.__mswMockDB) {
+  globalAny.__mswMockDB = createMockDatabase();
+}
+
+const {
+  organizations: mockOrganizations,
+  users: mockUsers,
+  units: mockUnits,
+  pricingPlans: mockPricingPlans,
+  credentials: mockCredentials,
+} = globalAny.__mswMockDB;
+
 
 // ---------------------------------------------------------------------------
 // Dev helper: log generated credentials (will appear in browser console once)

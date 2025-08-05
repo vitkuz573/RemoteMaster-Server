@@ -92,9 +92,20 @@ export function Header({
           {config.showProfile && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                  <User className="h-4 w-4" />
-                  <span>User</span>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center space-x-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <div className="flex flex-col items-start leading-tight text-left">
+                    <span className="text-sm font-medium">
+                      {authState.user?.name ?? 'User'}
+                    </span>
+                    <span className="text-xs text-muted-foreground max-w-[10rem] truncate">
+                      {authState.user?.organizationName ?? authState.user?.organizationDomain ?? (typeof window !== 'undefined' ? localStorage.getItem('tenant') ?? 'Organization' : 'Organization')}
+                    </span>
+                  </div>
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>

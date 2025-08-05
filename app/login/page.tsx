@@ -182,6 +182,9 @@ export default function LoginPage() {
           email: result.user.email,
           role: result.user.role,
           avatar: null,
+          organizationId: result.user.organization.id,
+          organizationDomain: result.user.organization.domain,
+          organizationName: result.user.organization.name,
         });
 
         // Optionally keep raw response in localStorage for debugging

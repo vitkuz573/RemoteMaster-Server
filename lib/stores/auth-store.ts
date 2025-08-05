@@ -6,6 +6,9 @@ export interface User {
   email: string;
   role: string;
   avatar: string | null;
+  organizationId: string;
+  organizationDomain: string;
+  organizationName: string;
 }
 
 export interface AuthState {
