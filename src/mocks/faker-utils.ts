@@ -260,30 +260,23 @@ export const generateMockUsers = (organizationId: string, count: number = 10): M
 };
 
 // Generate organizational units for an organization
+// This function ensures NO DUPLICATE NAMES by shuffling the available unit types
+// and limiting the count to the number of available types (10 total)
 export const generateMockOrganizationalUnits = (count: number = 3): MockOrganizationalUnit[] => {
-  const usedNames = new Set<string>();
+  // Create a shuffled copy of UNIT_TYPES to ensure we get unique names
+  const availableUnitTypes = [...UNIT_TYPES];
+  const shuffledTypes = faker.helpers.shuffle(availableUnitTypes);
+  
+  // Limit count to available unit types to avoid duplicates
+  // We have 10 unit types: Production, Development, Staging, Testing, QA, UAT, Marketing, Sales, Support, Engineering, Operations
+  const actualCount = Math.min(count, shuffledTypes.length);
+  
   const units: MockOrganizationalUnit[] = [];
   
-  for (let i = 0; i < count; i++) {
-    let unitName: string;
-    let attempts = 0;
-    
-    // Try to get a unique unit name
-    do {
-      unitName = faker.helpers.arrayElement(UNIT_TYPES);
-      attempts++;
-      // If we've tried too many times, just use the name with a number suffix
-      if (attempts > 10) {
-        unitName = `${unitName} ${i + 1}`;
-        break;
-      }
-    } while (usedNames.has(unitName));
-    
-    usedNames.add(unitName);
-    
+  for (let i = 0; i < actualCount; i++) {
     units.push({
       id: faker.string.alphanumeric(8),
-      name: unitName,
+      name: shuffledTypes[i],
       description: faker.lorem.sentence(),
       hosts: Array.from({ length: faker.number.int({ min: 1, max: 8 }) }, () => generateMockHost()),
       createdAt: faker.date.past({ years: 1 }).toISOString()

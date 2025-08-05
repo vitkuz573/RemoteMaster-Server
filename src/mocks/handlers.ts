@@ -459,6 +459,18 @@ export const handlers = [
         // Generate some units for this organization
         const generatedUnits = generateMockOrganizationalUnits(2);
         orgUnits.push(...generatedUnits);
+      } else {
+        // Ensure no duplicate names in existing units
+        const usedNames = new Set<string>();
+        const uniqueUnits = orgUnits.filter(unit => {
+          if (usedNames.has(unit.name)) {
+            return false; // Skip duplicates
+          }
+          usedNames.add(unit.name);
+          return true;
+        });
+        orgUnits.length = 0; // Clear array
+        orgUnits.push(...uniqueUnits);
       }
       
       const unitsMap: Record<string, any> = {};
