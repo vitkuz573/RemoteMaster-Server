@@ -10,7 +10,6 @@ import { NotificationPanel } from '@/components/ui/notification-panel';
 import { PanelLeftClose, PanelLeftOpen, ArrowLeftRight, ChevronDown, ChevronRight, LogOut, User, Settings, Building2 } from 'lucide-react';
 import { appConfig } from '@/lib/app-config';
 import { 
-  ApiProvider, 
   HomePageDataProvider, 
   HomePageDataLoading 
 } from '@/components/data-providers';
@@ -153,16 +152,16 @@ export default function Home() {
   const router = useRouter();
   
   // Custom hooks for state management
-  const [appState, appActions] = useAppState();
-  const [hostSelection, hostActions] = useHostSelection();
-  const [authState, authActions] = useAuth();
+  const appState = useAppState();
+  const hostSelection = useHostSelection();
+  const authState = useAuth();
   
   // Memoized data
   const notifications = useNotifications();
 
   // Handle logout
   const handleLogout = () => {
-    authActions.logout();
+    authState.logout();
   };
 
   // Show loading state while checking auth
@@ -183,16 +182,15 @@ export default function Home() {
   }
 
   return (
-    <ApiProvider>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         <Header
           sidebarOpen={appState.sidebarOpen}
-          onToggleSidebar={appActions.toggleSidebarOpen}
+          onToggleSidebar={appState.toggleSidebarOpen}
           notifications={notifications}
           notificationCount={appState.notificationCount}
           notificationsEnabled={appState.notificationsEnabled}
-          onToggleNotifications={() => appActions.setNotificationsEnabled(!appState.notificationsEnabled)}
-          onLogoutClick={() => appActions.setLogoutModalOpen(true)}
+          onToggleNotifications={() => appState.setNotificationsEnabled(!appState.notificationsEnabled)}
+          onLogoutClick={() => appState.setLogoutModalOpen(true)}
         />
 
         <div className="flex h-[calc(100vh-4rem)]">
@@ -208,7 +206,7 @@ export default function Home() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={appActions.toggleSidebar}
+                  onClick={appState.toggleSidebar}
                   className="hidden lg:flex"
                 >
                   <ArrowLeftRight className="h-4 w-4" />
@@ -229,7 +227,7 @@ export default function Home() {
                                   key={unitId}
                                   title={unit.name}
                                   hosts={unit.hosts.length}
-                                  onClick={() => hostActions.setSelectedOrganizationalUnit(unitId)}
+                                  onClick={() => hostSelection.setSelectedOrganizationalUnit(unitId)}
                                   isSelected={hostSelection.selectedOrganizationalUnit === unitId}
                                 />
                               ))}
@@ -250,8 +248,8 @@ export default function Home() {
               <Toolbar
                 selectedUnit={hostSelection.selectedOrganizationalUnit}
                 selectedHostsCount={hostSelection.selectedHosts.size}
-                onSelectAll={hostActions.selectAllHosts}
-                onClear={hostActions.clearSelection}
+                onSelectAll={hostSelection.selectAllHosts}
+                onClear={hostSelection.clearSelection}
               />
 
               {/* Content Area */}
@@ -278,7 +276,7 @@ export default function Home() {
                       return (
                         <div 
                           className="relative min-h-full"
-                          onMouseDown={hostActions.handleMouseDown}
+                          onMouseDown={hostSelection.handleMouseDown}
                           ref={(el) => {
                             if (el && !hostSelection.containerRect) {
                               // This will be handled by the useHostSelection hook
@@ -298,7 +296,7 @@ export default function Home() {
                                 key={host.id}
                                 host={host}
                                 isSelected={hostSelection.selectedHosts.has(host.id)}
-                                onToggle={() => hostActions.handleHostToggle(host.id)}
+                                onToggle={() => hostSelection.handleHostToggle(host.id)}
                               />
                             ))}
                           </div>
@@ -313,7 +311,7 @@ export default function Home() {
         </div>
 
         {/* Logout Confirmation Dialog */}
-        <Dialog open={appState.logoutModalOpen} onOpenChange={appActions.setLogoutModalOpen}>
+        <Dialog open={appState.logoutModalOpen} onOpenChange={appState.setLogoutModalOpen}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Confirm Logout</DialogTitle>
@@ -322,7 +320,7 @@ export default function Home() {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => appActions.setLogoutModalOpen(false)}>
+              <Button variant="outline" onClick={() => appState.setLogoutModalOpen(false)}>
                 Cancel
               </Button>
               <Button onClick={handleLogout}>
@@ -332,6 +330,5 @@ export default function Home() {
           </DialogContent>
         </Dialog>
       </div>
-    </ApiProvider>
   );
 }

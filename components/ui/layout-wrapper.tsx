@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useApiContext } from '@/contexts/api-context';
+import { useApiStore } from '@/lib/stores';
 import { LoadingOverlay } from './loading-overlay';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
@@ -12,11 +12,11 @@ interface LayoutWrapperProps {
 }
 
 export function LayoutWrapper({ children, className }: LayoutWrapperProps) {
-  const { state } = useApiContext();
+  const { isConnecting, isCheckingApi, pendingRequests } = useApiStore();
   const pathname = usePathname();
   
   // Show loading overlay when connecting, checking API, or when there are pending requests
-  const isLoading = state.isConnecting || state.isCheckingApi || state.pendingRequests > 0;
+  const isLoading = isConnecting || isCheckingApi || pendingRequests > 0;
 
   // Don't apply fixed header/footer spacing on main page since it has its own layout
   const isMainPage = pathname === '/';
@@ -26,8 +26,8 @@ export function LayoutWrapper({ children, className }: LayoutWrapperProps) {
       {/* Loading overlay */}
       <LoadingOverlay 
         isLoading={isLoading} 
-        text={state.isConnecting ? "Connecting to API..." : 
-              state.isCheckingApi ? "Checking API availability..." : 
+        text={isConnecting ? "Connecting to API..." : 
+              isCheckingApi ? "Checking API availability..." : 
               "Loading data..."}
       />
       

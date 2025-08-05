@@ -12,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import { RefreshCw, Users, Building2, Globe, Mail, Calendar, Lock, AlertTriangle } from 'lucide-react';
 import { useHeader } from '@/contexts/header-context';
 import { 
-  ApiProvider, 
   AdminPageDataProvider, 
   AdminPageDataLoading 
 } from '@/components/data-providers';
@@ -211,8 +210,7 @@ export default function AdminPage() {
   }
 
   return (
-    <ApiProvider>
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
         {/* Loading State */}
         {isCheckingApi && (
           <Card className="border-2 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20">
@@ -396,6 +394,6 @@ export default function AdminPage() {
           </AdminPageDataProvider>
         </Suspense>
       </div>
-    </ApiProvider>
+    </div>
   );
 }

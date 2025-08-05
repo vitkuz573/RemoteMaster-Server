@@ -1,98 +1,65 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/stores';
 
-export interface AuthState {
-  isAuthenticated: boolean;
-  isCheckingAuth: boolean;
-  user: {
-    name: string;
-    email: string;
-    role: string;
-    avatar: string | null;
-  } | null;
-}
-
-export interface AuthActions {
-  login: (token: string, userData: AuthState['user']) => void;
-  logout: () => void;
-  checkAuth: () => Promise<void>;
-}
-
-const initialState: AuthState = {
-  isAuthenticated: false,
-  isCheckingAuth: true,
-  user: null,
-};
-
-export function useAuth(): [AuthState, AuthActions] {
-  const [state, setState] = useState<AuthState>(initialState);
+export function useAuth() {
   const router = useRouter();
-
-  // Create actions using useCallback directly
-  const login = useCallback((token: string, userData: AuthState['user']) => {
-    localStorage.setItem('authToken', token);
-    setState({
-      isAuthenticated: true,
-      isCheckingAuth: false,
-      user: userData,
-    });
-  }, []);
+  const {
+    isAuthenticated,
+    isCheckingAuth,
+    user,
+    token,
+    login,
+    logout: logoutAction,
+    setCheckingAuth,
+  } = useAuthStore();
 
   const logout = useCallback(() => {
-    localStorage.removeItem('authToken');
-    setState({
-      isAuthenticated: false,
-      isCheckingAuth: false,
-      user: null,
-    });
+    logoutAction();
     router.push('/login');
-  }, [router]);
+  }, [logoutAction, router]);
 
   const checkAuth = useCallback(async () => {
     try {
-      setState(prev => ({ ...prev, isCheckingAuth: true }));
+      setCheckingAuth(true);
       
       // Simulate authentication check
-      const authToken = localStorage.getItem('authToken');
-      
-      if (authToken) {
+      if (token) {
         // In a real app, you would validate the token with your API
         // For now, we'll simulate a successful auth check
-        setState({
-          isAuthenticated: true,
-          isCheckingAuth: false,
-          user: {
+        if (!user) {
+          login(token, {
             name: 'John Doe',
             email: 'john@example.com',
             role: 'admin',
             avatar: null,
-          },
-        });
+          });
+        }
       } else {
-        setState({
-          isAuthenticated: false,
-          isCheckingAuth: false,
-          user: null,
-        });
         router.push('/login');
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      setState({
-        isAuthenticated: false,
-        isCheckingAuth: false,
-        user: null,
-      });
+      logoutAction();
       router.push('/login');
+    } finally {
+      setCheckingAuth(false);
     }
-  }, [router]);
+  }, [token, user, login, logoutAction, router, setCheckingAuth]);
 
   // Check authentication on mount
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
-  return [state, { login, logout, checkAuth }];
+  return {
+    isAuthenticated,
+    isCheckingAuth,
+    user,
+    login,
+    logout,
+    checkAuth,
+  };
 } 

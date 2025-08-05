@@ -1,12 +1,10 @@
 'use client';
 
-import { use, createContext, useContext, useMemo } from 'react';
+import { use, useMemo } from 'react';
 import { API_CONFIG } from '@/lib/api-config';
 // Removed mock API import - using single API service
 import { apiService } from '@/lib/api-service';
-
-// API context for data fetching
-const ApiContext = createContext<typeof apiService | null>(null);
+import { useApiStore } from '@/lib/stores';
 
 // Global cache for data fetching - this ensures promises are created once and reused
 const dataCache = new Map<string, Promise<any>>();
@@ -78,13 +76,12 @@ function fetchPricingPlans(api: typeof apiService): Promise<any[]> {
   return promise;
 }
 
-// Hook to get API service
+// Hook to get API service from Zustand store
 function useApiService() {
-  const api = useContext(ApiContext);
-  if (!api) {
-    throw new Error('useApiService must be used within ApiProvider');
-  }
-  return api;
+  const { isMockApi } = useApiStore();
+  // For now, we'll use the apiService directly since the store doesn't expose the API service
+  // In a more complete implementation, we might want to store the API service in the Zustand store
+  return apiService;
 }
 
 // Data provider components that use Suspense
@@ -144,19 +141,6 @@ export function SetupWizardDataProvider({ children }: { children: (data: {
         pricingPlans
       })}
     </>
-  );
-}
-
-// API Provider component
-export function ApiProvider({ children }: { children: React.ReactNode }) {
-  const api = useMemo(() => {
-    return apiService;
-  }, []);
-  
-  return (
-    <ApiContext.Provider value={api}>
-      {children}
-    </ApiContext.Provider>
   );
 }
 

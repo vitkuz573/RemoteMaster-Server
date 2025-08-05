@@ -30,7 +30,6 @@ import { NavigationButtons } from './navigation-buttons';
 import { LoadingErrorStates } from './loading-error-states';
 import { ConfirmationDialog } from './confirmation-dialog';
 import { 
-  ApiProvider, 
   SetupWizardDataProvider, 
   SetupWizardDataLoading 
 } from './data-providers';
@@ -60,8 +59,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     setByoidForm,
     totalMonthly,
     setTotalMonthly,
-    clearSetupWizardState,
-    resetSetupWizardState,
+    resetWizard,
     registrationResult,
     setRegistrationResult
   } = useSetupWizardState();
@@ -133,11 +131,11 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   const currentStepIndex = isClient ? steps.findIndex(step => step.key === currentStep) : 0;
 
   const handleOrgInputChange = (field: keyof typeof orgForm, value: string | number) => {
-    setOrgForm(prev => ({ ...prev, [field]: value }));
+    setOrgForm({ [field]: value });
   };
 
   const handleByoidInputChange = (field: keyof typeof byoidForm, value: string) => {
-    setByoidForm(prev => ({ ...prev, [field]: value }));
+    setByoidForm({ [field]: value });
   };
 
   const handleDiscoverProvider = async () => {
@@ -149,10 +147,9 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     setIsDiscovering(true);
     try {
       const result = await api.discoverOpenIDProvider(byoidForm.issuerUrl.trim());
-      setByoidForm(prev => ({ 
-        ...prev, 
+      setByoidForm({ 
         discoveryData: result.discovery 
-      }));
+      });
       toast.success('OpenID Connect provider discovered successfully!');
     } catch (error) {
       console.error('Discovery failed:', error);
@@ -299,7 +296,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
 
   const handleStartNew = () => {
     // Reset all state to start fresh
-    resetSetupWizardState();
+    resetWizard();
     setCurrentStep('organization');
     
     // Show success message
@@ -311,7 +308,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   };
 
   const handleConfirmReset = () => {
-    resetSetupWizardState();
+    resetWizard();
     setShowResetConfirmation(false);
     toast.success('Setup wizard has been reset. You can start over.');
   };
@@ -330,8 +327,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   }
 
   return (
-    <ApiProvider>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/20 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/20 relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
         <div className="absolute top-0 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
@@ -466,6 +462,5 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
           variant="danger"
         />
       </div>
-    </ApiProvider>
   );
 } 

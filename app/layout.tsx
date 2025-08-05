@@ -6,7 +6,7 @@ import { FooterProvider } from "@/contexts/footer-context";
 import { ConditionalHeader } from "@/components/ui/conditional-header";
 import { HeaderProvider } from "@/contexts/header-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ApiProvider } from "@/contexts/api-context";
+import { StoreInitializer } from "@/components/store-initializer";
 import { Toaster } from "@/components/ui/sonner";
 import { appConfig } from "@/lib/app-config";
 
@@ -42,17 +42,16 @@ export default function RootLayout({
       >
         <MSWProvider>
           <TooltipProvider>
-            <ApiProvider>
-              <HeaderProvider>
-                <FooterProvider>
-                  <ConditionalHeaderWrapper />
-                  <div className="flex-1">
-                    {children}
-                  </div>
-                  <Footer />
-                </FooterProvider>
-              </HeaderProvider>
-            </ApiProvider>
+            <HeaderProvider>
+              <FooterProvider>
+                <StoreInitializer />
+                <ConditionalHeaderWrapper />
+                <div className="flex-1">
+                  {children}
+                </div>
+                <Footer />
+              </FooterProvider>
+            </HeaderProvider>
           </TooltipProvider>
           <Toaster />
         </MSWProvider>

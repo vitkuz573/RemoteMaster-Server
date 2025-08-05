@@ -9,7 +9,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useApiContext } from '@/contexts/api-context';
+import { useApiStore } from '@/lib/stores';
 import { 
   Wifi, 
   WifiOff, 
@@ -30,7 +30,13 @@ export function ApiStatus({
   showDetails = false, 
   compact = false 
 }: ApiStatusProps) {
-  const { state } = useApiContext();
+  const { 
+    isConnecting, 
+    isConnected, 
+    lastSync, 
+    pendingRequests, 
+    errors 
+  } = useApiStore();
 
   const formatLastSync = (date: Date | null) => {
     if (!date) return 'Never';
@@ -51,14 +57,14 @@ export function ApiStatus({
 
   if (compact) {
     const getStatusColor = () => {
-      if (state.isConnecting) return 'bg-yellow-500';
-      if (state.isConnected) return 'bg-green-500';
+      if (isConnecting) return 'bg-yellow-500';
+      if (isConnected) return 'bg-green-500';
       return 'bg-red-500';
     };
 
     const getStatusText = () => {
-      if (state.isConnecting) return 'API Connecting...';
-      if (state.isConnected) return 'API Connected';
+      if (isConnecting) return 'API Connecting...';
+      if (isConnected) return 'API Connected';
       return 'API Disconnected';
     };
 
@@ -70,7 +76,7 @@ export function ApiStatus({
             <span className="text-xs text-muted-foreground">
               {getStatusText()}
             </span>
-            {(state.pendingRequests > 0 || state.isConnecting) && (
+            {(pendingRequests > 0 || isConnecting) && (
               <RefreshCw className="w-3 h-3 animate-spin text-blue-500" />
             )}
           </div>
@@ -80,21 +86,21 @@ export function ApiStatus({
             <div className="flex items-center gap-2">
               <span>Status:</span>
               <Badge variant={
-                state.isConnecting ? 'secondary' :
-                state.isConnected ? 'default' : 'destructive'
+                isConnecting ? 'secondary' :
+                isConnected ? 'default' : 'destructive'
               }>
-                {state.isConnecting ? 'Connecting...' :
-                 state.isConnected ? 'Connected' : 'Disconnected'}
+                {isConnecting ? 'Connecting...' :
+                 isConnected ? 'Connected' : 'Disconnected'}
               </Badge>
             </div>
             <div className="flex items-center gap-2">
               <span>Last sync:</span>
-              <span className="text-xs">{formatLastSync(state.lastSync)}</span>
+              <span className="text-xs">{formatLastSync(lastSync)}</span>
             </div>
-            {state.pendingRequests > 0 && (
+            {pendingRequests > 0 && (
               <div className="flex items-center gap-2">
                 <span>Pending:</span>
-                <span className="text-xs">{state.pendingRequests}</span>
+                <span className="text-xs">{pendingRequests}</span>
               </div>
             )}
           </div>
@@ -107,9 +113,9 @@ export function ApiStatus({
     <Card className={className}>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm flex items-center gap-2">
-          {state.isConnecting ? (
+          {isConnecting ? (
             <RefreshCw className="w-4 h-4 text-yellow-500 animate-spin" />
-          ) : state.isConnected ? (
+          ) : isConnected ? (
             <Wifi className="w-4 h-4 text-green-500" />
           ) : (
             <WifiOff className="w-4 h-4 text-red-500" />
@@ -122,15 +128,15 @@ export function ApiStatus({
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Connection</span>
           <Badge variant={
-            state.isConnecting ? 'secondary' :
-            state.isConnected ? 'default' : 'destructive'
+            isConnecting ? 'secondary' :
+            isConnected ? 'default' : 'destructive'
           }>
-            {state.isConnecting ? (
+            {isConnecting ? (
               <>
                 <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
                 Connecting...
               </>
-            ) : state.isConnected ? (
+            ) : isConnected ? (
               <>
                 <CheckCircle className="w-3 h-3 mr-1" />
                 Connected
@@ -149,27 +155,27 @@ export function ApiStatus({
           <span className="text-sm text-muted-foreground">Last Sync</span>
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3 text-muted-foreground" />
-            <span className="text-sm">{formatLastSync(state.lastSync)}</span>
+            <span className="text-sm">{formatLastSync(lastSync)}</span>
           </div>
         </div>
 
         {/* Pending Requests */}
-        {state.pendingRequests > 0 && (
+        {pendingRequests > 0 && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Pending</span>
             <div className="flex items-center gap-1">
               <RefreshCw className="w-3 h-3 animate-spin text-blue-500" />
-              <span className="text-sm">{state.pendingRequests}</span>
+              <span className="text-sm">{pendingRequests}</span>
             </div>
           </div>
         )}
 
         {/* Recent Errors */}
-        {showDetails && state.errors.length > 0 && (
+        {showDetails && errors.length > 0 && (
           <div className="space-y-2">
             <span className="text-sm text-muted-foreground">Recent Errors</span>
             <div className="space-y-1">
-              {state.errors.slice(-3).map((error, index) => (
+              {errors.slice(-3).map((error, index) => (
                 <div key={index} className="text-xs text-red-600 bg-red-50 p-2 rounded">
                   {error}
                 </div>

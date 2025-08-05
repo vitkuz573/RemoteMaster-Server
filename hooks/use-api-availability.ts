@@ -1,4 +1,4 @@
-import { useApiContext } from '@/contexts/api-context';
+import { useApiStore } from '@/lib/stores';
 import { API_CONFIG } from '@/lib/api-config';
 import { apiService } from '@/lib/api-service';
 import { useNotifications } from '@/hooks/use-notifications';
@@ -6,7 +6,13 @@ import { useCallback, useEffect } from 'react';
 import React from 'react';
 
 export function useApiAvailability() {
-  const { state, setApiAvailable, setCheckingApi } = useApiContext();
+  const { 
+    isApiAvailable, 
+    isCheckingApi, 
+    isMockApi,
+    setApiAvailable, 
+    setCheckingApi 
+  } = useApiStore();
   const { showError, showInfo } = useNotifications();
   
   // Track if we've already initialized
@@ -46,21 +52,21 @@ export function useApiAvailability() {
   }, [checkApiAvailability, setApiAvailable, hasInitialized]);
 
   // Helper function to determine if forms should be disabled
-  const isFormDisabled = state.isCheckingApi || !state.isApiAvailable;
+  const isFormDisabled = isCheckingApi || !isApiAvailable;
 
   // Helper function to get loading text
   const getLoadingText = () => {
-    if (state.isCheckingApi) return 'Checking service status...';
-    if (!state.isApiAvailable) return 'Service unavailable';
+    if (isCheckingApi) return 'Checking service status...';
+    if (!isApiAvailable) return 'Service unavailable';
     return '';
   };
 
   // Helper function to get status message
   const getStatusMessage = () => {
-    if (state.isCheckingApi) {
+    if (isCheckingApi) {
       return 'Verifying connection to service...';
     }
-    if (!state.isApiAvailable) {
+    if (!isApiAvailable) {
       return 'Unable to connect to the service. Please check your connection and try again later.';
     }
     return '';
@@ -68,9 +74,9 @@ export function useApiAvailability() {
 
   return {
     // State
-    isApiAvailable: state.isApiAvailable,
-    isCheckingApi: state.isCheckingApi,
-    isMockApi: state.isMockApi,
+    isApiAvailable,
+    isCheckingApi,
+    isMockApi,
     
     // Actions
     checkApiAvailability,
