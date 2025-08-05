@@ -117,15 +117,15 @@ export default function LoginPage() {
         }
 
         if (tenant.byoidConfig && tenant.byoidConfig.status === 'active') {
-          // In a real implementation, this would redirect to the IdP's authorization endpoint
-          // For demo purposes, we'll show a message and redirect to a demo page
-          alert(`Redirecting to your Identity Provider: ${tenant.byoidConfig.issuerUrl}`);
-          
-          // Simulate SSO redirect delay
+          // Discover the tenant's Identity Provider using OpenID Connect discovery.
+          // In development, this request will be intercepted by MSW.
+          await apiService.discoverOpenIDProvider(tenant.byoidConfig.issuerUrl);
+
+          // Simulate redirect delay
           await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // For demo: redirect to a success page that simulates IdP authentication
-          router.push("/mock-info");
+
+          // Redirect to main dashboard after successful discovery
+          router.push("/");
         } else {
           // No BYOID configuration, redirect to main app
           // Simulate SSO redirect delay
