@@ -261,7 +261,36 @@ export const generateMockUsers = (organizationId: string, count: number = 10): M
 
 // Generate organizational units for an organization
 export const generateMockOrganizationalUnits = (count: number = 3): MockOrganizationalUnit[] => {
-  return Array.from({ length: count }, () => generateMockOrganizationalUnit());
+  const usedNames = new Set<string>();
+  const units: MockOrganizationalUnit[] = [];
+  
+  for (let i = 0; i < count; i++) {
+    let unitName: string;
+    let attempts = 0;
+    
+    // Try to get a unique unit name
+    do {
+      unitName = faker.helpers.arrayElement(UNIT_TYPES);
+      attempts++;
+      // If we've tried too many times, just use the name with a number suffix
+      if (attempts > 10) {
+        unitName = `${unitName} ${i + 1}`;
+        break;
+      }
+    } while (usedNames.has(unitName));
+    
+    usedNames.add(unitName);
+    
+    units.push({
+      id: faker.string.alphanumeric(8),
+      name: unitName,
+      description: faker.lorem.sentence(),
+      hosts: Array.from({ length: faker.number.int({ min: 1, max: 8 }) }, () => generateMockHost()),
+      createdAt: faker.date.past({ years: 1 }).toISOString()
+    });
+  }
+  
+  return units;
 };
 
 // Helper function to generate consistent data for testing

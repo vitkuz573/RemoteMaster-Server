@@ -463,7 +463,7 @@ export const handlers = [
       
       const unitsMap: Record<string, any> = {};
       orgUnits.forEach(unit => {
-        unitsMap[unit.name.toLowerCase()] = {
+        unitsMap[unit.id] = {
           id: unit.id,
           name: unit.name,
           description: unit.description,
