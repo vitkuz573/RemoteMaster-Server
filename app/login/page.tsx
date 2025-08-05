@@ -26,7 +26,7 @@ import { apiService } from '@/lib/api-service';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { showHeader } = useHeader();
+  const { showHeader, resetConfig, updateConfig } = useHeader();
   const [loginMode, setLoginMode] = React.useState<'sso' | 'credentials'>('sso');
   const [organizationId, setOrganizationId] = React.useState("");
   const [domain, setDomain] = React.useState("");
@@ -43,10 +43,12 @@ export default function LoginPage() {
 
   // Application configuration (imported from centralized config)
 
-  // Show header on login page
+  // Show header on login page and reset header config
   React.useEffect(() => {
     showHeader();
-  }, [showHeader]);
+    resetConfig();
+    updateConfig({ showNotifications: false, showProfile: false });
+  }, [showHeader, resetConfig, updateConfig]);
 
   // Load organizations from external API
   React.useEffect(() => {

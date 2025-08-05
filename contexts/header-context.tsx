@@ -32,17 +32,17 @@ export function HeaderProvider({ children }: { children: React.ReactNode }) {
   const [isVisible, setIsVisible] = useState(true);
   const [config, setConfig] = useState<HeaderConfig>(defaultConfig);
 
-  const showHeader = () => setIsVisible(true);
-  const hideHeader = () => setIsVisible(false);
-  const toggleHeader = () => setIsVisible(prev => !prev);
+  const showHeader = React.useCallback(() => setIsVisible(true), []);
+  const hideHeader = React.useCallback(() => setIsVisible(false), []);
+  const toggleHeader = React.useCallback(() => setIsVisible(prev => !prev), []);
   
   const updateConfig = React.useCallback((newConfig: Partial<HeaderConfig>) => {
     setConfig(prev => ({ ...prev, ...newConfig }));
   }, []);
   
-  const resetConfig = () => {
+  const resetConfig = React.useCallback(() => {
     setConfig(defaultConfig);
-  };
+  }, []);
 
   return (
     <HeaderContext.Provider value={{ 

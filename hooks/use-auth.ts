@@ -1,11 +1,13 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
+import { useHeader } from '@/contexts/header-context';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores';
 
 export function useAuth() {
   const router = useRouter();
+  const { resetConfig } = useHeader();
   const {
     isAuthenticated,
     isCheckingAuth,
@@ -17,10 +19,12 @@ export function useAuth() {
   } = useAuthStore();
 
   const logout = useCallback(() => {
+    // Clear header configuration on logout
+    resetConfig();
     logoutAction();
     // Use replace to prevent back navigation to authenticated pages
     router.replace('/login');
-  }, [logoutAction, router]);
+  }, [logoutAction, router, resetConfig]);
 
   const checkAuth = useCallback(async () => {
     try {
