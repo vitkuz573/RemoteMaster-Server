@@ -1,8 +1,6 @@
 'use client';
 
 import { use, useMemo } from 'react';
-import { API_CONFIG } from '@/lib/api-config';
-// Removed mock API import - using single API service
 import { apiService } from '@/lib/api-service';
 import { useApiStore } from '@/lib/stores';
 

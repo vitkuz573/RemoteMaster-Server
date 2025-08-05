@@ -1,5 +1,4 @@
 import { useApiStore } from '@/lib/stores';
-import { API_CONFIG } from '@/lib/api-config';
 import { apiService } from '@/lib/api-service';
 import { useNotifications } from '@/hooks/use-notifications';
 import { useCallback, useEffect } from 'react';

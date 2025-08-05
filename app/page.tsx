@@ -4,10 +4,8 @@ import React, { Suspense, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { NotificationPanel } from '@/components/ui/notification-panel';
-import { PanelLeftClose, PanelLeftOpen, ArrowLeftRight, ChevronDown, ChevronRight, LogOut, User, Settings, Building2 } from 'lucide-react';
+import { ArrowLeftRight, Building2 } from 'lucide-react';
 import { appConfig } from '@/lib/app-config';
 import { 
   HomePageDataProvider, 
@@ -16,6 +14,7 @@ import {
 import { useAppState } from '@/hooks/use-app-state';
 import { useHostSelection } from '@/hooks/use-host-selection';
 import { useAuth } from '@/hooks/use-auth';
+import { EnhancedHeader } from '@/components/ui/enhanced-header';
 import {
   TreeItem,
   HostCard,
@@ -53,11 +52,7 @@ const useNotifications = () => {
 };
 
 // Optimized Sidebar component
-const Sidebar = React.memo(function Sidebar({ 
-  onLogoutClick 
-}: { 
-  onLogoutClick: () => void 
-}) {
+const Sidebar = React.memo(function Sidebar() {
   return (
     <div className="w-64 bg-card border-r h-full">
       <div className="p-4">
@@ -66,84 +61,10 @@ const Sidebar = React.memo(function Sidebar({
           <SidebarLink href="/">Dashboard</SidebarLink>
           <SidebarLink href="/admin">Admin</SidebarLink>
           <SidebarLink href="/setup">Setup</SidebarLink>
+          <SidebarLink href="/header-demo">Header Demo</SidebarLink>
         </nav>
       </div>
     </div>
-  );
-});
-
-// Optimized Header component
-const Header = React.memo(function Header({
-  sidebarOpen,
-  onToggleSidebar,
-  notifications,
-  notificationCount,
-  notificationsEnabled,
-  onToggleNotifications,
-  onLogoutClick,
-}: {
-  sidebarOpen: boolean;
-  onToggleSidebar: () => void;
-  notifications: any[];
-  notificationCount: number;
-  notificationsEnabled: boolean;
-  onToggleNotifications: () => void;
-  onLogoutClick: () => void;
-}) {
-  return (
-    <header className="border-b bg-card">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleSidebar}
-            className="lg:hidden"
-          >
-            {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
-          </Button>
-          
-          <div className="flex items-center space-x-2">
-            <Building2 className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-semibold">{appConfig.name}</h1>
-          </div>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <NotificationPanel
-            notifications={notifications}
-            count={notificationCount}
-            enabled={notificationsEnabled}
-            onToggleEnabled={onToggleNotifications}
-          />
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                <User className="h-4 w-4" />
-                <span>User</span>
-                <ChevronDown className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem>
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogoutClick}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    </header>
   );
 });
 
@@ -164,6 +85,9 @@ export default function Home() {
     authState.logout();
   };
 
+  // Memoized notification data
+  const notifications = useNotifications();
+
   // Show loading state while checking auth
   if (authState.isCheckingAuth) {
     return (
@@ -183,7 +107,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-        <Header
+        <EnhancedHeader
+          showNotifications={true}
+          showProfile={true}
           sidebarOpen={appState.sidebarOpen}
           onToggleSidebar={appState.toggleSidebarOpen}
           notifications={notifications}

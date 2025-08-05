@@ -21,15 +21,14 @@ import {
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
 import { useHeader } from '@/contexts/header-context';
-import { API_CONFIG } from '@/lib/api-config';
-// Removed mock API import - using single API service
 import { apiService } from '@/lib/api-service';
 
 export default function LoginPage() {
   const router = useRouter();
   const { showHeader } = useHeader();
   const [loginMode, setLoginMode] = React.useState<'sso' | 'credentials'>('sso');
-  const [tenantId, setTenantId] = React.useState("");
+  const [organizationId, setOrganizationId] = React.useState("");
+  const [domain, setDomain] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
@@ -91,7 +90,7 @@ export default function LoginPage() {
     e.preventDefault();
     
     if (loginMode === 'sso') {
-      const trimmed = tenantId.trim().toLowerCase();
+      const trimmed = organizationId.trim().toLowerCase();
       
       if (!trimmed) {
         setError("Please enter your organization ID");
@@ -156,7 +155,7 @@ export default function LoginPage() {
       }
     } else {
       // Credentials login
-      if (!email.trim() || !password.trim() || !tenantId.trim()) {
+      if (!email.trim() || !password.trim() || !domain.trim()) {
         setError("Please fill in all fields");
         return;
       }
@@ -166,12 +165,12 @@ export default function LoginPage() {
 
       try {
         // First check if organization exists
-        const trimmedTenantId = tenantId.trim();
+        const trimmedDomain = domain.trim();
         const tenant = knownTenants.find(t => 
-          t.id === trimmedTenantId || 
-          t.domain === trimmedTenantId || 
-          t.id.toLowerCase() === trimmedTenantId.toLowerCase() ||
-          t.domain.toLowerCase() === trimmedTenantId.toLowerCase()
+          t.id === trimmedDomain || 
+          t.domain === trimmedDomain || 
+          t.id.toLowerCase() === trimmedDomain.toLowerCase() ||
+          t.domain.toLowerCase() === trimmedDomain.toLowerCase()
         );
         
         if (!tenant) {
@@ -184,14 +183,14 @@ export default function LoginPage() {
         const result = await apiService.login({
           email: email.trim(),
           password: password,
-          domain: tenantId.trim()
+          domain: domain.trim()
         });
 
         // Save auth data to localStorage
         if (typeof window !== "undefined") {
           localStorage.setItem("authToken", result.token);
           localStorage.setItem("user", JSON.stringify(result.user));
-          localStorage.setItem("tenant", tenantId.trim());
+          localStorage.setItem("tenant", domain.trim());
         }
 
         // Show success message
@@ -234,7 +233,11 @@ export default function LoginPage() {
               { id: 'credentials', label: 'Credentials', icon: <User size={16} /> }
             ]}
             value={loginMode}
-            onValueChange={(value) => setLoginMode(value as 'sso' | 'credentials')}
+            onValueChange={(value) => {
+              setLoginMode(value as 'sso' | 'credentials');
+              // Clear error when switching modes
+              setError("");
+            }}
             disabled={isCheckingApi || !isApiAvailable}
           />
 
@@ -289,8 +292,14 @@ export default function LoginPage() {
                   </Label>
                   <Input
                     id="tenant-id"
-                    value={tenantId}
-                    onChange={(e) => setTenantId(e.target.value)}
+                    value={loginMode === 'sso' ? organizationId : domain}
+                    onChange={(e) => {
+                      if (loginMode === 'sso') {
+                        setOrganizationId(e.target.value);
+                      } else {
+                        setDomain(e.target.value);
+                      }
+                    }}
                     placeholder={loginMode === 'sso' ? "your-organization-id" : "example.com"}
                     className="h-11"
                     autoComplete="organization"
