@@ -85,9 +85,6 @@ export default function Home() {
     authState.logout();
   };
 
-  // Memoized notification data
-  const notifications = useNotifications();
-
   // Show loading state while checking auth
   if (authState.isCheckingAuth) {
     return (

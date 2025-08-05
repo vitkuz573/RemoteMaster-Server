@@ -2,7 +2,6 @@
 
 import { use, useMemo } from 'react';
 import { apiService } from '@/lib/api-service';
-import { useApiStore } from '@/lib/stores';
 
 // Global cache for data fetching - this ensures promises are created once and reused
 const dataCache = new Map<string, Promise<any>>();
@@ -74,9 +73,8 @@ function fetchPricingPlans(api: typeof apiService): Promise<any[]> {
   return promise;
 }
 
-// Hook to get API service from Zustand store
+// Hook to get API service - MSW automatically handles mocking in development
 function useApiService() {
-  const { isMockApi } = useApiStore();
   return apiService;
 }
 

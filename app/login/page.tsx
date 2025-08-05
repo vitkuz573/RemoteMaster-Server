@@ -32,6 +32,7 @@ export default function LoginPage() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isNavigatingToSetup, setIsNavigatingToSetup] = React.useState(false);
   const [error, setError] = React.useState("");
   const [isApiAvailable, setIsApiAvailable] = React.useState(true);
   const [isCheckingApi, setIsCheckingApi] = React.useState(true);
@@ -416,13 +417,25 @@ export default function LoginPage() {
               </p>
               <Button 
                 variant="outline" 
-                onClick={() => router.push('/setup')}
+                onClick={() => {
+                  setIsNavigatingToSetup(true);
+                  router.push('/setup');
+                }}
                 className="w-full"
-                disabled={isCheckingApi || !isApiAvailable}
-                tabIndex={isCheckingApi || !isApiAvailable ? -1 : 0}
+                disabled={isNavigatingToSetup || isCheckingApi || !isApiAvailable}
+                tabIndex={isNavigatingToSetup || isCheckingApi || !isApiAvailable ? -1 : 0}
               >
-                Register Your Organization
-                <ExternalLink size={16} className="ml-2" />
+                {isNavigatingToSetup ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    <span className="ml-2">Loading...</span>
+                  </>
+                ) : (
+                  <>
+                    Register Your Organization
+                    <ExternalLink size={16} className="ml-2" />
+                  </>
+                )}
               </Button>
               <p className="text-xs text-muted-foreground">
                 Set up {appConfig.name} for your organization in minutes

@@ -118,9 +118,18 @@ import { ModeToggle } from '@/components/ui/mode-toggle';
 
 ## 🔧 Development
 
+### API Mocking with MSW
+
+This project uses [Mock Service Worker (MSW)](https://mswjs.io/) for API mocking in development:
+
+- **Automatic in Development**: MSW automatically runs when `NODE_ENV === 'development'`
+- **Real HTTP Requests**: Intercepts real `fetch()` requests at the network level
+- **No Code Changes**: Your API service code works the same with real and mock data
+- **Realistic Responses**: Returns realistic mock data with proper delays
+
 ### Available Scripts
 
-- `npm run dev` - Start development server
+- `npm run dev` - Start development server (with MSW enabled)
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
@@ -148,8 +157,9 @@ Create a `.env.local` file with:
 ```env
 # API Configuration
 NEXT_PUBLIC_API_URL=your-api-url
-NEXT_PUBLIC_USE_MOCK_API=true
 ```
+
+**Note:** MSW (Mock Service Worker) automatically runs in development mode for API mocking.
 
 ## 🤝 Contributing
 

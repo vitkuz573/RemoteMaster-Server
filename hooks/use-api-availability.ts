@@ -7,17 +7,16 @@ import React from 'react';
 export function useApiAvailability() {
   const { 
     isApiAvailable, 
-    isCheckingApi, 
-    isMockApi,
+    isCheckingApi,
     setApiAvailable, 
     setCheckingApi 
   } = useApiStore();
-  const { showError, showInfo } = useNotifications();
+  const { showError } = useNotifications();
   
   // Track if we've already initialized
   const [hasInitialized, setHasInitialized] = React.useState(false);
 
-  // Use the single API service - MSW will handle mocking if enabled
+  // Use the single API service - MSW automatically handles mocking in development
   const api = apiService;
 
   // Check API availability
@@ -46,7 +45,7 @@ export function useApiAvailability() {
     
     setHasInitialized(true);
     
-    // Check API availability (MSW will handle mocking if enabled)
+    // Check API availability (MSW automatically handles mocking in development)
     checkApiAvailability();
   }, [checkApiAvailability, setApiAvailable, hasInitialized]);
 
@@ -75,7 +74,6 @@ export function useApiAvailability() {
     // State
     isApiAvailable,
     isCheckingApi,
-    isMockApi,
     
     // Actions
     checkApiAvailability,

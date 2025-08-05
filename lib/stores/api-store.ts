@@ -8,7 +8,6 @@ export interface ApiState {
   errors: string[];
   pendingRequests: number;
   apiUrl: string;
-  isMockApi: boolean;
   isApiAvailable: boolean;
   isCheckingApi: boolean;
 }
@@ -22,7 +21,6 @@ interface ApiActions {
   clearErrors: () => void;
   incrementPending: () => void;
   decrementPending: () => void;
-  setMockApi: (isMock: boolean) => void;
   setApiAvailable: (available: boolean) => void;
   setCheckingApi: (checking: boolean) => void;
 }
@@ -35,8 +33,7 @@ const initialState: ApiState = {
   lastSync: null,
   errors: [],
   pendingRequests: 0,
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || '',
-  isMockApi: false,
+  apiUrl: process.env['NEXT_PUBLIC_API_URL'] || '',
   isApiAvailable: false,
   isCheckingApi: false,
 };
@@ -90,11 +87,6 @@ export const useApiStore = create<ApiStore>()(
         pendingRequests: Math.max(0, state.pendingRequests - 1) 
       })),
       
-      setMockApi: (isMock: boolean) => set((state) => ({ 
-        ...state, 
-        isMockApi: isMock 
-      })),
-      
       setApiAvailable: (available: boolean) => set((state) => ({ 
         ...state, 
         isApiAvailable: available 
@@ -109,7 +101,6 @@ export const useApiStore = create<ApiStore>()(
       name: 'api-store',
       partialize: (state) => ({
         apiUrl: state.apiUrl,
-        isMockApi: state.isMockApi,
       }),
     }
   )
