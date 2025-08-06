@@ -1,13 +1,12 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
-import { useHeader } from '@/contexts/header-context';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/stores';
+import { useAuthStore, useHeaderStore } from '@/lib/stores';
 
 export function useAuth() {
   const router = useRouter();
-  const { resetConfig } = useHeader();
+  const { resetConfig } = useHeaderStore();
   const {
     isAuthenticated,
     isCheckingAuth,

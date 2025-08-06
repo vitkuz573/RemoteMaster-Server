@@ -1,6 +1,6 @@
 'use client';
 
-import { useHeader } from '@/contexts/header-context';
+import { useHeaderStore } from '@/lib/stores';
 import { Header } from './header';
 
 interface ConditionalHeaderProps {
@@ -24,7 +24,7 @@ export function ConditionalHeader({
   onToggleNotifications,
   onLogoutClick
 }: ConditionalHeaderProps) {
-  const { isVisible } = useHeader();
+  const { isVisible } = useHeaderStore();
 
   if (!isVisible) {
     return null;

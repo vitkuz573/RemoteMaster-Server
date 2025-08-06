@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Footer } from "@/components/ui/footer";
-import { FooterProvider } from "@/contexts/footer-context";
 import { ConditionalHeader } from "@/components/ui/conditional-header";
-import { HeaderProvider } from "@/contexts/header-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -43,16 +41,11 @@ export default function RootLayout({
       >
         <MSWProvider>
           <TooltipProvider>
-            <HeaderProvider>
-              <FooterProvider>
-
-                <ConditionalHeaderWrapper />
-                <div className="flex-1">
-                  {children}
-                </div>
-                <ConditionalFooterWrapper />
-              </FooterProvider>
-            </HeaderProvider>
+            <ConditionalHeaderWrapper />
+            <div className="flex-1">
+              {children}
+            </div>
+            <ConditionalFooterWrapper />
           </TooltipProvider>
           <Toaster />
         </MSWProvider>

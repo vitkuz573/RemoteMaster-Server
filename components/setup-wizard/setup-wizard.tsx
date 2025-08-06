@@ -10,7 +10,7 @@ import {
   CheckCircle,
   Shield
 } from "lucide-react";
-import { useHeader } from '@/contexts/header-context';
+import { useHeaderStore } from '@/lib/stores';
 import { useApiAvailability } from '@/hooks/use-api-availability';
 import { useSetupWizardState } from '@/hooks/use-setup-wizard-state';
 import { toast } from 'sonner';
@@ -35,7 +35,7 @@ import {
 } from './data-providers';
 
 export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
-  const { showHeader } = useHeader();
+  const { showHeader } = useHeaderStore();
   const { 
     isApiAvailable, 
     isCheckingApi, 

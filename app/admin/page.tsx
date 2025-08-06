@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { RefreshCw, Users, Building2, Globe, Mail, Calendar, Lock, AlertTriangle } from 'lucide-react';
-import { useHeader } from '@/contexts/header-context';
+import { useHeaderStore, useAdminStore } from '@/lib/stores';
 import { 
   AdminPageDataProvider, 
   AdminPageDataLoading 
@@ -41,15 +41,27 @@ interface Organization {
 
 export default function AdminPage() {
   const router = useRouter();
-  const { showHeader } = useHeader();
-  const [refreshing, setRefreshing] = useState(false);
-  const [isNavigatingToHome, setIsNavigatingToHome] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [isApiAvailable, setIsApiAvailable] = useState(true);
-  const [isCheckingApi, setIsCheckingApi] = useState(true);
+  const { showHeader } = useHeaderStore();
+  const {
+    refreshing,
+    isNavigatingToHome,
+    isAuthenticated,
+    showLogin,
+    adminPassword,
+    loginError,
+    isApiAvailable,
+    isCheckingApi,
+    setRefreshing,
+    setIsNavigatingToHome,
+    setIsAuthenticated,
+    setShowLogin,
+    setAdminPassword,
+    setLoginError,
+    setIsApiAvailable,
+    setIsCheckingApi,
+    resetForm,
+    clearError,
+  } = useAdminStore();
 
   // Show header on admin page
   useEffect(() => {

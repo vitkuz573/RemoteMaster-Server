@@ -1,4 +1,4 @@
-import { useHeader } from '@/contexts/header-context';
+import { useHeaderStore } from '@/lib/stores';
 
 export interface HeaderPreset {
   showNotifications: boolean;
@@ -53,7 +53,7 @@ export const headerPresets = {
 } as const;
 
 export function useHeaderConfig() {
-  const { updateConfig, resetConfig, config } = useHeader();
+  const { updateConfig, resetConfig, config } = useHeaderStore();
 
   const applyPreset = (preset: keyof typeof headerPresets) => {
     updateConfig(headerPresets[preset]);

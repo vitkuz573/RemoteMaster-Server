@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { NotificationPanel } from '@/components/ui/notification-panel';
 import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, Settings } from 'lucide-react';
 import { appConfig } from '@/lib/app-config';
-import { useHeader } from '@/contexts/header-context';
+import { useHeaderStore } from '@/lib/stores';
 import { useAppState } from '@/hooks/use-app-state';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -31,7 +31,7 @@ export function Header({
   onToggleNotifications,
   onLogoutClick
 }: HeaderProps) {
-  const { config } = useHeader();
+  const { config } = useHeaderStore();
   const appState = useAppState();
   const authState = useAuth();
 

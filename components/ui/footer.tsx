@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { appConfig } from '@/lib/app-config';
-import { useFooter } from '@/contexts/footer-context';
+import { useFooterStore } from '@/lib/stores';
 
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -19,7 +19,7 @@ interface FooterProps {
 export function Footer({ 
   className = ""
 }: FooterProps) {
-  const { isFooterVisible, footerConfig } = useFooter();
+  const { isFooterVisible, footerConfig } = useFooterStore();
   const { showBuildDate } = footerConfig;
 
   if (!isFooterVisible) return null;

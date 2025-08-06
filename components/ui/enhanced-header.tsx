@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { ConditionalHeader } from './conditional-header';
-import { useHeader } from '@/contexts/header-context';
+import { useHeaderStore } from '@/lib/stores';
 
 interface EnhancedHeaderProps {
   className?: string;
@@ -35,7 +35,7 @@ export function EnhancedHeader({
   onToggleNotifications,
   onLogoutClick
 }: EnhancedHeaderProps) {
-  const { updateConfig } = useHeader();
+  const { updateConfig } = useHeaderStore();
 
   // Update header configuration when props change
   useEffect(() => {

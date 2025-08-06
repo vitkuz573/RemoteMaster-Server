@@ -20,26 +20,42 @@ import {
   User
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
-import { useHeader } from '@/contexts/header-context';
+import { useHeaderStore, useLoginStore } from '@/lib/stores';
 import { useAuth } from '@/hooks/use-auth';
 import { apiService } from '@/lib/api-service';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { showHeader, resetConfig, updateConfig } = useHeader();
-  const [loginMode, setLoginMode] = React.useState<'sso' | 'credentials'>('sso');
-  const [organizationId, setOrganizationId] = React.useState("");
-  const [domain, setDomain] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isNavigatingToSetup, setIsNavigatingToSetup] = React.useState(false);
-  const [error, setError] = React.useState("");
+  const { showHeader, resetConfig, updateConfig } = useHeaderStore();
+  const {
+    loginMode,
+    organizationId,
+    domain,
+    email,
+    password,
+    isLoading,
+    isNavigatingToSetup,
+    error,
+    isApiAvailable,
+    isCheckingApi,
+    knownTenants,
+    setLoginMode,
+    setOrganizationId,
+    setDomain,
+    setEmail,
+    setPassword,
+    setIsLoading,
+    setIsNavigatingToSetup,
+    setError,
+    setIsApiAvailable,
+    setIsCheckingApi,
+    setKnownTenants,
+    resetForm,
+    clearError,
+  } = useLoginStore();
 
   // Auth store
   const auth = useAuth();
-  const [isApiAvailable, setIsApiAvailable] = React.useState(true);
-  const [isCheckingApi, setIsCheckingApi] = React.useState(true);
 
   // Application configuration (imported from centralized config)
 
@@ -80,18 +96,7 @@ export default function LoginPage() {
     loadOrganizations();
   }, []);
 
-  // Tenant registry will be fetched from API
-  const [knownTenants, setKnownTenants] = React.useState<Array<{
-    id: string, 
-    name: string, 
-    domain: string, 
-    idp: string,
-    byoidConfig?: {
-      issuerUrl: string;
-      clientId: string;
-      status: string;
-    } | null
-  }>>([]);
+
 
   React.useEffect(() => {
     if (auth.isAuthenticated) {
