@@ -82,7 +82,11 @@ if (typeof console !== 'undefined' && Object.keys(mockCredentials).length) {
     console.groupCollapsed('[MSW] Generated dev credentials');
     // eslint-disable-next-line no-console
     console.table(
-      Object.entries(mockCredentials).map(([email, { password, role }]) => ({ email, password, role }))
+      Object.entries(mockCredentials).map(([email, credential]) => ({ 
+        email, 
+        password: (credential as Credential).password, 
+        role: (credential as Credential).role 
+      }))
     );
     console.groupEnd();
   }, 0);
@@ -125,7 +129,7 @@ export const handlers = [
     let organizations = mockOrganizations
     
     if (domain) {
-      organizations = organizations.filter(org => 
+      organizations = organizations.filter((org: MockOrganization) => 
         org.domain === domain || 
         org.id === domain ||
         org.domain.toLowerCase() === domain.toLowerCase() ||
@@ -134,7 +138,7 @@ export const handlers = [
     }
     
     if (id) {
-      organizations = organizations.filter(org => org.id === id)
+      organizations = organizations.filter((org: MockOrganization) => org.id === id)
     }
 
     return HttpResponse.json({
@@ -219,15 +223,15 @@ export const handlers = [
     
     if (credentials && credentials.password === data.password) {
       // Find or generate user
-      let mockUser = mockUsers.find(u => u.email === data.email);
+      let mockUser = mockUsers.find((u: MockUser) => u.email === data.email);
       if (!mockUser) {
-        mockUser = generateMockUser((mockOrganizations.find(o => o.domain === data?.domain)?.id) || mockOrganizations[0].id);
+        mockUser = generateMockUser((mockOrganizations.find((o: MockOrganization) => o.domain === data?.domain)?.id) || mockOrganizations[0].id);
         mockUser.email = data.email;
         mockUser.role = credentials.role;
         mockUsers.push(mockUser);
       }
       
-      const mockOrg = mockOrganizations.find(o => o.id === mockUser.organizationId) || mockOrganizations[0];
+      const mockOrg = mockOrganizations.find((o: MockOrganization) => o.id === mockUser.organizationId) || mockOrganizations[0];
       
       if (!mockOrg) {
         return HttpResponse.json(
@@ -267,8 +271,8 @@ export const handlers = [
     const data = await request.json() as any
     
     // Simulate SSO authentication
-    const mockUser = generateMockUser((mockOrganizations.find(o => o.domain === data?.domain)?.id) || mockOrganizations[0].id);
-    const mockOrg = mockOrganizations.find(o => o.domain === data.domain) || mockOrganizations[0];
+    const mockUser = generateMockUser((mockOrganizations.find((o: MockOrganization) => o.domain === data?.domain)?.id) || mockOrganizations[0].id);
+    const mockOrg = mockOrganizations.find((o: MockOrganization) => o.domain === data.domain) || mockOrganizations[0];
     
     if (!mockOrg) {
       return HttpResponse.json(
@@ -332,7 +336,7 @@ export const handlers = [
     await delay(50)
     const { planId, expectedUsers } = await request.json() as any
     
-    const plan = mockPricingPlans.find(p => p.id === planId)
+    const plan = mockPricingPlans.find((p: any) => p.id === planId)
     if (!plan) {
       return HttpResponse.json(
         { error: 'Plan not found' },
@@ -450,9 +454,9 @@ export const handlers = [
     // Convert mock units to the expected format
     const organizationsWithUnits: Record<string, any> = {};
     
-    mockOrganizations.forEach(org => {
-      const orgUnits = mockUnits.filter(unit => 
-        unit.hosts.some(host => host.id.includes(org.id) || org.id.includes(host.id))
+    mockOrganizations.forEach((org: MockOrganization) => {
+      const orgUnits = mockUnits.filter((unit: MockOrganizationalUnit) => 
+        unit.hosts.some((host: any) => host.id.includes(org.id) || org.id.includes(host.id))
       );
       
       if (orgUnits.length === 0) {
@@ -462,7 +466,7 @@ export const handlers = [
       } else {
         // Ensure no duplicate names in existing units
         const usedNames = new Set<string>();
-        const uniqueUnits = orgUnits.filter(unit => {
+        const uniqueUnits = orgUnits.filter((unit: MockOrganizationalUnit) => {
           if (usedNames.has(unit.name)) {
             return false; // Skip duplicates
           }
@@ -474,12 +478,12 @@ export const handlers = [
       }
       
       const unitsMap: Record<string, any> = {};
-      orgUnits.forEach(unit => {
+      orgUnits.forEach((unit: MockOrganizationalUnit) => {
         unitsMap[unit.id] = {
           id: unit.id,
           name: unit.name,
           description: unit.description,
-          hosts: unit.hosts.map(host => ({
+          hosts: unit.hosts.map((host: any) => ({
             id: host.id,
             name: host.name,
             status: host.status,
