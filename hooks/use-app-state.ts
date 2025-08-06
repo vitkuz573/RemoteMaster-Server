@@ -30,6 +30,7 @@ export function useAppState() {
     logoutModalOpen,
     isAuthenticated,
     isCheckingAuth,
+    notifications: [],
     
     // Actions
     setSidebarPosition,

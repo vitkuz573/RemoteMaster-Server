@@ -45,7 +45,6 @@ export function Header({
   const finalOnLogoutClick = onLogoutClick ?? (() => appState.setLogoutModalOpen(true));
 
   const handleLogout = () => {
-    authState.logout();
     finalOnLogoutClick();
   };
 
