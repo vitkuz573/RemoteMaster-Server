@@ -93,6 +93,12 @@ export default function LoginPage() {
     } | null
   }>>([]);
 
+  React.useEffect(() => {
+    if (auth.isAuthenticated) {
+      router.push("/");
+    }
+  }, [auth.isAuthenticated, router]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
