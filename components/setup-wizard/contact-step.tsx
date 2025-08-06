@@ -6,28 +6,26 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, AlertCircle } from 'lucide-react';
-import { OrganizationForm } from './types';
+import type { OrganizationForm } from './types';
 import { contactSchema } from './validation-schemas';
+import { FieldError, FieldSuccess } from './form-helpers';
 
 interface ContactStepProps {
   form: OrganizationForm;
   onFormChange: (field: keyof OrganizationForm, value: string | number) => void;
-  isFormDisabled: boolean;
 }
 
 export function ContactStep({
   form,
   onFormChange,
-  isFormDisabled
 }: ContactStepProps) {
   const {
     register,
-    formState: { errors },
-    watch,
+    formState: { errors, touchedFields },
     setValue
   } = useForm({
     resolver: zodResolver(contactSchema),
+    mode: 'onChange',
     defaultValues: {
       contactName: form.contactName,
       contactEmail: form.contactEmail,
@@ -36,43 +34,6 @@ export function ContactStep({
       expectedUsers: form.expectedUsers
     }
   });
-
-  const watchedValues = watch();
-
-  // Update parent form when values change
-  React.useEffect(() => {
-    Object.entries(watchedValues).forEach(([key, value]) => {
-      if (value !== undefined && value !== form[key as keyof OrganizationForm]) {
-        onFormChange(key as keyof OrganizationForm, value);
-      }
-    });
-  }, [watchedValues, onFormChange, form]);
-
-  const renderFieldError = (fieldName: string) => {
-    const error = errors[fieldName as keyof typeof errors];
-    if (!error) return null;
-    
-    return (
-      <div className="flex items-center gap-1 text-red-500 text-xs mt-1">
-        <AlertCircle className="w-3 h-3" />
-        <span>{error.message as string}</span>
-      </div>
-    );
-  };
-
-  const renderFieldSuccess = (fieldName: string) => {
-    const value = watchedValues[fieldName as keyof typeof watchedValues];
-    const error = errors[fieldName as keyof typeof errors];
-    
-    if (value && !error) {
-      return (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-          <CheckCircle className="w-5 h-5 text-green-500" />
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-8">
@@ -85,15 +46,19 @@ export function ContactStep({
             <Input
               id="contactName"
               {...register('contactName')}
+              onChange={(e) => {
+                setValue('contactName', e.target.value, { shouldValidate: true });
+                onFormChange('contactName', e.target.value);
+              }}
               placeholder="John Doe"
-              disabled={isFormDisabled}
+              
               className={`h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm ${
                 errors.contactName ? 'border-red-500 focus:border-red-500' : ''
               }`}
             />
-            {renderFieldSuccess('contactName')}
+            <FieldSuccess show={touchedFields.contactName && !errors.contactName} />
           </div>
-          {renderFieldError('contactName')}
+          <FieldError message={errors.contactName?.message} />
         </div>
         
         <div className="space-y-3">
@@ -105,15 +70,19 @@ export function ContactStep({
               id="contactEmail"
               type="email"
               {...register('contactEmail')}
+              onChange={(e) => {
+                setValue('contactEmail', e.target.value, { shouldValidate: true });
+                onFormChange('contactEmail', e.target.value);
+              }}
               placeholder="john@acme.com"
-              disabled={isFormDisabled}
+              
               className={`h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm ${
                 errors.contactEmail ? 'border-red-500 focus:border-red-500' : ''
               }`}
             />
-            {renderFieldSuccess('contactEmail')}
+            <FieldSuccess show={touchedFields.contactEmail && !errors.contactEmail} />
           </div>
-          {renderFieldError('contactEmail')}
+          <FieldError message={errors.contactEmail?.message} />
         </div>
         
         <div className="space-y-3">
@@ -124,15 +93,19 @@ export function ContactStep({
             <Input
               id="contactPhone"
               {...register('contactPhone')}
+              onChange={(e) => {
+                setValue('contactPhone', e.target.value, { shouldValidate: true });
+                onFormChange('contactPhone', e.target.value);
+              }}
               placeholder="+1 (555) 123-4567"
-              disabled={isFormDisabled}
+              
               className={`h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm ${
                 errors.contactPhone ? 'border-red-500 focus:border-red-500' : ''
               }`}
             />
-            {renderFieldSuccess('contactPhone')}
+            <FieldSuccess show={touchedFields.contactPhone && !errors.contactPhone} />
           </div>
-          {renderFieldError('contactPhone')}
+          <FieldError message={errors.contactPhone?.message} />
         </div>
         
         <div className="space-y-3">
@@ -146,14 +119,18 @@ export function ContactStep({
               min="1"
               max="10000"
               {...register('expectedUsers', { valueAsNumber: true })}
+              onChange={(e) => {
+                setValue('expectedUsers', e.target.valueAsNumber, { shouldValidate: true });
+                onFormChange('expectedUsers', e.target.valueAsNumber);
+              }}
               placeholder="10"
-              disabled={isFormDisabled}
+              
               className={`h-12 px-4 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm ${
                 errors.expectedUsers ? 'border-red-500 focus:border-red-500' : ''
               }`}
             />
           </div>
-          {renderFieldError('expectedUsers')}
+          <FieldError message={errors.expectedUsers?.message} />
         </div>
       </div>
       
@@ -164,14 +141,18 @@ export function ContactStep({
         <Textarea
           id="address"
           {...register('address')}
+          onChange={(e) => {
+            setValue('address', e.target.value, { shouldValidate: true });
+            onFormChange('address', e.target.value);
+          }}
           placeholder="123 Business St, City, State, ZIP"
           rows={3}
-          disabled={isFormDisabled}
+          
           className={`min-h-[100px] px-4 py-3 text-base transition-all duration-200 border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-background/50 backdrop-blur-sm resize-none ${
             errors.address ? 'border-red-500 focus:border-red-500' : ''
           }`}
         />
-        {renderFieldError('address')}
+        <FieldError message={errors.address?.message} />
       </div>
     </div>
   );

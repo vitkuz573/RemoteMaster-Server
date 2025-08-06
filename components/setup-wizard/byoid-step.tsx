@@ -11,7 +11,6 @@ interface BYOIDStepProps {
   form: BYOIDForm;
   onFormChange: (field: keyof BYOIDForm, value: string) => void;
   onDiscoverProvider: () => Promise<void>;
-  isFormDisabled: boolean;
   isDiscovering: boolean;
 }
 
@@ -19,7 +18,6 @@ export function BYOIDStep({
   form,
   onFormChange,
   onDiscoverProvider,
-  isFormDisabled,
   isDiscovering
 }: BYOIDStepProps) {
   return (
@@ -46,11 +44,11 @@ export function BYOIDStep({
               onChange={(e) => onFormChange('issuerUrl', e.target.value)}
               placeholder="https://your-idp.com"
               className="flex-1"
-              disabled={isFormDisabled}
+              
             />
             <Button
               onClick={onDiscoverProvider}
-              disabled={isDiscovering || !form.issuerUrl.trim() || isFormDisabled}
+              disabled={isDiscovering || !form.issuerUrl.trim()}
               variant="outline"
               className="whitespace-nowrap"
             >
@@ -98,7 +96,7 @@ export function BYOIDStep({
               value={form.clientId}
               onChange={(e) => onFormChange('clientId', e.target.value)}
               placeholder="your-client-id"
-              disabled={isFormDisabled}
+              
             />
             <p className="text-xs text-muted-foreground">
               The client ID configured in your IdP
@@ -113,7 +111,7 @@ export function BYOIDStep({
               value={form.clientSecret}
               onChange={(e) => onFormChange('clientSecret', e.target.value)}
               placeholder="your-client-secret"
-              disabled={isFormDisabled}
+              
             />
             <p className="text-xs text-muted-foreground">
               The client secret configured in your IdP

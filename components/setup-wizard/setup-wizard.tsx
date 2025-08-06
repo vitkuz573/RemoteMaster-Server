@@ -13,12 +13,13 @@ import {
 import { useHeaderStore } from '@/lib/stores';
 import { useApiAvailability } from '@/hooks/use-api-availability';
 import { useSetupWizardStore } from '@/lib/stores';
+import { apiService } from '@/lib/api-service';
 import { toast } from 'sonner';
-import { 
+import type { 
   WizardStepConfig,
   SetupWizardProps 
 } from './types';
-import { organizationSchema, contactSchema, byoidSchema } from './validation-schemas';
+import { organizationSchema, contactSchema } from './validation-schemas';
 import { OrganizationStep } from './organization-step';
 import { ContactStep } from './contact-step';
 import { PricingStep } from './pricing-step';
@@ -39,10 +40,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   const { 
     isApiAvailable, 
     isCheckingApi, 
-    isFormDisabled, 
-    getLoadingText, 
-    getStatusMessage,
-    api 
+    getApiStatus,
   } = useApiAvailability();
   
   // Use custom hook for state management with persistence
@@ -146,7 +144,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
 
     setIsDiscovering(true);
     try {
-      const result = await api.discoverOpenIDProvider(byoidForm.issuerUrl.trim());
+      const result = await apiService.discoverOpenIDProvider(byoidForm.issuerUrl.trim());
       setByoidForm({ 
         discoveryData: result.discovery 
       });
@@ -234,7 +232,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
 
     try {
       // Submit organization registration
-      const result = await api.registerOrganization(orgForm);
+      const result = await apiService.registerOrganization(orgForm);
 
       // Store registration result for CompleteStep
       setRegistrationResult(result);
@@ -282,7 +280,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
           return;
         }
         
-        const costResponse = await api.calculateMonthlyCost(orgForm.selectedPlan, orgForm.expectedUsers);
+        const costResponse = await apiService.calculateMonthlyCost(orgForm.selectedPlan, orgForm.expectedUsers);
         setTotalMonthly(costResponse.calculation.totalCost);
       } catch (error) {
         setTotalMonthly(0);
@@ -292,7 +290,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     if (orgForm.selectedPlan && orgForm.expectedUsers > 0) {
       calculateCost();
     }
-  }, [orgForm.selectedPlan, orgForm.expectedUsers, api, setTotalMonthly]);
+  }, [orgForm.selectedPlan, orgForm.expectedUsers, setTotalMonthly]);
 
   const handleStartNew = () => {
     // Reset all state to start fresh
@@ -320,8 +318,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       <LoadingErrorStates
         isCheckingApi={isCheckingApi}
         isApiAvailable={isApiAvailable}
-        getLoadingText={getLoadingText}
-        getStatusMessage={getStatusMessage}
+        getApiStatus={getApiStatus}
       />
     );
   }
@@ -347,14 +344,14 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
             <CardHeader className="pb-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
-                  {steps[currentStepIndex].icon}
+                  {steps[currentStepIndex]?.icon}
                 </div>
                 <div>
                   <CardTitle className="text-2xl font-bold">
-                    {steps[currentStepIndex].title}
+                    {steps[currentStepIndex]?.title}
                   </CardTitle>
                   <CardDescription className="text-base mt-1">
-                    {steps[currentStepIndex].description}
+                    {steps[currentStepIndex]?.description}
                   </CardDescription>
                 </div>
               </div>
@@ -378,7 +375,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
                               onFormChange={handleOrgInputChange}
                               industries={industries}
                               companySizes={companySizes}
-                              isFormDisabled={isFormDisabled}
                             />
                           )}
 
@@ -386,7 +382,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
                             <ContactStep
                               form={orgForm}
                               onFormChange={handleOrgInputChange}
-                              isFormDisabled={isFormDisabled}
                             />
                           )}
 
@@ -395,7 +390,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
                               form={orgForm}
                               onFormChange={handleOrgInputChange}
                               pricingPlans={pricingPlans}
-                              isFormDisabled={isFormDisabled}
                               totalMonthly={totalMonthly}
                             />
                           )}
@@ -405,7 +399,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
                               form={byoidForm}
                               onFormChange={handleByoidInputChange}
                               onDiscoverProvider={handleDiscoverProvider}
-                              isFormDisabled={isFormDisabled}
                               isDiscovering={isDiscovering}
                             />
                           )}
@@ -446,7 +439,6 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
               canGoBack={currentStepIndex > 0}
               canGoNext={validateCurrentStep()}
               isSubmitting={isSubmitting}
-              isFormDisabled={isFormDisabled}
               isLastStep={currentStep === 'review'}
             />
           )}

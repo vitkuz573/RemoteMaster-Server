@@ -9,24 +9,23 @@ import { useRouter } from 'next/navigation';
 interface LoadingErrorStatesProps {
   isCheckingApi: boolean;
   isApiAvailable: boolean;
-  getLoadingText: () => string;
-  getStatusMessage: () => string;
+  getApiStatus: () => { loadingText: string; statusMessage: string };
 }
 
 export function LoadingErrorStates({
   isCheckingApi,
   isApiAvailable,
-  getLoadingText,
-  getStatusMessage
+  getApiStatus,
 }: LoadingErrorStatesProps) {
   const router = useRouter();
+  const { loadingText, statusMessage } = getApiStatus();
   // Show loading state while checking API
   if (isCheckingApi) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">{getLoadingText()}</p>
+          <p className="text-muted-foreground">{loadingText}</p>
         </div>
       </div>
     );
@@ -43,7 +42,7 @@ export function LoadingErrorStates({
             </div>
             <CardTitle className="text-2xl">Service Unavailable</CardTitle>
             <CardDescription>
-              {getStatusMessage()}
+              {statusMessage}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">

@@ -19,7 +19,6 @@ interface PricingStepProps {
   form: OrganizationForm;
   onFormChange: (field: keyof OrganizationForm, value: string | number) => void;
   pricingPlans: PricingPlan[];
-  isFormDisabled: boolean;
   totalMonthly: number;
 }
 
@@ -27,7 +26,6 @@ export function PricingStep({
   form,
   onFormChange,
   pricingPlans,
-  isFormDisabled,
   totalMonthly
 }: PricingStepProps) {
   const selectedPlan = pricingPlans.find(plan => plan.id === form.selectedPlan) || pricingPlans[0];
@@ -42,12 +40,12 @@ export function PricingStep({
         {pricingPlans.map((plan) => (
           <div
             key={plan.id}
-            className={`p-4 border rounded-lg transition-all duration-200 ${
+            className={`p-4 border rounded-lg transition-all duration-200 cursor-pointer ${
               form.selectedPlan === plan.id
                 ? 'border-primary bg-primary/5'
                 : 'border-muted hover:border-primary/50'
-            } ${isFormDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            onClick={isFormDisabled ? undefined : () => onFormChange('selectedPlan', plan.id)}
+            }`}
+            onClick={() => onFormChange('selectedPlan', plan.id)}
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">

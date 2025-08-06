@@ -11,7 +11,6 @@ interface NavigationButtonsProps {
   canGoBack: boolean;
   canGoNext: boolean;
   isSubmitting: boolean;
-  isFormDisabled: boolean;
   isLastStep: boolean;
 }
 
@@ -22,7 +21,6 @@ export function NavigationButtons({
   canGoBack,
   canGoNext,
   isSubmitting,
-  isFormDisabled,
   isLastStep
 }: NavigationButtonsProps) {
   return (
@@ -41,7 +39,7 @@ export function NavigationButtons({
           <Button
             variant="outline"
             onClick={onBack}
-            disabled={!canGoBack || isFormDisabled}
+            disabled={!canGoBack}
             className="w-full sm:w-auto h-12 px-6 text-base font-medium transition-all duration-200 hover:shadow-md"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -57,7 +55,7 @@ export function NavigationButtons({
             <Button
               variant="ghost"
               onClick={onReset}
-              disabled={isFormDisabled}
+              disabled={isSubmitting}
               className="w-full sm:w-auto h-12 px-4 text-base font-medium text-muted-foreground hover:text-foreground transition-all duration-200"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
@@ -75,7 +73,7 @@ export function NavigationButtons({
       >
         <Button
           onClick={onNext}
-          disabled={!canGoNext || isSubmitting || isFormDisabled}
+          disabled={!canGoNext || isSubmitting}
           className="w-full sm:w-auto h-12 px-8 text-base font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200 hover:shadow-lg hover:shadow-primary/25"
         >
           {isSubmitting ? (
