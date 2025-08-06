@@ -9,6 +9,7 @@ import { appConfig } from '@/lib/app-config';
 import { useHeader } from '@/contexts/header-context';
 import { useAppState } from '@/hooks/use-app-state';
 import { useAuth } from '@/hooks/use-auth';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface HeaderProps {
   className?: string;
@@ -94,10 +95,16 @@ export function Header({
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="flex items-center space-x-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className="h-9 w-auto px-2 focus-visible:ring-0 focus-visible:ring-offset-0"
                   >
-                  <Building2 className="h-4 w-4 text-primary" />
-                  <div className="flex flex-col items-start leading-tight text-left">
+                  <Avatar className="h-6 w-6">
+                    {authState.user?.avatar ? (
+                      <AvatarImage src={authState.user.avatar} alt={authState.user.name ?? 'User'} />
+                    ) : (
+                      <AvatarFallback className="text-xs">{(authState.user?.name ?? 'U').charAt(0).toUpperCase()}</AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="flex flex-col items-start leading-tight text-left ml-2">
                     <span className="text-sm font-medium">
                       {authState.user?.name ?? 'User'}
                     </span>
@@ -105,7 +112,7 @@ export function Header({
                       {authState.user?.organizationName ?? authState.user?.organizationDomain ?? (typeof window !== 'undefined' ? localStorage.getItem('tenant') ?? 'Organization' : 'Organization')}
                     </span>
                   </div>
-                  <ChevronDown className="h-3 w-3" />
+                  <ChevronDown className="h-3 w-3 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
