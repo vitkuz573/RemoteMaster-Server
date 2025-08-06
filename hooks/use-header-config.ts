@@ -52,11 +52,12 @@ export const headerPresets = {
   },
 } as const;
 
-export function useHeaderConfig() {
+export function useHeaderConfig(customPresets?: Record<string, HeaderPreset>) {
   const { updateConfig, resetConfig, config } = useHeaderStore();
+  const allPresets = { ...headerPresets, ...customPresets };
 
-  const applyPreset = (preset: keyof typeof headerPresets) => {
-    updateConfig(headerPresets[preset]);
+  const applyPreset = (preset: keyof typeof allPresets) => {
+    updateConfig(allPresets[preset]);
   };
 
   const applyCustomConfig = (customConfig: Partial<HeaderPreset>) => {
@@ -68,6 +69,6 @@ export function useHeaderConfig() {
     applyPreset,
     applyCustomConfig,
     resetConfig,
-    presets: headerPresets,
+    presets: allPresets,
   };
 } 

@@ -9,7 +9,7 @@ import {
   HomePageDataProvider, 
   HomePageDataLoading 
 } from '@/components/data-providers';
-import { useAppState } from '@/hooks/use-app-state';
+import { useAppStore } from '@/lib/stores';
 import { useHostSelection } from '@/hooks/use-host-selection';
 import { useAuth } from '@/hooks/use-auth';
 import { EnhancedHeader } from '@/components/ui/enhanced-header';
@@ -52,7 +52,7 @@ const useNotifications = () => {
 // Main page component
 export default function Home() {
   // Custom hooks for state management
-  const appState = useAppState();
+  const appState = useAppStore();
   const hostSelection = useHostSelection();
   const authState = useAuth();
   

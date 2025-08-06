@@ -3,6 +3,7 @@
 import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, useHeaderStore } from '@/lib/stores';
+import { apiService } from '@/lib/api-service';
 
 export function useAuth() {
   const router = useRouter();
@@ -17,45 +18,45 @@ export function useAuth() {
     setCheckingAuth,
   } = useAuthStore();
 
+  const redirectToLogin = useCallback(() => {
+    router.replace('/login');
+  }, [router]);
+
   const logout = useCallback(() => {
     // Clear header configuration on logout
     resetConfig();
     logoutAction();
     // Use replace to prevent back navigation to authenticated pages
-    router.replace('/login');
-  }, [logoutAction, router, resetConfig]);
+    redirectToLogin();
+  }, [logoutAction, resetConfig, redirectToLogin]);
 
   const checkAuth = useCallback(async () => {
     try {
       setCheckingAuth(true);
-      
-      // Simulate authentication check
       if (token) {
         // In a real app, you would validate the token with your API
         if (!user) {
+          const { user: userData } = await apiService.getCurrentUser();
+          const { organizations } = await apiService.getOrganizations({ id: userData.organizationId });
+          const organization = organizations?.[0];
+
           login(token, {
-            name: 'John Doe',
-            email: 'john@example.com',
-            role: 'admin',
-            avatar: null,
-            organizationId: '',
-            organizationDomain: '',
-            organizationName: '',
+            ...userData,
+            organizationDomain: organization?.domain || '',
+            organizationName: organization?.name || '',
           });
         }
       } else {
-        // Use replace to prevent back navigation to authenticated pages
-        router.replace('/login');
+        redirectToLogin();
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      console.error('Auth check failed:', error instanceof Error ? error.message : String(error));
       logoutAction();
-      // Use replace to prevent back navigation to authenticated pages
-      router.replace('/login');
+      redirectToLogin();
     } finally {
       setCheckingAuth(false);
     }
-  }, [token, user, login, logoutAction, router, setCheckingAuth]);
+  }, [token, user, login, logoutAction, setCheckingAuth, redirectToLogin]);
 
   // Check authentication on mount
   useEffect(() => {

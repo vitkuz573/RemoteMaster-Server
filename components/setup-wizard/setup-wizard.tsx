@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useHeaderStore } from '@/lib/stores';
 import { useApiAvailability } from '@/hooks/use-api-availability';
-import { useSetupWizardState } from '@/hooks/use-setup-wizard-state';
+import { useSetupWizardStore } from '@/lib/stores';
 import { toast } from 'sonner';
 import { 
   WizardStepConfig,
@@ -62,7 +62,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
     resetWizard,
     registrationResult,
     setRegistrationResult
-  } = useSetupWizardState();
+  } = useSetupWizardStore();
   
   // Confirmation dialog state
   const [showResetConfirmation, setShowResetConfirmation] = React.useState(false);

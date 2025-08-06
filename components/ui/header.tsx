@@ -6,7 +6,7 @@ import { NotificationPanel } from '@/components/ui/notification-panel';
 import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, Settings } from 'lucide-react';
 import { appConfig } from '@/lib/app-config';
 import { useHeaderStore } from '@/lib/stores';
-import { useAppState } from '@/hooks/use-app-state';
+import { useAppStore } from '@/lib/stores';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -32,13 +32,13 @@ export function Header({
   onLogoutClick
 }: HeaderProps) {
   const { config } = useHeaderStore();
-  const appState = useAppState();
+  const appState = useAppStore();
   const authState = useAuth();
 
   // Use provided props or fall back to app state
   const finalSidebarOpen = sidebarOpen ?? appState.sidebarOpen;
   const finalOnToggleSidebar = onToggleSidebar ?? appState.toggleSidebarOpen;
-  const finalNotifications = notifications.length > 0 ? notifications : appState.notifications || [];
+  const finalNotifications = notifications;
   const finalNotificationCount = notificationCount ?? appState.notificationCount;
   const finalNotificationsEnabled = notificationsEnabled ?? appState.notificationsEnabled;
   const finalOnToggleNotifications = onToggleNotifications ?? (() => appState.setNotificationsEnabled(!appState.notificationsEnabled));

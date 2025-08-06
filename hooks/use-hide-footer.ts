@@ -2,14 +2,16 @@ import { useEffect } from 'react';
 import { useFooterStore } from '@/lib/stores';
 
 /**
- * Hook to hide footer on mount and restore on unmount
- * Use this in pages where footer should be hidden
+ * Hook to conditionally hide the footer.
+ * @param hidden - If true, the footer will be hidden. Defaults to true.
  */
-export function useHideFooter() {
+export function useHideFooter(hidden: boolean = true) {
   const { hideFooter, showFooter } = useFooterStore();
-  
+
   useEffect(() => {
-    hideFooter();
-    return () => showFooter();
-  }, [hideFooter, showFooter]);
+    if (hidden) {
+      hideFooter();
+      return () => showFooter();
+    }
+  }, [hidden, hideFooter, showFooter]);
 } 
