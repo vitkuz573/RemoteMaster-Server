@@ -1,10 +1,9 @@
 'use client';
 
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NotificationPanel } from '@/components/ui/notification-panel';
-import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, Settings, Building2 } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, Settings } from 'lucide-react';
 import { appConfig } from '@/lib/app-config';
 import { useHeader } from '@/contexts/header-context';
 import { useAppState } from '@/hooks/use-app-state';

@@ -5,11 +5,11 @@
 
 'use client';
 
-import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useApiStore } from '@/lib/stores';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useApiAvailability } from '@/hooks/use-api-availability';
 import { 
   Wifi, 
   WifiOff, 
@@ -36,7 +36,7 @@ export function ApiStatus({
     lastSync, 
     pendingRequests, 
     errors 
-  } = useApiStore();
+  } = useApiAvailability();
 
   const formatLastSync = (date: Date | null) => {
     if (!date) return 'Never';

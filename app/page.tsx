@@ -1,12 +1,10 @@
 'use client';
 
 import React, { Suspense, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ArrowLeftRight, Building2 } from 'lucide-react';
-import { appConfig } from '@/lib/app-config';
 import { 
   HomePageDataProvider, 
   HomePageDataLoading 
@@ -19,7 +17,6 @@ import { Footer } from '@/components/ui/footer';
 import {
   TreeItem,
   HostCard,
-  SidebarLink,
   SelectionRectangle,
   Toolbar,
   EmptyState,
@@ -52,26 +49,8 @@ const useNotifications = () => {
   ], []);
 };
 
-// Optimized Sidebar component
-const Sidebar = React.memo(function Sidebar() {
-  return (
-    <div className="w-64 bg-card border-r h-full">
-      <div className="p-4">
-        <h2 className="font-semibold mb-4">Navigation</h2>
-        <nav className="space-y-2">
-          <SidebarLink href="/">Dashboard</SidebarLink>
-          <SidebarLink href="/admin">Admin</SidebarLink>
-          <SidebarLink href="/setup">Setup</SidebarLink>
-        </nav>
-      </div>
-    </div>
-  );
-});
-
 // Main page component
 export default function Home() {
-  const router = useRouter();
-  
   // Custom hooks for state management
   const appState = useAppState();
   const hostSelection = useHostSelection();
