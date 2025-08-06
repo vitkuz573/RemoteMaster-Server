@@ -16,15 +16,12 @@ export function useApiAvailability() {
   // Track if we've already initialized
   const [hasInitialized, setHasInitialized] = React.useState(false);
 
-  // Use the single API service - MSW automatically handles mocking in development
-  const api = apiService;
-
   // Check API availability
   const checkApiAvailability = useCallback(async () => {
     setCheckingApi(true);
     try {
       // Try to make a simple API call to check availability
-      await api.getOrganizations();
+      await apiService.getOrganizations();
       setApiAvailable(true);
       return true;
     } catch (error) {
@@ -35,7 +32,7 @@ export function useApiAvailability() {
     } finally {
       setCheckingApi(false);
     }
-  }, [api, setApiAvailable, setCheckingApi, showError]);
+  }, [setApiAvailable, setCheckingApi, showError]);
 
   // Check API availability on mount
   useEffect(() => {
@@ -82,8 +79,5 @@ export function useApiAvailability() {
     isFormDisabled,
     getLoadingText,
     getStatusMessage,
-    
-    // API service
-    api,
   };
 } 

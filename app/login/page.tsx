@@ -72,8 +72,7 @@ export default function LoginPage() {
       setIsCheckingApi(true);
       try {
         // Use the appropriate API service based on configuration
-        const api = apiService;
-        const data = await api.getOrganizations();
+        const data = await apiService.getOrganizations();
         const organizations = data.organizations || [];
         const tenants = organizations.map((org: any) => ({
           id: org.id,

@@ -73,37 +73,26 @@ function fetchPricingPlans(api: typeof apiService): Promise<any[]> {
   return promise;
 }
 
-// Hook to get API service - MSW automatically handles mocking in development
-function useApiService() {
-  return apiService;
-}
-
 // Data provider components that use Suspense
 export function IndustriesProvider({ children }: { children: (industries: string[]) => React.ReactNode }) {
-  const api = useApiService();
-  
   // Create the promise once and memoize it
-  const industriesPromise = useMemo(() => fetchIndustries(api), [api]);
+  const industriesPromise = useMemo(() => fetchIndustries(apiService), []);
   const industries = use(industriesPromise);
   
   return <>{children(industries)}</>;
 }
 
 export function CompanySizesProvider({ children }: { children: (companySizes: string[]) => React.ReactNode }) {
-  const api = useApiService();
-  
   // Create the promise once and memoize it
-  const companySizesPromise = useMemo(() => fetchCompanySizes(api), [api]);
+  const companySizesPromise = useMemo(() => fetchCompanySizes(apiService), []);
   const companySizes = use(companySizesPromise);
   
   return <>{children(companySizes)}</>;
 }
 
 export function PricingPlansProvider({ children }: { children: (pricingPlans: any[]) => React.ReactNode }) {
-  const api = useApiService();
-  
   // Create the promise once and memoize it
-  const pricingPlansPromise = useMemo(() => fetchPricingPlans(api), [api]);
+  const pricingPlansPromise = useMemo(() => fetchPricingPlans(apiService), []);
   const pricingPlans = use(pricingPlansPromise);
   
   return <>{children(pricingPlans)}</>;
@@ -115,12 +104,10 @@ export function SetupWizardDataProvider({ children }: { children: (data: {
   companySizes: string[];
   pricingPlans: any[];
 }) => React.ReactNode }) {
-  const api = useApiService();
-  
   // Create all promises once and memoize them - this ensures they're created only once
-  const industriesPromise = useMemo(() => fetchIndustries(api), [api]);
-  const companySizesPromise = useMemo(() => fetchCompanySizes(api), [api]);
-  const pricingPlansPromise = useMemo(() => fetchPricingPlans(api), [api]);
+  const industriesPromise = useMemo(() => fetchIndustries(apiService), []);
+  const companySizesPromise = useMemo(() => fetchCompanySizes(apiService), []);
+  const pricingPlansPromise = useMemo(() => fetchPricingPlans(apiService), []);
 
   // Use all promises - React will handle the Suspense for each one
   const industries = use(industriesPromise);
