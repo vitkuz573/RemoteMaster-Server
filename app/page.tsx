@@ -15,6 +15,7 @@ import { useAppState } from '@/hooks/use-app-state';
 import { useHostSelection } from '@/hooks/use-host-selection';
 import { useAuth } from '@/hooks/use-auth';
 import { EnhancedHeader } from '@/components/ui/enhanced-header';
+import { Footer } from '@/components/ui/footer';
 import {
   TreeItem,
   HostCard,
@@ -102,7 +103,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background overflow-hidden flex flex-col">
         <EnhancedHeader
           showNotifications={true}
           showProfile={true}
@@ -115,7 +116,7 @@ export default function Home() {
           onLogoutClick={() => appState.setLogoutModalOpen(true)}
         />
 
-        <div className="flex h-[calc(100vh-4rem)]">
+        <div className="flex flex-1 overflow-hidden">
           {/* Sidebar */}
           <aside className={`
             ${appState.sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -176,7 +177,7 @@ export default function Home() {
               />
 
               {/* Content Area */}
-              <div className="flex-1 overflow-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4">
                 <Suspense fallback={<HomePageDataLoading />}>
                   <HomePageDataProvider>
                     {({ organizations }) => {
@@ -198,7 +199,7 @@ export default function Home() {
 
                       return (
                         <div 
-                          className="relative min-h-full"
+                          className="relative"
                           onMouseDown={hostSelection.handleMouseDown}
                           ref={(el) => {
                             if (el && !hostSelection.containerRect) {
@@ -231,6 +232,9 @@ export default function Home() {
             </div>
           </main>
         </div>
+
+        {/* Footer */}
+        <Footer />
 
         {/* Logout Confirmation Dialog */}
         <Dialog open={appState.logoutModalOpen} onOpenChange={appState.setLogoutModalOpen}>

@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { appConfig } from "@/lib/app-config";
 
 import { ConditionalHeaderWrapper } from "@/components/ui/conditional-header-wrapper";
+import { ConditionalFooterWrapper } from "@/components/ui/conditional-footer-wrapper";
 import { MSWProvider } from "@/components/msw-provider";
 
 const geistSans = Geist({
@@ -49,7 +50,7 @@ export default function RootLayout({
                 <div className="flex-1">
                   {children}
                 </div>
-                <Footer />
+                <ConditionalFooterWrapper />
               </FooterProvider>
             </HeaderProvider>
           </TooltipProvider>
