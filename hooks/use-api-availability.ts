@@ -15,7 +15,7 @@ export function useApiAvailability() {
   const checkApiAvailability = useCallback(async () => {
     setCheckingApi(true);
     try {
-      await apiService.getOrganizations();
+      await apiService.getHealth();
       setApiAvailable(true);
       return true;
     } catch (error) {

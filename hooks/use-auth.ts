@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useHeaderStore } from '@/lib/stores';
 import { apiService } from '@/lib/api-service';
 
 export function useAuth() {
   const router = useRouter();
+  const pathname = usePathname();
   const { resetConfig } = useHeaderStore();
   const {
     isAuthenticated,
@@ -46,22 +47,27 @@ export function useAuth() {
             organizationName: organization?.name || '',
           });
         }
-      } else {
-        redirectToLogin();
       }
+      // Don't redirect to login automatically - let the calling component decide
     } catch (error) {
       console.error('Auth check failed:', error instanceof Error ? error.message : String(error));
       logoutAction();
-      redirectToLogin();
+      // Don't redirect to login automatically - let the calling component decide
     } finally {
       setCheckingAuth(false);
     }
-  }, [token, user, login, logoutAction, setCheckingAuth, redirectToLogin]);
+  }, [token, user, login, logoutAction, setCheckingAuth]);
 
-  // Check authentication on mount
+  // Check authentication on mount only if we're not on setup or login pages
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    const isSetupPage = pathname === '/setup';
+    const isLoginPage = pathname === '/login';
+    
+    // Don't check auth on setup or login pages
+    if (!isSetupPage && !isLoginPage) {
+      checkAuth();
+    }
+  }, [checkAuth, pathname]);
 
   return {
     isAuthenticated,
