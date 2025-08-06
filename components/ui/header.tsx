@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NotificationPanel } from '@/components/ui/notification-panel';
+import { ThemeSwitcher } from './theme-switcher';
 import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, Settings } from 'lucide-react';
 import { appConfig } from '@/lib/app-config';
 import { useHeaderStore } from '@/lib/stores';
@@ -79,6 +80,7 @@ export function Header({
         </div>
         
         <div className="flex items-center space-x-4">
+            <ThemeSwitcher />
           {config.showNotifications && (
             <NotificationPanel
               notifications={finalNotifications}

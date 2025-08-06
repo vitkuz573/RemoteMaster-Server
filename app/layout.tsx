@@ -11,6 +11,7 @@ import { appConfig } from "@/lib/app-config";
 import { ConditionalHeaderWrapper } from "@/components/ui/conditional-header-wrapper";
 import { ConditionalFooterWrapper } from "@/components/ui/conditional-footer-wrapper";
 import { MSWProvider } from "@/components/msw-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,20 +36,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
-        <MSWProvider>
-          <TooltipProvider>
-            <ConditionalHeaderWrapper />
-            <div className="flex-1">
-              {children}
-            </div>
-            <ConditionalFooterWrapper />
-          </TooltipProvider>
-          <Toaster />
-        </MSWProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <MSWProvider>
+            <TooltipProvider>
+              <ConditionalHeaderWrapper />
+              <div className="flex-1">
+                {children}
+              </div>
+              <ConditionalFooterWrapper />
+            </TooltipProvider>
+            <Toaster />
+          </MSWProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
