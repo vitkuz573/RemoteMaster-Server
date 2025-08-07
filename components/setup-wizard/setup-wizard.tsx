@@ -183,9 +183,15 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
         case 'pricing':
           return orgForm.selectedPlan !== '';
         case 'byoid':
-          if (byoidForm.issuerUrl.trim() === '') return false;
-          if (byoidForm.discoveryData === undefined) return false;
-          return true;
+          // If user entered issuer URL but hasn't completed discovery
+          if (byoidForm.issuerUrl.trim() !== '' && !byoidForm.discoveryData) {
+            return false;
+          }
+          // If discovery is completed, check required fields
+          if (byoidForm.discoveryData) {
+            return byoidForm.clientId.trim() !== '' && byoidForm.clientSecret.trim() !== '';
+          }
+          return true; // Empty form is also valid (optional step)
         case 'review':
           return true; // Review step is always valid
         default:
@@ -236,6 +242,25 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
 
       // Store registration result for CompleteStep
       setRegistrationResult(result);
+
+      // Submit BYOID configuration if available
+      if (byoidForm.discoveryData && byoidForm.clientId && byoidForm.clientSecret) {
+        try {
+          await apiService.submitBYOIDSetup({
+            issuerUrl: byoidForm.issuerUrl,
+            clientId: byoidForm.clientId,
+            clientSecret: byoidForm.clientSecret,
+            organizationId: result.organization.id,
+            organizationName: orgForm.name,
+            organizationDomain: orgForm.domain
+          });
+          
+          toast.success('BYOID configuration submitted successfully!');
+        } catch (byoidError) {
+          console.error('BYOID setup failed:', byoidError);
+          toast.warning('Organization created successfully, but BYOID configuration failed. You can configure it later in the admin panel.');
+        }
+      }
 
       // Save organization data to separate localStorage key (for backup)
       if (isClient && typeof window !== "undefined") {

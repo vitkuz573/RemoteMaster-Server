@@ -219,7 +219,7 @@ export function ReviewStep({
                   <span className="text-sm font-medium text-green-600">Provider Discovery Successful</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  OpenID Connect provider configuration has been validated
+                  OpenID Connect provider configuration has been validated and will be submitted with your organization setup.
                 </p>
               </div>
             )}
@@ -256,7 +256,9 @@ export function ReviewStep({
             {orgForm.selectedPlan !== 'free' && byoidForm.issuerUrl && (
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Identity Provider:</span>
-                <Badge variant="secondary">Configured</Badge>
+                <Badge variant={byoidForm.discoveryData ? "default" : "secondary"}>
+                  {byoidForm.discoveryData ? "Ready to Submit" : "Partially Configured"}
+                </Badge>
               </div>
             )}
           </div>

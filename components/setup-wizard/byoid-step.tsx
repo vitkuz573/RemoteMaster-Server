@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Globe, Shield, CheckCircle, Info } from 'lucide-react';
-import { BYOIDForm } from './types';
+import type { BYOIDForm } from './types';
 
 interface BYOIDStepProps {
   form: BYOIDForm;
@@ -90,31 +90,43 @@ export function BYOIDStep({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="clientId">Client ID</Label>
+            <Label htmlFor="clientId">
+              Client ID
+              {form.discoveryData && <span className="text-red-500 ml-1">*</span>}
+            </Label>
             <Input
               id="clientId"
               value={form.clientId}
               onChange={(e) => onFormChange('clientId', e.target.value)}
               placeholder="your-client-id"
-              
+              className={form.discoveryData && !form.clientId.trim() ? "border-red-300 focus:border-red-500" : ""}
             />
             <p className="text-xs text-muted-foreground">
               The client ID configured in your IdP
+              {form.discoveryData && !form.clientId.trim() && (
+                <span className="text-red-500 ml-1">Required after discovery</span>
+              )}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="clientSecret">Client Secret</Label>
+            <Label htmlFor="clientSecret">
+              Client Secret
+              {form.discoveryData && <span className="text-red-500 ml-1">*</span>}
+            </Label>
             <Input
               id="clientSecret"
               type="password"
               value={form.clientSecret}
               onChange={(e) => onFormChange('clientSecret', e.target.value)}
               placeholder="your-client-secret"
-              
+              className={form.discoveryData && !form.clientSecret.trim() ? "border-red-300 focus:border-red-500" : ""}
             />
             <p className="text-xs text-muted-foreground">
               The client secret configured in your IdP
+              {form.discoveryData && !form.clientSecret.trim() && (
+                <span className="text-red-500 ml-1">Required after discovery</span>
+              )}
             </p>
           </div>
         </div>
