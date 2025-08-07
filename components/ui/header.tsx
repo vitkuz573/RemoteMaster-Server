@@ -8,7 +8,7 @@ import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, Settings } fr
 import { appConfig } from '@/lib/app-config';
 import { useHeaderStore } from '@/lib/stores';
 import { useAppStore } from '@/lib/stores';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/auth/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface HeaderProps {

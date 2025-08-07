@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useHeaderStore } from '@/lib/stores';
 import { apiService } from '@/lib/api-service';
+import { notifications } from '@/lib/utils/notifications';
 
 export function useAuth() {
   const router = useRouter();
@@ -24,46 +25,38 @@ export function useAuth() {
   }, [router]);
 
   const logout = useCallback(() => {
-    // Clear header configuration on logout
     resetConfig();
     logoutAction();
-    // Use replace to prevent back navigation to authenticated pages
     redirectToLogin();
   }, [logoutAction, resetConfig, redirectToLogin]);
 
   const checkAuth = useCallback(async () => {
+    setCheckingAuth(true);
     try {
-      setCheckingAuth(true);
-      if (token) {
-        // In a real app, you would validate the token with your API
-        if (!user) {
-          const { user: userData } = await apiService.getCurrentUser();
-          const { organizations } = await apiService.getOrganizations({ id: userData.organizationId });
-          const organization = organizations?.[0];
-
-          login(token, {
-            ...userData,
-            organizationDomain: organization?.domain || '',
-            organizationName: organization?.name || '',
-          });
-        }
+      if (!token) {
+        // If no token, no need to proceed
+        return;
       }
-      // Don't redirect to login automatically - let the calling component decide
+      // In a real app, you would validate the token with your API
+      // This is simplified for the example
+      if (!user) {
+        // The following logic should be moved to a dedicated data fetching service or store
+        // For now, we'll just show an error
+        notifications.showError('User data is missing. Please log in again.');
+        logoutAction();
+      }
     } catch (error) {
       console.error('Auth check failed:', error instanceof Error ? error.message : String(error));
       logoutAction();
-      // Don't redirect to login automatically - let the calling component decide
     } finally {
       setCheckingAuth(false);
     }
-  }, [token, user, login, logoutAction, setCheckingAuth]);
+  }, [token, user, logoutAction, setCheckingAuth]);
 
-  // Check authentication on mount only if we're not on setup or login pages
   useEffect(() => {
     const isSetupPage = pathname === '/setup';
     const isLoginPage = pathname === '/login';
     
-    // Don't check auth on setup or login pages
     if (!isSetupPage && !isLoginPage) {
       checkAuth();
     }
@@ -77,4 +70,4 @@ export function useAuth() {
     logout,
     checkAuth,
   };
-} 
+}
