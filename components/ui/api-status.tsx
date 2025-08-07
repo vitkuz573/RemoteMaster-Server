@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { useApiAvailability } from '@/hooks/use-api-availability';
+import { useApiAvailability } from '@/hooks/api/use-api-availability';
 import { 
   Wifi, 
   WifiOff, 

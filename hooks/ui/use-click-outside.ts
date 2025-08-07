@@ -22,4 +22,4 @@ export function useClickOutside<T extends HTMLElement = HTMLElement>(
       document.removeEventListener('touchstart', listener);
     };
   }, [refs, handler]);
-} 
+}

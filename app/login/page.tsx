@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
 import { useHeaderStore, useLoginStore } from '@/lib/stores';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/auth/use-auth';
 import { apiService } from '@/lib/api-service';
 
 export default function LoginPage() {

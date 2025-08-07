@@ -10,8 +10,9 @@ import {
   HomePageDataLoading 
 } from '@/components/data-providers';
 import { useAppStore } from '@/lib/stores';
-import { useHostSelection } from '@/hooks/use-host-selection';
-import { useAuth } from '@/hooks/use-auth';
+import { useHostSelectionStore } from '@/lib/stores';
+import { useDragSelection } from '@/hooks/ui/use-drag-selection';
+import { useAuth } from '@/hooks/auth/use-auth';
 import { EnhancedHeader } from '@/components/ui/enhanced-header';
 import { Footer } from '@/components/ui/footer';
 import {
@@ -53,8 +54,13 @@ const useNotifications = () => {
 export default function Home() {
   // Custom hooks for state management
   const appState = useAppStore();
-  const hostSelection = useHostSelection();
+  const hostSelection = useHostSelectionStore();
   const authState = useAuth();
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const { isDragging, dragStart, dragEnd } = useDragSelection({
+    containerRef,
+    onSelectionChange: hostSelection.updateSelection,
+  });
   
   // Memoized data
   const notifications = useNotifications();
@@ -179,16 +185,12 @@ export default function Home() {
                       return (
                         <div 
                           className="relative"
-                          onMouseDown={hostSelection.handleMouseDown}
-                          ref={(el) => {
-                            if (el && !hostSelection.containerRect) {
-                            }
-                          }}
+                          ref={containerRef}
                         >
                           <SelectionRectangle
-                            isDragging={hostSelection.dragState.isDragging}
-                            dragStart={hostSelection.dragState.dragStart}
-                            dragEnd={hostSelection.dragState.dragEnd}
+                            isDragging={isDragging}
+                            dragStart={dragStart}
+                            dragEnd={dragEnd}
                           />
 
                           {/* Host Grid */}

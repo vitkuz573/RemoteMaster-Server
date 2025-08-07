@@ -1,5 +1,3 @@
-import { useHeaderStore } from '@/lib/stores';
-
 export interface HeaderPreset {
   showNotifications: boolean;
   showProfile: boolean;
@@ -51,24 +49,3 @@ export const headerPresets = {
     customSubtitle: 'Configure your system',
   },
 } as const;
-
-export function useHeaderConfig(customPresets?: Record<string, HeaderPreset>) {
-  const { updateConfig, resetConfig, config } = useHeaderStore();
-  const allPresets = { ...headerPresets, ...customPresets };
-
-  const applyPreset = (preset: keyof typeof allPresets) => {
-    updateConfig(allPresets[preset]);
-  };
-
-  const applyCustomConfig = (customConfig: Partial<HeaderPreset>) => {
-    updateConfig(customConfig);
-  };
-
-  return {
-    config,
-    applyPreset,
-    applyCustomConfig,
-    resetConfig,
-    presets: allPresets,
-  };
-} 

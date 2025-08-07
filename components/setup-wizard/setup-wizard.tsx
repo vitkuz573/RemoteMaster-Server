@@ -11,7 +11,7 @@ import {
   Shield
 } from "lucide-react";
 import { useHeaderStore } from '@/lib/stores';
-import { useApiAvailability } from '@/hooks/use-api-availability';
+import { useApiAvailability } from '@/hooks/api/use-api-availability';
 import { useSetupWizardStore } from '@/lib/stores';
 import { apiService } from '@/lib/api-service';
 import { toast } from 'sonner';
