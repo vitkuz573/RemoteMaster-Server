@@ -63,11 +63,20 @@ export function useAuth() {
     const isSetupPage = pathname === '/setup';
     const isLoginPage = pathname === '/login';
     
-    // Don't check auth on setup or login pages
-    if (!isSetupPage && !isLoginPage) {
+    // Don't check auth on setup page
+    if (!isSetupPage) {
       checkAuth();
     }
   }, [checkAuth, pathname]);
+
+  useEffect(() => {
+    const isSetupPage = pathname === '/setup';
+    const isLoginPage = pathname === '/login';
+
+    if (!isCheckingAuth && !isAuthenticated && !isSetupPage && !isLoginPage) {
+      redirectToLogin();
+    }
+  }, [isAuthenticated, isCheckingAuth, pathname, redirectToLogin]);
 
   return {
     isAuthenticated,

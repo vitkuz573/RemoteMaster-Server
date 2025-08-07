@@ -63,6 +63,10 @@ export interface MockOrganization {
     zipCode: string;
     country: string;
   };
+  byoidConfig?: {
+    status: 'active' | 'inactive' | 'pending';
+    issuerUrl: string;
+  };
 }
 
 export interface MockUser {
@@ -133,6 +137,10 @@ export const generateMockOrganization = (): MockOrganization => {
       state: faker.location.state(),
       zipCode: faker.location.zipCode(),
       country: faker.location.country()
+    },
+    byoidConfig: {
+      status: faker.helpers.arrayElement(['active', 'inactive', 'pending']),
+      issuerUrl: `https://accounts.${faker.internet.domainName()}`
     }
   };
 };
