@@ -1,0 +1,10 @@
+
+> remotemaster-server@0.1.0 dev
+> node scripts/generate-build-info.js && next dev --turbopack
+
+✅ Build info generated successfully:
+   📅 Build Date: 2025-08-07
+   ⏰ Build Time: 2025-08-07T04:41:52.688Z
+   🔗 Git Hash: 2e80c6d
+   🌿 Git Branch: HEAD
+   📁 Files: .env.local, build-info.json

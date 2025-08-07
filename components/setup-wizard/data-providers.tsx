@@ -1,128 +1,72 @@
 'use client';
 
-import { use, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { apiService } from '@/lib/api-service';
 
-// Global cache for data fetching - this ensures promises are created once and reused
-const dataCache = new Map<string, Promise<any>>();
-
-// Data fetching functions that return promises (not async functions)
-function fetchIndustries(api: typeof apiService): Promise<string[]> {
-  const cacheKey = 'industries';
-  if (dataCache.has(cacheKey)) {
-    return dataCache.get(cacheKey) as Promise<string[]>;
-  }
-
-  const promise = api.getIndustries().then(response => {
-    if (response.success) {
-      return response.industries;
-    } else {
-      throw new Error('Failed to fetch industries');
-    }
-  }).catch(error => {
-    // Remove from cache on error so we can retry
-    dataCache.delete(cacheKey);
-    throw error;
-  });
-
-  dataCache.set(cacheKey, promise);
-  return promise;
-}
-
-function fetchCompanySizes(api: typeof apiService): Promise<string[]> {
-  const cacheKey = 'companySizes';
-  if (dataCache.has(cacheKey)) {
-    return dataCache.get(cacheKey) as Promise<string[]>;
-  }
-
-  const promise = api.getCompanySizes().then(response => {
-    if (response.success) {
-      return response.companySizes;
-    } else {
-      throw new Error('Failed to fetch company sizes');
-    }
-  }).catch(error => {
-    // Remove from cache on error so we can retry
-    dataCache.delete(cacheKey);
-    throw error;
-  });
-
-  dataCache.set(cacheKey, promise);
-  return promise;
-}
-
-function fetchPricingPlans(api: typeof apiService): Promise<any[]> {
-  const cacheKey = 'pricingPlans';
-  if (dataCache.has(cacheKey)) {
-    return dataCache.get(cacheKey) as Promise<any[]>;
-  }
-
-  const promise = api.getPricingPlans().then(response => {
-    if (response.success) {
-      return response.plans;
-    } else {
-      throw new Error('Failed to fetch pricing plans');
-    }
-  }).catch(error => {
-    // Remove from cache on error so we can retry
-    dataCache.delete(cacheKey);
-    throw error;
-  });
-
-  dataCache.set(cacheKey, promise);
-  return promise;
-}
-
-// Data provider components that use Suspense
-export function IndustriesProvider({ children }: { children: (industries: string[]) => React.ReactNode }) {
-  // Create the promise once and memoize it
-  const industriesPromise = useMemo(() => fetchIndustries(apiService), []);
-  const industries = use(industriesPromise);
-  
-  return <>{children(industries)}</>;
-}
-
-export function CompanySizesProvider({ children }: { children: (companySizes: string[]) => React.ReactNode }) {
-  // Create the promise once and memoize it
-  const companySizesPromise = useMemo(() => fetchCompanySizes(apiService), []);
-  const companySizes = use(companySizesPromise);
-  
-  return <>{children(companySizes)}</>;
-}
-
-export function PricingPlansProvider({ children }: { children: (pricingPlans: any[]) => React.ReactNode }) {
-  // Create the promise once and memoize it
-  const pricingPlansPromise = useMemo(() => fetchPricingPlans(apiService), []);
-  const pricingPlans = use(pricingPlansPromise);
-  
-  return <>{children(pricingPlans)}</>;
-}
-
-// Combined data provider for all setup wizard data
+// Data provider component that uses a traditional useEffect for data fetching
 export function SetupWizardDataProvider({ children }: { children: (data: {
   industries: string[];
   companySizes: string[];
   pricingPlans: any[];
 }) => React.ReactNode }) {
-  // Create all promises once and memoize them - this ensures they're created only once
-  const industriesPromise = useMemo(() => fetchIndustries(apiService), []);
-  const companySizesPromise = useMemo(() => fetchCompanySizes(apiService), []);
-  const pricingPlansPromise = useMemo(() => fetchPricingPlans(apiService), []);
+  const [data, setData] = useState<{
+    industries: string[];
+    companySizes: string[];
+    pricingPlans: any[];
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Use all promises - React will handle the Suspense for each one
-  const industries = use(industriesPromise);
-  const companySizes = use(companySizesPromise);
-  const pricingPlans = use(pricingPlansPromise);
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [industriesRes, companySizesRes, pricingPlansRes] = await Promise.all([
+          apiService.getIndustries(),
+          apiService.getCompanySizes(),
+          apiService.getPricingPlans()
+        ]);
 
-  return (
-    <>
-      {children({
-        industries,
-        companySizes,
-        pricingPlans
-      })}
-    </>
-  );
+        if (industriesRes.success && companySizesRes.success && pricingPlansRes.success) {
+          setData({
+            industries: industriesRes.industries,
+            companySizes: companySizesRes.companySizes,
+            pricingPlans: pricingPlansRes.plans
+          });
+        } else {
+          throw new Error('Failed to fetch required setup data.');
+        }
+      } catch (err) {
+        console.error(err);
+        setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []); // Empty dependency array ensures this runs once on mount
+
+  if (isLoading) {
+    return <SetupWizardDataLoading />;
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500 p-4 border border-red-500/20 bg-red-500/10 rounded-md">
+        <p className="font-bold">Error loading data:</p>
+        <p>{error}</p>
+        <p className="mt-2 text-sm">Please try refreshing the page.</p>
+      </div>
+    );
+  }
+
+  if (data) {
+    return <>{children(data)}</>;
+  }
+
+  return null;
 }
 
 // Loading components for Suspense fallbacks

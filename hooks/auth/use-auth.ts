@@ -55,9 +55,9 @@ export function useAuth() {
 
   useEffect(() => {
     const isSetupPage = pathname === '/setup';
-    const isLoginPage = pathname === '/login';
     
-    if (!isSetupPage && !isLoginPage) {
+    // Run auth check on all pages except the setup page
+    if (!isSetupPage) {
       checkAuth();
     }
   }, [checkAuth, pathname]);
