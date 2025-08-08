@@ -46,6 +46,13 @@ export function useAuth(options: UseAuthOptions = {}) {
   const logout = useCallback(() => {
     // Clear header configuration on logout
     resetConfig();
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const ch = new BroadcastChannel('auth');
+        ch.postMessage({ type: 'logout' });
+        ch.close();
+      }
+    } catch {}
     logoutAction();
     // Use replace to prevent back navigation to authenticated pages
     redirectToLogin();
@@ -88,6 +95,21 @@ export function useAuth(options: UseAuthOptions = {}) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkAuth, pathname, JSON.stringify(skipPaths)]);
+
+  // Cross-tab auth sync via BroadcastChannel (logout)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
+    const ch = new BroadcastChannel('auth');
+    const onMessage = (e: MessageEvent) => {
+      if (e?.data?.type === 'logout') {
+        logoutAction();
+      }
+    };
+    ch.addEventListener('message', onMessage);
+    return () => {
+      try { ch.removeEventListener('message', onMessage); ch.close(); } catch {}
+    };
+  }, [logoutAction]);
 
   // Schedule proactive token refresh slightly before expiry
   useEffect(() => {

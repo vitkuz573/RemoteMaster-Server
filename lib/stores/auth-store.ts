@@ -86,13 +86,9 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'auth-store',
-      partialize: (state) => ({
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        expiresAt: state.expiresAt,
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
+      // Do not persist tokens or auth flags in localStorage for security
+      // Enterprise approach would use httpOnly cookies server-side.
+      partialize: () => ({}),
     }
   )
 ); 
