@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthStore, useHeaderStore } from '@/lib/stores';
+import { useAuthStore, useHeaderStore, useAppStore, useHostSelectionStore } from '@/lib/stores';
 import { apiService } from '@/lib/api-service';
 
 export interface UseAuthOptions {
@@ -52,6 +52,14 @@ export function useAuth(options: UseAuthOptions = {}) {
         ch.postMessage({ type: 'logout' });
         ch.close();
       }
+    } catch {}
+    // Cross-store UI cleanup
+    try { useAppStore.getState().setLogoutModalOpen(false); } catch {}
+    try {
+      const s = useHostSelectionStore.getState();
+      s.clearSelection();
+      s.setSelectedOrganizationalUnit(null);
+      s.setContainerRect(null);
     } catch {}
     logoutAction();
     // Use replace to prevent back navigation to authenticated pages

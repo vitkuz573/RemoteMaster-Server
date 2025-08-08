@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import { AuthGate } from '@/components/auth-gate';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -39,7 +40,7 @@ interface Organization {
   byoidConfig?: any;
 }
 
-export default function AdminPage() {
+function AdminBody() {
   const router = useRouter();
   const { showHeader } = useHeaderStore();
   const {
@@ -422,5 +423,23 @@ export default function AdminPage() {
         </AdminPageDataProvider>
       </Suspense>
     </div>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <AuthGate
+      options={{ requiredRoles: ['admin'] }}
+      fallback={(
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Checking admin access…</p>
+          </div>
+        </div>
+      )}
+    >
+      <AdminBody />
+    </AuthGate>
   );
 }
