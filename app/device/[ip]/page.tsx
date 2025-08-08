@@ -49,12 +49,18 @@ export default function DevicePage({ params }: DevicePageProps) {
         </div>
       </div>
 
-      {/* Edge toggle button (right middle) */}
+      {/* Edge toggle button that travels with the sidebar */}
       <button
         type="button"
         aria-label="Toggle sidebar"
         onClick={() => setSidebarOpen((v) => !v)}
-        className="absolute top-1/2 -translate-y-1/2 right-0 z-20 w-9 h-16 rounded-l-full bg-white/20 hover:bg-white/30 text-white backdrop-blur flex items-center justify-center shadow"
+        className={
+          `absolute top-1/2 -translate-y-1/2 z-20 w-9 h-16 flex items-center justify-center shadow transition-colors transition-[right] duration-200 
+           ${sidebarOpen 
+              ? 'right-80 rounded-l-full bg-foreground/10 text-foreground hover:bg-foreground/20' 
+              : 'right-0 rounded-l-full bg-white/20 text-white hover:bg-white/30 backdrop-blur'}
+          `
+        }
       >
         {sidebarOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>
