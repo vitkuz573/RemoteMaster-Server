@@ -68,6 +68,13 @@ export default function LoginPage() {
     updateConfig({ showNotifications: false, showProfile: false });
   }, [showHeader, resetConfig, updateConfig]);
 
+  // Ensure loading flags are reset when arriving to login (after logout/navigation)
+  React.useEffect(() => {
+    setIsLoading(false);
+    setIsNavigatingToSetup(false);
+    clearError();
+  }, [setIsLoading, setIsNavigatingToSetup, clearError]);
+
   // Load organizations from external API
   React.useEffect(() => {
     const loadOrganizations = async () => {
