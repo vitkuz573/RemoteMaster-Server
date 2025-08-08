@@ -198,7 +198,7 @@ export default function LoginPage() {
         });
 
         // Persist auth in zustand store (with localStorage fallback handled by middleware)
-        auth.login(result.token, {
+        auth.login({ accessToken: result.token, refreshToken: (result as any).refreshToken ?? null, expiresIn: (result as any).expiresIn ?? null }, {
           name: result.user.name,
           email: result.user.email,
           role: result.user.role,

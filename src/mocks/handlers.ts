@@ -243,6 +243,8 @@ export const handlers = [
       return HttpResponse.json({
         success: true,
         token: generateId('token'),
+        refreshToken: generateId('refresh'),
+        expiresIn: 60 * 30,
         user: {
           id: mockUser.id,
           email: mockUser.email,
@@ -329,6 +331,21 @@ export const handlers = [
       success: true,
       plans: mockPricingPlans,
       message: 'Pricing plans retrieved successfully'
+    })
+  }),
+
+  // Token refresh
+  http.post('http://localhost:3001/auth/refresh', async ({ request }) => {
+    await delay(200)
+    const body = await request.json() as any
+    const valid = typeof body?.refreshToken === 'string' && body.refreshToken.startsWith('refresh_')
+    if (!valid) {
+      return HttpResponse.json({ error: 'Invalid refresh token' }, { status: 401 })
+    }
+    return HttpResponse.json({
+      success: true,
+      token: generateId('token'),
+      expiresIn: 60 * 30,
     })
   }),
 

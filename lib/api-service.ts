@@ -1,5 +1,6 @@
 import { appConfig } from './app-config';
 import { toast } from 'sonner';
+import { useAuthStore } from './stores';
 
 // API Service for external API calls
 class ApiService {
@@ -17,7 +18,7 @@ class ApiService {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    const defaultHeaders = {
+    const defaultHeaders: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
@@ -28,20 +29,40 @@ class ApiService {
     };
 
     try {
-      const response = await fetch(url, config);
+      // Attach Authorization header if available
+      try {
+        const { accessToken } = useAuthStore.getState();
+        if (accessToken) {
+          (config.headers as Record<string, string>)['Authorization'] = `Bearer ${accessToken}`;
+        }
+      } catch {}
+
+      const doFetch = async (): Promise<Response> => fetch(url, config);
+      let response = await doFetch();
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || `HTTP error! status: ${response.status}`;
-        
-        if (this.showNotifications) {
-          toast.error(errorMessage, {
-            description: `Request to ${endpoint} failed`,
-            duration: 5000,
-          });
+        // On 401 try to refresh token once
+        if (response.status === 401) {
+          const refreshed = await this.tryRefreshToken();
+          if (refreshed) {
+            const { accessToken: newToken } = useAuthStore.getState();
+            if (newToken) {
+              (config.headers as Record<string, string>)['Authorization'] = `Bearer ${newToken}`;
+            }
+            response = await doFetch();
+          }
         }
-        
-        throw new Error(errorMessage);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = (errorData && (errorData.error || errorData.message)) || `HTTP error! status: ${response.status}`;
+          if (this.showNotifications) {
+            toast.error(errorMessage, {
+              description: `Request to ${endpoint} failed`,
+              duration: 5000,
+            });
+          }
+          throw new Error(errorMessage);
+        }
       }
 
       return await response.json();
@@ -57,6 +78,39 @@ class ApiService {
       
       throw error;
     }
+  }
+
+  private async tryRefreshToken(): Promise<boolean> {
+    try {
+      const { refreshToken, setAccessToken, logout } = useAuthStore.getState();
+      if (!refreshToken) return false;
+      const res = await fetch(`${this.baseUrl}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) {
+        logout();
+        return false;
+      }
+      const data = await res.json();
+      const newToken: string | undefined = data?.token;
+      const expiresIn: number | undefined = data?.expiresIn;
+      if (newToken) {
+        setAccessToken(newToken, expiresIn ?? null);
+        return true;
+      }
+      logout();
+      return false;
+    } catch {
+      try { useAuthStore.getState().logout(); } catch {}
+      return false;
+    }
+  }
+
+  // Expose refresh for scheduling (no need to leak tokens)
+  async refreshSession(): Promise<boolean> {
+    return this.tryRefreshToken();
   }
 
   // Organization operations

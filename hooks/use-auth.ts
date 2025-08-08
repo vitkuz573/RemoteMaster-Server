@@ -10,6 +10,7 @@ export interface UseAuthOptions {
   redirectPath?: string;
   skipPaths?: string[]; // paths where no auth check or redirect should happen
   hydrateUser?: boolean; // fetch current user/org on first valid token
+  requiredRoles?: string[]; // optional roles requirement
 }
 
 export function useAuth(options: UseAuthOptions = {}) {
@@ -26,13 +27,17 @@ export function useAuth(options: UseAuthOptions = {}) {
     isAuthenticated,
     isCheckingAuth,
     user,
-    token,
+    accessToken,
+    refreshToken,
+    expiresAt,
     login,
     logout: logoutAction,
     setCheckingAuth,
+    setAccessToken,
   } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
   const inFlight = useRef<AbortController | null>(null);
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const redirectToLogin = useCallback(() => {
     router.replace(redirectPath);
@@ -49,7 +54,7 @@ export function useAuth(options: UseAuthOptions = {}) {
   const checkAuth = useCallback(async () => {
     try {
       setCheckingAuth(true);
-      if (token && hydrateUser) {
+      if (accessToken && hydrateUser) {
         if (!user) {
           const controller = new AbortController();
           inFlight.current = controller;
@@ -57,7 +62,7 @@ export function useAuth(options: UseAuthOptions = {}) {
           const { organizations } = await apiService.getOrganizations({ id: userData.organizationId } as any);
           const organization = organizations?.[0];
 
-          login(token, {
+          login({ accessToken, refreshToken, expiresIn: null }, {
             ...userData,
             organizationDomain: organization?.domain || '',
             organizationName: organization?.name || '',
@@ -73,7 +78,7 @@ export function useAuth(options: UseAuthOptions = {}) {
     } finally {
       setCheckingAuth(false);
     }
-  }, [token, user, login, logoutAction, setCheckingAuth, hydrateUser]);
+  }, [accessToken, refreshToken, user, login, logoutAction, setCheckingAuth, hydrateUser]);
 
   // Check authentication on mount unless in skipPaths
   useEffect(() => {
@@ -84,16 +89,35 @@ export function useAuth(options: UseAuthOptions = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkAuth, pathname, JSON.stringify(skipPaths)]);
 
+  // Schedule proactive token refresh slightly before expiry
+  useEffect(() => {
+    if (!expiresAt) return;
+    const now = Date.now();
+    const lead = 30 * 1000; // 30s before expiry
+    const delay = Math.max(0, expiresAt - now - lead);
+    if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    refreshTimer.current = setTimeout(() => {
+      void apiService.refreshSession();
+    }, delay);
+    return () => {
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    };
+  }, [expiresAt]);
+
   useEffect(() => {
     const shouldSkip = skipPaths.includes(pathname);
     if (!redirectOnUnauthed) return;
-    if (!isCheckingAuth && !isAuthenticated && !shouldSkip) {
+    // Role-based check once authenticated
+    const lacksRole = options.requiredRoles && options.requiredRoles.length > 0
+      ? !(user && options.requiredRoles.some((r) => user.role === r))
+      : false;
+    if (!isCheckingAuth && (!isAuthenticated || lacksRole) && !shouldSkip) {
       redirectToLogin();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, isCheckingAuth, pathname, redirectOnUnauthed, JSON.stringify(skipPaths), redirectToLogin]);
+  }, [isAuthenticated, isCheckingAuth, pathname, redirectOnUnauthed, JSON.stringify(skipPaths), redirectToLogin, options.requiredRoles, user]);
 
-  const state = useMemo(() => ({ isAuthenticated, isCheckingAuth, user, token }), [isAuthenticated, isCheckingAuth, user, token]);
+  const state = useMemo(() => ({ isAuthenticated, isCheckingAuth, user, accessToken, refreshToken, expiresAt }), [isAuthenticated, isCheckingAuth, user, accessToken, refreshToken, expiresAt]);
 
   return {
     ...state,

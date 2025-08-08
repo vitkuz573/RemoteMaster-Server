@@ -15,15 +15,18 @@ export interface AuthState {
   isAuthenticated: boolean;
   isCheckingAuth: boolean;
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  expiresAt: number | null; // epoch ms when access token expires
 }
 
 interface AuthActions {
-  login: (token: string, userData: User) => void;
+  login: (tokens: { accessToken: string; refreshToken?: string | null; expiresIn?: number | null }, userData: User) => void;
   logout: () => void;
   setCheckingAuth: (checking: boolean) => void;
   setUser: (user: User | null) => void;
-  setToken: (token: string | null) => void;
+  setAccessToken: (token: string | null, expiresIn?: number | null) => void;
+  setRefreshToken: (token: string | null) => void;
 }
 
 type AuthStore = AuthState & AuthActions;
@@ -32,7 +35,9 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isCheckingAuth: true,
   user: null,
-  token: null,
+  accessToken: null,
+  refreshToken: null,
+  expiresAt: null,
 };
 
 export const useAuthStore = create<AuthStore>()(
@@ -40,18 +45,22 @@ export const useAuthStore = create<AuthStore>()(
     (set, get) => ({
       ...initialState,
       
-      login: (token: string, userData: User) => set({
+      login: (tokens: { accessToken: string; refreshToken?: string | null; expiresIn?: number | null }, userData: User) => set({
         isAuthenticated: true,
         isCheckingAuth: false,
         user: userData,
-        token,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken ?? null,
+        expiresAt: tokens.expiresIn ? Date.now() + tokens.expiresIn * 1000 : null,
       }),
       
       logout: () => set({
         isAuthenticated: false,
         isCheckingAuth: false,
         user: null,
-        token: null,
+        accessToken: null,
+        refreshToken: null,
+        expiresAt: null,
       }),
       
       setCheckingAuth: (checking: boolean) => set((state) => ({
@@ -64,15 +73,23 @@ export const useAuthStore = create<AuthStore>()(
         user,
       })),
       
-      setToken: (token: string | null) => set((state) => ({
+      setAccessToken: (token: string | null, expiresIn?: number | null) => set((state) => ({
         ...state,
-        token,
+        accessToken: token,
+        expiresAt: typeof expiresIn === 'number' ? Date.now() + expiresIn * 1000 : state.expiresAt,
+      })),
+
+      setRefreshToken: (token: string | null) => set((state) => ({
+        ...state,
+        refreshToken: token,
       })),
     }),
     {
       name: 'auth-store',
       partialize: (state) => ({
-        token: state.token,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        expiresAt: state.expiresAt,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
