@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useHeaderStore, useFooterStore } from "@/lib/stores";
 
 interface DevicePageProps {
   params: { ip: string };
@@ -10,6 +11,19 @@ interface DevicePageProps {
 export default function DevicePage({ params }: DevicePageProps) {
   const { ip } = params;
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { hideHeader, showHeader } = useHeaderStore();
+  const { hideFooter, showFooter } = useFooterStore();
+
+  // Hide global header/footer while on device page
+  useEffect(() => {
+    hideHeader();
+    hideFooter();
+    return () => {
+      showHeader();
+      showFooter();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="relative h-[calc(100vh-0px)] bg-black">{/* Full viewport under layout wrappers */}
