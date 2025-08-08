@@ -68,15 +68,15 @@ class ApiService {
       return await response.json();
     } catch (error) {
       console.error(`API request failed for ${endpoint}:`, error);
-      
-      if (this.showNotifications && error instanceof Error) {
-        toast.error(error.message, {
-          description: `Network error: ${endpoint}`,
+
+      if (this.showNotifications) {
+        toast.error('Network request failed', {
+          description: `Request to ${endpoint} failed`,
           duration: 5000,
         });
       }
-      
-      throw error;
+
+      throw error as Error;
     }
   }
 
@@ -316,6 +316,9 @@ class ApiService {
             name: string;
             status: string;
             type: string;
+            ip?: string;
+            ipAddress?: string;
+            mac?: string;
           }>;
         }>;
       }>;

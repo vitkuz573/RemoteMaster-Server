@@ -4,6 +4,7 @@ export interface DragState {
   isDragging: boolean;
   dragStart: { x: number; y: number } | null;
   dragEnd: { x: number; y: number } | null;
+  didDrag?: boolean;
 }
 
 export interface HostSelectionState {
@@ -11,6 +12,7 @@ export interface HostSelectionState {
   selectedHosts: Set<string>;
   dragState: DragState;
   containerRect: DOMRect | null;
+  justDragged: boolean;
 }
 
 interface HostSelectionActions {
@@ -22,6 +24,7 @@ interface HostSelectionActions {
   updateSelection: (start: { x: number; y: number }, end: { x: number; y: number }) => void;
   setDragState: (dragState: DragState) => void;
   setContainerRect: (rect: DOMRect | null) => void;
+  setJustDragged: (value: boolean) => void;
 }
 
 type HostSelectionStore = HostSelectionState & HostSelectionActions;
@@ -33,8 +36,10 @@ const initialState: HostSelectionState = {
     isDragging: false,
     dragStart: null,
     dragEnd: null,
+    didDrag: false,
   },
   containerRect: null,
+  justDragged: false,
 };
 
 export const useHostSelectionStore = create<HostSelectionStore>()((set, get) => ({
@@ -70,16 +75,20 @@ export const useHostSelectionStore = create<HostSelectionStore>()((set, get) => 
   })),
   
   handleMouseDown: (e: React.MouseEvent) => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    // Deprecated path kept for safety: we rely on global capture in hook now
+    if (e.button !== 0) return;
+    const el = e.currentTarget as HTMLElement | null;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
     set((state) => ({
       ...state,
       dragState: {
         isDragging: true,
         dragStart: { x, y },
         dragEnd: { x, y },
+        didDrag: false,
       },
       containerRect: rect,
     }));
@@ -127,5 +136,10 @@ export const useHostSelectionStore = create<HostSelectionStore>()((set, get) => 
   setContainerRect: (rect: DOMRect | null) => set((state) => ({
     ...state,
     containerRect: rect,
+  })),
+
+  setJustDragged: (value: boolean) => set((state) => ({
+    ...state,
+    justDragged: value,
   })),
 })); 

@@ -518,6 +518,7 @@ export const handlers = [
             status: host.status,
             type: host.type,
             ipAddress: host.ipAddress,
+            mac: host.mac,
             os: host.os,
             lastSeen: host.lastSeen,
             cpuUsage: host.cpuUsage,

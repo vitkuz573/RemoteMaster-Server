@@ -56,15 +56,20 @@ interface HostCardProps {
     name: string;
     status: string;
     type: string;
+    ip?: string;
+    ipAddress?: string;
+    mac?: string;
   };
   isSelected: boolean;
   onToggle: () => void;
+  onContextMenu?: (e: React.MouseEvent, host: { id: string; name: string; status: string; type: string }) => void;
 }
 
 export const HostCard = memo(function HostCard({ 
   host, 
   isSelected, 
-  onToggle 
+  onToggle,
+  onContextMenu,
 }: HostCardProps) {
   const getTypeIcon = useMemo(() => (type: string) => {
     switch (type.toLowerCase()) {
@@ -92,6 +97,10 @@ export const HostCard = memo(function HostCard({
       data-host-id={host.id}
       className={className}
       onClick={onToggle}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onContextMenu?.(e, host);
+      }}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center space-x-3">
@@ -99,6 +108,16 @@ export const HostCard = memo(function HostCard({
           <div>
             <h3 className="font-medium">{host.name}</h3>
             <p className="text-sm text-muted-foreground">{host.type}</p>
+            {(host.ip || host.ipAddress || host.mac) && (
+              <div className="mt-1 space-y-0.5">
+                {(host.ip || host.ipAddress) && (
+                  <p className="text-xs text-muted-foreground">IP: {host.ip || host.ipAddress}</p>
+                )}
+                {host.mac && (
+                  <p className="text-xs text-muted-foreground">MAC: {host.mac}</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -155,7 +174,7 @@ export const SelectionRectangle = memo(function SelectionRectangle({
 
   return (
     <div
-      className="absolute border-2 border-primary bg-primary/10 pointer-events-none z-10"
+      className="absolute border-2 border-primary bg-primary/10 pointer-events-none z-50"
       style={style}
     />
   );

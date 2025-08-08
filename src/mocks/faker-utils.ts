@@ -94,6 +94,7 @@ export interface MockHost {
   status: 'online' | 'offline' | 'maintenance' | 'error';
   type: typeof HOST_TYPES[number];
   ipAddress?: string;
+  mac?: string;
   os?: string;
   lastSeen?: string;
   cpuUsage?: number;
@@ -184,7 +185,8 @@ export const generateMockHost = (): MockHost => {
     name: `${hostType}-${faker.helpers.arrayElement(['server', 'node', 'instance'])}-${faker.number.int({ min: 1, max: 99 })}`,
     status: weightedRandom(STATUS_WEIGHTS),
     type: hostType,
-    ipAddress: faker.internet.ip(),
+    ipAddress: faker.internet.ipv4(),
+    mac: faker.internet.mac(),
     os: faker.helpers.arrayElement(OPERATING_SYSTEMS),
     lastSeen: faker.date.recent({ days: 7 }).toISOString(),
     cpuUsage: faker.number.float({ min: 5, max: 95, fractionDigits: 1 }),

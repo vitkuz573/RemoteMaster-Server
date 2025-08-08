@@ -1,6 +1,7 @@
 'use client';
 
-import React, { Suspense, useMemo, useEffect, useRef } from 'react';
+import React, { Suspense, useMemo, useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { AuthGate } from '@/components/auth-gate';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -23,6 +24,10 @@ import {
   Toolbar,
   EmptyState,
 } from '@/components/ui/optimized-components';
+import { HostContextMenu } from '@/components/ui/host-context-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 // Memoized notification data
 const useNotifications = () => {
@@ -115,7 +120,7 @@ export default function Home() {
         </div>
       )}
     >
-    <div className="h-screen bg-background overflow-hidden flex flex-col">
+    <div className="h-screen bg-background overflow-hidden flex flex-col select-none">
         <EnhancedHeader
           showNotifications={true}
           showProfile={true}
@@ -212,7 +217,7 @@ export default function Home() {
                       return (
                         <div 
                           className="relative"
-                          onMouseDown={hostSelection.handleMouseDown}
+                          onMouseDownCapture={hostSelection.handleMouseDown}
                           ref={containerRef}
                         >
                           <SelectionRectangle
@@ -222,16 +227,9 @@ export default function Home() {
                           />
 
                           {/* Host Grid */}
-                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {currentUnit.hosts.map((host) => (
-                              <HostCard
-                                key={host.id}
-                                host={host}
-                                isSelected={hostSelection.selectedHosts.has(host.id)}
-                                onToggle={() => hostSelection.handleHostToggle(host.id)}
-                              />
-                            ))}
-                          </div>
+                          <HostGridWithContext
+                            hosts={currentUnit.hosts}
+                          />
                         </div>
                       );
                     }}
@@ -266,5 +264,114 @@ export default function Home() {
         </Dialog>
       </div>
     </AuthGate>
+  );
+}
+
+// Host grid with context menu logic
+function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: string; status: string; type: string; ip?: string; ipAddress?: string; mac?: string }> }) {
+  const hostSelection = useHostSelectionStore();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [contextHostId, setContextHostId] = useState<string | null>(null);
+  const [propertiesHostId, setPropertiesHostId] = useState<string | null>(null);
+  const router = useRouter();
+
+  const selectedCount = hostSelection.selectedHosts.size;
+  const canShowProperties = selectedCount === 1;
+
+  const handleContextMenu = useCallback((e: React.MouseEvent, host: { id: string }) => {
+    e.preventDefault();
+    // If the clicked host is not in the selection, select only it
+    if (!hostSelection.selectedHosts.has(host.id)) {
+      hostSelection.clearSelection();
+      hostSelection.handleHostToggle(host.id);
+    }
+    hostSelection.setJustDragged(false);
+    setContextHostId(host.id);
+    setMenuPos({ x: e.clientX, y: e.clientY });
+    setMenuOpen(true);
+  }, [hostSelection]);
+
+  const handleConnect = useCallback(() => {
+    const ids = hostSelection.selectedHosts.size > 0
+      ? Array.from(hostSelection.selectedHosts)
+      : (contextHostId ? [contextHostId] : []);
+    if (ids.length === 0) return;
+
+    const firstId = ids[0] as string | undefined;
+    const host = firstId ? hosts.find(h => h.id === firstId) : undefined;
+    const ip = host?.ip || host?.ipAddress;
+    if (!ip) {
+      toast.error('Unable to determine selected device IP');
+      return;
+    }
+    router.push(`/device/${encodeURIComponent(ip)}`);
+  }, [hostSelection.selectedHosts, contextHostId, hosts, router]);
+
+  const handleProperties = useCallback(() => {
+    if (hostSelection.selectedHosts.size !== 1) return;
+    const onlyId = Array.from(hostSelection.selectedHosts)[0] as string | undefined;
+    if (onlyId) setPropertiesHostId(onlyId);
+  }, [hostSelection.selectedHosts]);
+
+  const currentHost = propertiesHostId ? hosts.find(h => h.id === propertiesHostId) : null;
+
+  return (
+    <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {hosts.map((host) => (
+          <HostCard
+            key={host.id}
+            host={host}
+            isSelected={hostSelection.selectedHosts.has(host.id)}
+            onToggle={() => {
+              if (hostSelection.justDragged) {
+                hostSelection.setJustDragged(false);
+                return;
+              }
+              hostSelection.handleHostToggle(host.id);
+            }}
+            onContextMenu={(e) => handleContextMenu(e, host)}
+          />
+        ))}
+      </div>
+      <HostContextMenu
+        open={menuOpen}
+        x={menuPos.x}
+        y={menuPos.y}
+        onClose={() => setMenuOpen(false)}
+        onConnect={handleConnect}
+        onProperties={handleProperties}
+        canShowProperties={canShowProperties}
+      />
+      {/* Properties Dialog */}
+      <Dialog open={!!currentHost} onOpenChange={(open) => { if (!open) setPropertiesHostId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Host Properties</DialogTitle>
+            <DialogDescription>Basic network identity</DialogDescription>
+          </DialogHeader>
+          {currentHost && (
+            <div className="grid gap-4 py-2">
+              <div className="grid gap-2">
+                <Label htmlFor="host-name">Name</Label>
+                <Input id="host-name" value={currentHost.name} readOnly className="select-text" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="host-ip">IP</Label>
+                <Input id="host-ip" value={(currentHost.ip || (currentHost as any).ipAddress) ?? ''} placeholder="N/A" readOnly className="select-text" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="host-mac">MAC</Label>
+                <Input id="host-mac" value={currentHost.mac ?? ''} placeholder="N/A" readOnly className="select-text" />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPropertiesHostId(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

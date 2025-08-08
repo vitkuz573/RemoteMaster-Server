@@ -45,6 +45,9 @@ function fetchOrganizations(api: typeof apiService): Promise<Record<string, {
       name: string;
       status: string;
       type: string;
+      ip?: string;
+      ipAddress?: string;
+      mac?: string;
     }>;
   }>;
 }>> {
@@ -228,6 +231,9 @@ export function OrganizationsProvider({ children }: { children: (organizations: 
       name: string;
       status: string;
       type: string;
+      ip?: string;
+      ipAddress?: string;
+      mac?: string;
     }>;
   }>;
 }>) => React.ReactNode }) {
@@ -301,6 +307,9 @@ export function HomePageDataProvider({ children }: { children: (data: {
         name: string;
         status: string;
         type: string;
+        ip?: string;
+        ipAddress?: string;
+        mac?: string;
       }>;
     }>;
   }>;
