@@ -60,6 +60,11 @@ export default function Home() {
 
   // Keep container rect in sync for drag selection calculations
   const containerRef = useRef<HTMLDivElement | null>(null);
+  // Make sure logout modal is closed when landing on Home
+  useEffect(() => {
+    appState.setLogoutModalOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -93,6 +98,8 @@ export default function Home() {
 
   // Handle logout
   const handleLogout = () => {
+    // Ensure the modal is closed and state is clean before navigation
+    appState.setLogoutModalOpen(false);
     authState.logout();
   };
 
