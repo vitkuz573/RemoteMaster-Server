@@ -55,11 +55,10 @@ export default function DevicePage({ params }: DevicePageProps) {
         aria-label="Toggle sidebar"
         onClick={() => setSidebarOpen((v) => !v)}
         className={
-          `absolute top-1/2 -translate-y-1/2 z-20 w-9 h-16 flex items-center justify-center shadow transition-colors transition-[right] duration-200 
-           ${sidebarOpen 
-              ? 'right-80 rounded-l-full bg-foreground/10 text-foreground hover:bg-foreground/20' 
-              : 'right-0 rounded-l-full bg-white/20 text-white hover:bg-white/30 backdrop-blur'}
-          `
+          `absolute top-1/2 -translate-y-1/2 z-[60] w-9 h-16 flex items-center justify-center shadow-lg border border-white/20 
+           rounded-l-full backdrop-blur-sm transition-[right] duration-200 
+           ${sidebarOpen ? 'right-80' : 'right-0'} 
+           bg-black/60 text-white hover:bg-black/70`
         }
       >
         {sidebarOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
