@@ -1,0 +1,14 @@
+# Default code owners
+# Adjust to teams or additional maintainers as needed.
+
+* @vitkuz573
+
+# Optional: component-specific ownership (customize if your team grows)
+app/ @vitkuz573
+components/ @vitkuz573
+hooks/ @vitkuz573
+lib/ @vitkuz573
+src/ @vitkuz573
+scripts/ @vitkuz573
+public/ @vitkuz573
+.github/ @vitkuz573

@@ -1,5 +1,7 @@
 # RemoteMaster Server UI
 
+[![CI](https://github.com/vitkuz573/RemoteMaster-Server/actions/workflows/ci.yml/badge.svg)](https://github.com/vitkuz573/RemoteMaster-Server/actions/workflows/ci.yml)
+
 A modern React application built with Next.js 15 and shadcn UI, featuring enterprise-grade authentication, organizational management, and host monitoring capabilities.
 
 ## 🚀 Features
@@ -134,6 +136,16 @@ This project uses [Mock Service Worker (MSW)](https://mswjs.io/) for API mocking
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 
+### Makefile Shortcuts
+
+If you prefer `make`:
+
+- `make install` → install dependencies (`npm ci`)
+- `make dev` → start dev server
+- `make lint` / `make typecheck` → lint and TS check
+- `make test`, `make test-watch`, `make test-coverage` → run tests
+- `make ci` → lint + typecheck + coverage (mirrors CI)
+
 ### Code Quality
 
 - **TypeScript** - Full type safety
@@ -163,11 +175,30 @@ NEXT_PUBLIC_API_URL=your-api-url
 
 ## 🤝 Contributing
 
+Please read AGENTS.md for repository guidelines, coding standards, and PR process.
+
 1. Follow the existing code patterns
 2. Use shadcn UI components for new features
 3. Maintain TypeScript type safety
 4. Add proper error handling
 5. Test accessibility features
+
+## 📦 Releases
+
+This repo uses Release Please to automate versioning and changelogs.
+
+- Commit using clear, conventional types (e.g., `feat:`, `fix:`, `docs:`, `refactor:`).
+- When changes land on `main`/`master`, Release Please opens a release PR that bumps the version and updates `CHANGELOG.md`.
+- Merge the release PR to create a Git tag and GitHub Release. No manual version edits are needed.
+
+Branch protection (recommended): require PRs, passing CI checks, and enable auto‑merge. You can also auto‑merge Dependabot PRs for safe updates (configured in `.github/workflows/dependabot-auto-merge.yml`).
+
+Helper script (requires GitHub CLI):
+
+```bash
+# set or export OWNER_REPO and BRANCH if different
+bash scripts/setup-branch-protection.sh
+```
 
 ## 📄 License
 
