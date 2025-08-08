@@ -6,8 +6,8 @@ import { Footer } from './footer';
 export function ConditionalFooterWrapper() {
   const pathname = usePathname();
   
-  // Hide footer on main page (/) since it has its own layout
-  if (pathname === '/') {
+  // Hide footer on main page (/) and device pages
+  if (pathname === '/' || pathname.startsWith('/device')) {
     return null;
   }
   
