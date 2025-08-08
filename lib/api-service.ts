@@ -187,12 +187,12 @@ class ApiService {
   }
 
   // Health check
-  async getHealth() {
+  async getHealth(options?: RequestInit) {
     return this.request<{
       status: string;
       timestamp: string;
       version: string;
-    }>('/health');
+    }>('/health', options);
   }
 
   // Notification management
@@ -229,7 +229,7 @@ class ApiService {
   }
 
   // Get current user information
-  async getCurrentUser() {
+  async getCurrentUser(options?: RequestInit) {
     return this.request<{
       success: boolean;
       user: {
@@ -241,7 +241,7 @@ class ApiService {
         organizationId: string;
       };
       message: string;
-    }>('/user/current');
+    }>('/user/current', options);
   }
 
   // Get organizations with hosts and units
@@ -286,6 +286,14 @@ class ApiService {
       }>;
       message: string;
     }>('/pricing/plans');
+  }
+
+  // Dev helpers
+  async getDevCredentials() {
+    return this.request<{
+      success: boolean;
+      items: Array<{ email: string; password: string; role: 'admin' | 'user'; domain: string }>;
+    }>('/dev/credentials');
   }
 
   // Get industries

@@ -332,6 +332,18 @@ export const handlers = [
     })
   }),
 
+  // Dev-only: expose generated credentials for easier copying/autofill in UI
+  http.get('http://localhost:3001/dev/credentials', async () => {
+    await delay(50);
+    const items = Object.entries(mockCredentials).map(([email, cred]) => ({
+      email,
+      password: (cred as Credential).password,
+      role: (cred as Credential).role,
+      domain: email.split('@')[1] || ''
+    }));
+    return HttpResponse.json({ success: true, items });
+  }),
+
   http.post('http://localhost:3001/pricing/calculate', async ({ request }) => {
     await delay(50)
     const { planId, expectedUsers } = await request.json() as any

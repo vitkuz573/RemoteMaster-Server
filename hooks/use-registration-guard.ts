@@ -1,9 +1,18 @@
+"use client";
+
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRegistrationStore } from '@/lib/stores';
 
-export function useRegistrationGuard(redirectTo: string = '/register') {
+export interface RegistrationGuardOptions {
+  redirectTo?: string;
+  enabled?: boolean;
+}
+
+export function useRegistrationGuard(options: RegistrationGuardOptions | string = '/register') {
   const router = useRouter();
+  const redirectTo = typeof options === 'string' ? options : options?.redirectTo ?? '/register';
+  const enabled = typeof options === 'string' ? true : options?.enabled ?? true;
   const {
     registrationData,
     isLoading,
@@ -11,16 +20,16 @@ export function useRegistrationGuard(redirectTo: string = '/register') {
   } = useRegistrationStore();
 
   useEffect(() => {
+    if (!enabled) return;
     // Redirect if no valid registration data
     if (!isLoading && !isValidAccess) {
-      // Use replace to prevent back navigation to protected pages
       router.replace(redirectTo);
     }
-  }, [isLoading, isValidAccess, router, redirectTo]);
+  }, [enabled, isLoading, isValidAccess, router, redirectTo]);
 
   return {
     registrationData,
     isLoading,
-    isValidAccess
-  };
+    isValidAccess,
+  } as const;
 } 

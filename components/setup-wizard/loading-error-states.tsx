@@ -9,16 +9,16 @@ import { useRouter } from 'next/navigation';
 interface LoadingErrorStatesProps {
   isCheckingApi: boolean;
   isApiAvailable: boolean;
-  getApiStatus: () => { loadingText: string; statusMessage: string };
+  apiStatus: { loadingText: string; statusMessage: string };
 }
 
 export function LoadingErrorStates({
   isCheckingApi,
   isApiAvailable,
-  getApiStatus,
+  apiStatus,
 }: LoadingErrorStatesProps) {
   const router = useRouter();
-  const { loadingText, statusMessage } = getApiStatus();
+  const { loadingText, statusMessage } = apiStatus;
   // Show loading state while checking API
   if (isCheckingApi) {
     return (

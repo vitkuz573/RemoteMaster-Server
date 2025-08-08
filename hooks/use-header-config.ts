@@ -1,3 +1,5 @@
+"use client";
+
 import { useHeaderStore } from '@/lib/stores';
 
 export interface HeaderPreset {
@@ -50,8 +52,11 @@ export const headerPresets = {
     customTitle: 'Setup Wizard',
     customSubtitle: 'Configure your system',
   },
-} as const;
+} as const satisfies Record<string, HeaderPreset>;
 
+/**
+ * Header config helper with typed presets and simple APIs.
+ */
 export function useHeaderConfig(customPresets?: Record<string, HeaderPreset>) {
   const { updateConfig, resetConfig, config } = useHeaderStore();
   const allPresets = { ...headerPresets, ...customPresets };
@@ -70,5 +75,5 @@ export function useHeaderConfig(customPresets?: Record<string, HeaderPreset>) {
     applyCustomConfig,
     resetConfig,
     presets: allPresets,
-  };
+  } as const;
 } 

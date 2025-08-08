@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -10,7 +10,8 @@ import {
   HomePageDataLoading 
 } from '@/components/data-providers';
 import { useAppStore } from '@/lib/stores';
-import { useHostSelection } from '@/hooks/use-host-selection';
+import { useHostSelectionStore } from '@/lib/stores';
+import { useDragSelection } from '@/hooks/use-drag-selection';
 import { useAuth } from '@/hooks/use-auth';
 import { EnhancedHeader } from '@/components/ui/enhanced-header';
 import { Footer } from '@/components/ui/footer';
@@ -53,7 +54,38 @@ const useNotifications = () => {
 export default function Home() {
   // Custom hooks for state management
   const appState = useAppStore();
-  const hostSelection = useHostSelection();
+  // Combine drag selection behavior with host selection store
+  useDragSelection();
+  const hostSelection = useHostSelectionStore();
+
+  // Keep container rect in sync for drag selection calculations
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const updateRect = () => hostSelection.setContainerRect(el.getBoundingClientRect());
+    updateRect();
+
+    // Observe size changes of the container
+    let observer: ResizeObserver | null = null;
+    if (typeof window !== 'undefined' && 'ResizeObserver' in window) {
+      observer = new ResizeObserver(() => updateRect());
+      observer.observe(el);
+    }
+
+    // Also listen to viewport changes that affect bounding rect
+    window.addEventListener('scroll', updateRect, true);
+    window.addEventListener('resize', updateRect, true);
+
+    return () => {
+      window.removeEventListener('scroll', updateRect, true);
+      window.removeEventListener('resize', updateRect, true);
+      observer?.disconnect();
+      hostSelection.setContainerRect(null);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [containerRef.current]);
   const authState = useAuth();
   
   // Memoized data
@@ -180,10 +212,7 @@ export default function Home() {
                         <div 
                           className="relative"
                           onMouseDown={hostSelection.handleMouseDown}
-                          ref={(el) => {
-                            if (el && !hostSelection.containerRect) {
-                            }
-                          }}
+                          ref={containerRef}
                         >
                           <SelectionRectangle
                             isDragging={hostSelection.dragState.isDragging}

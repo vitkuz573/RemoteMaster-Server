@@ -17,7 +17,9 @@ import {
   AlertCircle,
   ExternalLink,
   Shield,
-  User
+  User,
+  Copy,
+  Wand2,
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
 import { useHeaderStore, useLoginStore } from '@/lib/stores';
@@ -402,6 +404,18 @@ export default function LoginPage() {
             </CardContent>
           </Card>
 
+          {/* Dev Credentials Helper (development only) */}
+          {process.env.NODE_ENV === 'development' && !isCheckingApi && isApiAvailable && (
+            <DevCredentialsPanel 
+              onAutofill={({ email, password, domain }) => {
+                setLoginMode('credentials');
+                setDomain(domain);
+                setEmail(email);
+                setPassword(password);
+              }}
+            />
+          )}
+
 
 
           {/* Security Info */}
@@ -458,5 +472,80 @@ export default function LoginPage() {
 
 
     </div>
+  );
+}
+
+// Inline dev panel to avoid over-abstracting
+function DevCredentialsPanel({ onAutofill }: { onAutofill: (c: { email: string; password: string; domain: string }) => void }) {
+  const [items, setItems] = React.useState<Array<{ email: string; password: string; role: 'admin' | 'user'; domain: string }>>([]);
+  const [open, setOpen] = React.useState(true);
+
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await apiService.getDevCredentials();
+        if (mounted) setItems(data.items ?? []);
+      } catch {}
+    })();
+    return () => { mounted = false };
+  }, []);
+
+  if (!items.length) return null;
+
+  return (
+    <Card className="border-dashed">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm">Dev Credentials</CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => setOpen(!open)}>
+            {open ? 'Hide' : 'Show'}
+          </Button>
+        </div>
+        <CardDescription>Click to copy or autofill the form</CardDescription>
+      </CardHeader>
+      {open && (
+        <CardContent className="space-y-2">
+          <div className="max-h-56 overflow-auto space-y-2">
+            {items.map((c) => (
+              <div key={c.email} className="flex items-center gap-2 text-xs">
+                <span className="shrink-0 rounded px-2 py-0.5 bg-muted text-muted-foreground uppercase">
+                  {c.role}
+                </span>
+                <span className="truncate font-mono" title={c.email}>{c.email}</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="truncate font-mono" title={c.password}>{c.password}</span>
+                <div className="ml-auto flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Copy email"
+                    onClick={async () => { try { await navigator.clipboard.writeText(c.email) } catch {} }}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Copy password"
+                    onClick={async () => { try { await navigator.clipboard.writeText(c.password) } catch {} }}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    title="Autofill form"
+                    onClick={() => onAutofill(c)}
+                  >
+                    <Wand2 className="w-4 h-4 mr-1" /> Fill
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      )}
+    </Card>
   );
 }

@@ -40,7 +40,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
   const { 
     isApiAvailable, 
     isCheckingApi, 
-    getApiStatus,
+    apiStatus,
   } = useApiAvailability();
   
   // Use custom hook for state management with persistence
@@ -343,7 +343,7 @@ export function SetupWizard({ onStepChange, onComplete }: SetupWizardProps) {
       <LoadingErrorStates
         isCheckingApi={isCheckingApi}
         isApiAvailable={isApiAvailable}
-        getApiStatus={getApiStatus}
+        apiStatus={apiStatus}
       />
     );
   }
