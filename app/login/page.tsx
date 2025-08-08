@@ -1,7 +1,7 @@
 'use client';
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +28,7 @@ import { apiService } from '@/lib/api-service';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showHeader, resetConfig, updateConfig } = useHeaderStore();
   const {
     loginMode,
@@ -108,9 +109,11 @@ export default function LoginPage() {
 
   React.useEffect(() => {
     if (auth.isAuthenticated) {
-      router.push("/");
+      const rt = searchParams?.get('returnTo') || '/';
+      const safeRt = rt.startsWith('/') && !rt.startsWith('//') ? rt : '/';
+      router.push(safeRt);
     }
-  }, [auth.isAuthenticated, router]);
+  }, [auth.isAuthenticated, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -149,15 +152,19 @@ export default function LoginPage() {
           // Simulate redirect delay
           await new Promise(resolve => setTimeout(resolve, 1000));
 
-          // Redirect to main dashboard after successful discovery
-          router.push("/");
+          // Redirect to intended page (returnTo) or dashboard
+          const rt = searchParams?.get('returnTo') || '/';
+          const safeRt = rt.startsWith('/') && !rt.startsWith('//') ? rt : '/';
+          router.push(safeRt);
         } else {
           // No BYOID configuration, redirect to main app
           // Simulate SSO redirect delay
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          // Redirect to main dashboard
-          router.push("/");
+          // Redirect to intended page (returnTo) or dashboard
+          const rt = searchParams?.get('returnTo') || '/';
+          const safeRt = rt.startsWith('/') && !rt.startsWith('//') ? rt : '/';
+          router.push(safeRt);
         }
         
       } catch (err) {
@@ -216,8 +223,10 @@ export default function LoginPage() {
         // Show success message
         apiService.showSuccess(result.message || 'Login successful!');
         
-        // Redirect to main dashboard
-        router.push("/");
+        // Redirect to intended page (returnTo) or dashboard
+        const rt = searchParams?.get('returnTo') || '/';
+        const safeRt = rt.startsWith('/') && !rt.startsWith('//') ? rt : '/';
+        router.push(safeRt);
         
       } catch (err) {
         // Error notification is already handled by apiService

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore, useHeaderStore, useAppStore, useHostSelectionStore } from '@/lib/stores';
 import { apiService } from '@/lib/api-service';
 
@@ -22,6 +22,7 @@ export function useAuth(options: UseAuthOptions = {}) {
   } = options;
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { resetConfig } = useHeaderStore();
   const {
     isAuthenticated,
@@ -40,8 +41,13 @@ export function useAuth(options: UseAuthOptions = {}) {
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const redirectToLogin = useCallback(() => {
-    router.replace(redirectPath);
-  }, [router, redirectPath]);
+    const shouldSkip = skipPaths.includes(pathname);
+    const currentSearch = searchParams?.toString?.() ?? '';
+    const currentPath = pathname + (currentSearch ? `?${currentSearch}` : '');
+    const returnTo = shouldSkip ? '' : encodeURIComponent(currentPath);
+    const url = returnTo ? `${redirectPath}?returnTo=${returnTo}` : redirectPath;
+    router.replace(url);
+  }, [router, redirectPath, pathname, searchParams, skipPaths]);
 
   const logout = useCallback(() => {
     // Clear header configuration on logout

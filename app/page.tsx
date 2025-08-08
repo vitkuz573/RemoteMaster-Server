@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Suspense, useMemo, useEffect, useRef } from 'react';
+import { AuthGate } from '@/components/auth-gate';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -103,24 +104,17 @@ export default function Home() {
     authState.logout();
   };
 
-  // Show loading state while checking auth
-  if (authState.isCheckingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner size="lg" />
-          <p className="mt-4 text-muted-foreground">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect if not authenticated
-  if (!authState.isAuthenticated) {
-    return null; // Will redirect to login
-  }
-
   return (
+    <AuthGate
+      fallback={(
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <LoadingSpinner size="lg" />
+            <p className="mt-4 text-muted-foreground">Checking authentication...</p>
+          </div>
+        </div>
+      )}
+    >
     <div className="h-screen bg-background overflow-hidden flex flex-col">
         <EnhancedHeader
           showNotifications={true}
@@ -271,5 +265,6 @@ export default function Home() {
           </DialogContent>
         </Dialog>
       </div>
+    </AuthGate>
   );
 }
