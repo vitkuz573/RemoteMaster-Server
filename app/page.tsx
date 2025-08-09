@@ -303,7 +303,7 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
     return host ?? null;
   }, [hostSelection.selectedHosts, contextHostId, hosts]);
 
-  const openDeviceWindow = useCallback((url: string): boolean => {
+  const openDeviceWindow = useCallback((url: string): void => {
     if (typeof window === 'undefined') return false;
     try {
       const width = 1200;
@@ -316,13 +316,15 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
       const top = dualScreenTop + Math.max(0, (h - height) / 2);
       const features = `popup=yes,noopener,noreferrer,toolbar=no,menubar=no,location=no,status=no,scrollbars=yes,resizable=yes,width=${width},height=${height},top=${top},left=${left}`;
       const win = window.open(url, '_blank', features);
-      if (win) {
+      // Some browsers return null when using noopener even if the popup opens
+      // We avoid SPA fallback to prevent double navigation; inform user instead if blocked
+      if (!win) {
+        toast.info('Please allow pop-ups for this site to open device windows.');
+      } else {
         try { (win as any).opener = null; } catch {}
-        return true;
       }
-      return false;
     } catch {
-      return false;
+      toast.info('Please allow pop-ups for this site to open device windows.');
     }
   }, []);
 
@@ -335,8 +337,8 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
       return;
     }
     const url = `/device/ip/${encodeURIComponent(ip)}`;
-    if (!openDeviceWindow(url)) router.push(url);
-  }, [getPrimaryHost, router, openDeviceWindow]);
+    openDeviceWindow(url);
+  }, [getPrimaryHost, openDeviceWindow]);
 
   const handleConnectInternetId = useCallback(() => {
     const host = getPrimaryHost();
@@ -347,8 +349,8 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
       return;
     }
     const url = `/device/internetid/${encodeURIComponent(internetId)}`;
-    if (!openDeviceWindow(url)) router.push(url);
-  }, [getPrimaryHost, router, openDeviceWindow]);
+    openDeviceWindow(url);
+  }, [getPrimaryHost, openDeviceWindow]);
 
   const handleProperties = useCallback(() => {
     if (hostSelection.selectedHosts.size !== 1) return;
