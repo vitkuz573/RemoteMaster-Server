@@ -86,9 +86,14 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'auth-store',
-      // Do not persist tokens or auth flags in localStorage for security
-      // Enterprise approach would use httpOnly cookies server-side.
-      partialize: () => ({}),
+      // Persist minimal auth to survive reloads in dev: refresh token and expiry
+      partialize: (state) => ({
+        refreshToken: state.refreshToken,
+        accessToken: state.accessToken,
+        expiresAt: state.expiresAt,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 ); 

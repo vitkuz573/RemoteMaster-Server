@@ -75,7 +75,16 @@ export function useAuth(options: UseAuthOptions = {}) {
   const checkAuth = useCallback(async () => {
     try {
       setCheckingAuth(true);
-      if (accessToken && hydrateUser) {
+      let token = accessToken;
+      const isExpired = typeof expiresAt === 'number' && Date.now() >= expiresAt;
+      if ((!token || isExpired) && refreshToken) {
+        const refreshed = await apiService.refreshSession();
+        if (refreshed) {
+          token = useAuthStore.getState().accessToken;
+        }
+      }
+
+      if (token && hydrateUser) {
         if (!user) {
           const controller = new AbortController();
           inFlight.current = controller;
@@ -83,7 +92,7 @@ export function useAuth(options: UseAuthOptions = {}) {
           const { organizations } = await apiService.getOrganizations({ id: userData.organizationId } as any);
           const organization = organizations?.[0];
 
-          login({ accessToken, refreshToken, expiresIn: null }, {
+          login({ accessToken: token, refreshToken, expiresIn: null }, {
             ...userData,
             organizationDomain: organization?.domain || '',
             organizationName: organization?.name || '',
