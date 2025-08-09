@@ -300,12 +300,17 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
 
     const firstId = ids[0] as string | undefined;
     const host = firstId ? hosts.find(h => h.id === firstId) : undefined;
-    const target = host?.ip || host?.ipAddress || host?.internetId;
-    if (!target) {
-      toast.error('Unable to determine device endpoint');
+    const ip = host?.ip || host?.ipAddress;
+    const internetId = (host as any)?.internetId as string | undefined;
+    if (ip) {
+      router.push(`/device/ip/${encodeURIComponent(ip)}`);
       return;
     }
-    router.push(`/device/${encodeURIComponent(target)}`);
+    if (internetId) {
+      router.push(`/device/internetid/${encodeURIComponent(internetId)}`);
+      return;
+    }
+    toast.error('Unable to determine device endpoint');
   }, [hostSelection.selectedHosts, contextHostId, hosts, router]);
 
   const handleProperties = useCallback(() => {
