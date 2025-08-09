@@ -5,13 +5,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useHeaderStore, useFooterStore } from "@/lib/stores";
 
 type DeviceParams = { ip: string };
-type MaybePromise<T> = T | Promise<T>;
 
-export default function DevicePage({ params }: { params: MaybePromise<DeviceParams> }) {
-  const resolved = (typeof (params as any)?.then === 'function')
-    ? use(params as Promise<DeviceParams>)
-    : (params as DeviceParams);
-  const target = resolved.ip;
+export default function DevicePage({ params }: { params: Promise<DeviceParams> }) {
+  const { ip: target } = use(params);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { hideHeader, showHeader } = useHeaderStore();
   const { hideFooter, showFooter } = useFooterStore();
