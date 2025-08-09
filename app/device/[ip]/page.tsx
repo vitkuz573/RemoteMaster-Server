@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { use, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useHeaderStore, useFooterStore } from "@/lib/stores";
 
-interface DevicePageProps {
-  params: { ip: string };
-}
+type DeviceParams = { ip: string };
+type MaybePromise<T> = T | Promise<T>;
 
-export default function DevicePage({ params }: DevicePageProps) {
-  const target = params.ip;
+export default function DevicePage({ params }: { params: MaybePromise<DeviceParams> }) {
+  const resolved = (typeof (params as any)?.then === 'function')
+    ? use(params as Promise<DeviceParams>)
+    : (params as DeviceParams);
+  const target = resolved.ip;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { hideHeader, showHeader } = useHeaderStore();
   const { hideFooter, showFooter } = useFooterStore();
@@ -86,4 +88,3 @@ export default function DevicePage({ params }: DevicePageProps) {
     </div>
   );
 }
-
