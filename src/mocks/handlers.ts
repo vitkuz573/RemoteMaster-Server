@@ -519,6 +519,7 @@ export const handlers = [
             type: host.type,
             ipAddress: host.ipAddress,
             mac: host.mac,
+            internetId: host.internetId,
             os: host.os,
             lastSeen: host.lastSeen,
             cpuUsage: host.cpuUsage,

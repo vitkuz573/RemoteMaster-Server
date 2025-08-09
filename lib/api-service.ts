@@ -319,6 +319,7 @@ class ApiService {
             ip?: string;
             ipAddress?: string;
             mac?: string;
+            internetId?: string;
           }>;
         }>;
       }>;

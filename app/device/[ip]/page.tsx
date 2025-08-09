@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useHeaderStore, useFooterStore } from "@/lib/stores";
 
@@ -9,10 +9,11 @@ interface DevicePageProps {
 }
 
 export default function DevicePage({ params }: DevicePageProps) {
-  const { ip } = params;
+  const target = params.ip;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { hideHeader, showHeader } = useHeaderStore();
   const { hideFooter, showFooter } = useFooterStore();
+  const isIPv4 = useMemo(() => /^(?:\d{1,3}\.){3}\d{1,3}$/.test(target), [target]);
 
   // Hide global header/footer while on device page
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function DevicePage({ params }: DevicePageProps) {
       <div className="absolute inset-0">
         {/* Placeholder for remote screen image/stream */}
         <img
-          src={`/api/device/${encodeURIComponent(ip)}/screen`}
+          src={`/api/device/${encodeURIComponent(target)}/screen`}
           alt="Remote screen"
           className="w-full h-full object-contain select-none pointer-events-none"
           onError={(e) => {
@@ -43,7 +44,7 @@ export default function DevicePage({ params }: DevicePageProps) {
         {/* Fallback block when no image */}
         <div className="w-full h-full flex items-center justify-center text-white/70">
           <div className="text-center">
-            <div className="text-lg">Device screen: {ip}</div>
+            <div className="text-lg">Device screen: {target}</div>
             <div className="text-sm">Waiting for image…</div>
           </div>
         </div>
@@ -76,8 +77,8 @@ export default function DevicePage({ params }: DevicePageProps) {
           </div>
           <div className="flex-1 p-4">
             <div className="space-y-2">
-              <div className="text-sm text-muted-foreground">Connected to</div>
-              <div className="text-base font-medium break-all">{ip}</div>
+              <div className="text-sm text-muted-foreground">Connected to ({isIPv4 ? 'IP' : 'Internet ID'})</div>
+              <div className="text-base font-medium break-all">{target}</div>
             </div>
           </div>
         </div>
@@ -85,3 +86,4 @@ export default function DevicePage({ params }: DevicePageProps) {
     </div>
   );
 }
+

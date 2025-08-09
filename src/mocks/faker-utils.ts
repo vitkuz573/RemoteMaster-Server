@@ -95,6 +95,7 @@ export interface MockHost {
   type: typeof HOST_TYPES[number];
   ipAddress?: string;
   mac?: string;
+  internetId: string;
   os?: string;
   lastSeen?: string;
   cpuUsage?: number;
@@ -187,6 +188,7 @@ export const generateMockHost = (): MockHost => {
     type: hostType,
     ipAddress: faker.internet.ipv4(),
     mac: faker.internet.mac(),
+    internetId: `RM-${faker.string.alphanumeric(10)}`,
     os: faker.helpers.arrayElement(OPERATING_SYSTEMS),
     lastSeen: faker.date.recent({ days: 7 }).toISOString(),
     cpuUsage: faker.number.float({ min: 5, max: 95, fractionDigits: 1 }),

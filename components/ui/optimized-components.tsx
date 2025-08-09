@@ -59,6 +59,7 @@ interface HostCardProps {
     ip?: string;
     ipAddress?: string;
     mac?: string;
+    internetId?: string;
   };
   isSelected: boolean;
   onToggle: () => void;
@@ -108,13 +109,16 @@ export const HostCard = memo(function HostCard({
           <div>
             <h3 className="font-medium">{host.name}</h3>
             <p className="text-sm text-muted-foreground">{host.type}</p>
-            {(host.ip || host.ipAddress || host.mac) && (
+            {(host.ip || host.ipAddress || host.mac || host.internetId) && (
               <div className="mt-1 space-y-0.5">
                 {(host.ip || host.ipAddress) && (
                   <p className="text-xs text-muted-foreground">IP: {host.ip || host.ipAddress}</p>
                 )}
                 {host.mac && (
                   <p className="text-xs text-muted-foreground">MAC: {host.mac}</p>
+                )}
+                {host.internetId && (
+                  <p className="text-xs text-muted-foreground">ID: {host.internetId}</p>
                 )}
               </div>
             )}

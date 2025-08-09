@@ -268,7 +268,7 @@ export default function Home() {
 }
 
 // Host grid with context menu logic
-function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: string; status: string; type: string; ip?: string; ipAddress?: string; mac?: string }> }) {
+function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: string; status: string; type: string; ip?: string; ipAddress?: string; mac?: string; internetId?: string }> }) {
   const hostSelection = useHostSelectionStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -300,12 +300,12 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
 
     const firstId = ids[0] as string | undefined;
     const host = firstId ? hosts.find(h => h.id === firstId) : undefined;
-    const ip = host?.ip || host?.ipAddress;
-    if (!ip) {
-      toast.error('Unable to determine selected device IP');
+    const target = host?.ip || host?.ipAddress || host?.internetId;
+    if (!target) {
+      toast.error('Unable to determine device endpoint');
       return;
     }
-    router.push(`/device/${encodeURIComponent(ip)}`);
+    router.push(`/device/${encodeURIComponent(target)}`);
   }, [hostSelection.selectedHosts, contextHostId, hosts, router]);
 
   const handleProperties = useCallback(() => {
@@ -364,6 +364,10 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
               <div className="grid gap-2">
                 <Label htmlFor="host-mac">MAC</Label>
                 <Input id="host-mac" value={currentHost.mac ?? ''} placeholder="N/A" readOnly className="select-text" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="host-id">Internet ID</Label>
+                <Input id="host-id" value={(currentHost as any).internetId ?? ''} placeholder="N/A" readOnly className="select-text" />
               </div>
             </div>
           )}
