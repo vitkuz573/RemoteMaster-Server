@@ -303,6 +303,29 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
     return host ?? null;
   }, [hostSelection.selectedHosts, contextHostId, hosts]);
 
+  const openDeviceWindow = useCallback((url: string): boolean => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const width = 1200;
+      const height = 800;
+      const dualScreenLeft = (window as any).screenLeft ?? window.screenX ?? 0;
+      const dualScreenTop = (window as any).screenTop ?? window.screenY ?? 0;
+      const w = window.innerWidth || document.documentElement.clientWidth || window.screen.width;
+      const h = window.innerHeight || document.documentElement.clientHeight || window.screen.height;
+      const left = dualScreenLeft + Math.max(0, (w - width) / 2);
+      const top = dualScreenTop + Math.max(0, (h - height) / 2);
+      const features = `popup=yes,noopener,noreferrer,toolbar=no,menubar=no,location=no,status=no,scrollbars=yes,resizable=yes,width=${width},height=${height},top=${top},left=${left}`;
+      const win = window.open(url, '_blank', features);
+      if (win) {
+        try { (win as any).opener = null; } catch {}
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const handleConnectIp = useCallback(() => {
     const host = getPrimaryHost();
     if (!host) return;
@@ -312,12 +335,8 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
       return;
     }
     const url = `/device/ip/${encodeURIComponent(ip)}`;
-    if (typeof window !== 'undefined') {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } else {
-      router.push(url);
-    }
-  }, [getPrimaryHost, router]);
+    if (!openDeviceWindow(url)) router.push(url);
+  }, [getPrimaryHost, router, openDeviceWindow]);
 
   const handleConnectInternetId = useCallback(() => {
     const host = getPrimaryHost();
@@ -328,12 +347,8 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
       return;
     }
     const url = `/device/internetid/${encodeURIComponent(internetId)}`;
-    if (typeof window !== 'undefined') {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } else {
-      router.push(url);
-    }
-  }, [getPrimaryHost, router]);
+    if (!openDeviceWindow(url)) router.push(url);
+  }, [getPrimaryHost, router, openDeviceWindow]);
 
   const handleProperties = useCallback(() => {
     if (hostSelection.selectedHosts.size !== 1) return;
