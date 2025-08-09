@@ -4,14 +4,16 @@ import React, { use, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useHeaderStore, useFooterStore } from "@/lib/stores";
 
-type DeviceParams = { ip: string };
+type DeviceParams = { target: string };
 
 export default function DevicePage({ params }: { params: Promise<DeviceParams> }) {
-  const { ip: target } = use(params);
+  const { target } = use(params);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { hideHeader, showHeader } = useHeaderStore();
   const { hideFooter, showFooter } = useFooterStore();
   const isIPv4 = useMemo(() => /^(?:\d{1,3}\.){3}\d{1,3}$/.test(target), [target]);
+  const isIPv6 = useMemo(() => target.includes(':'), [target]);
+  const endpointLabel = isIPv4 ? 'IPv4' : (isIPv6 ? 'IPv6' : 'Internet ID');
 
   // Hide global header/footer while on device page
   useEffect(() => {
@@ -75,7 +77,7 @@ export default function DevicePage({ params }: { params: Promise<DeviceParams> }
           </div>
           <div className="flex-1 p-4">
             <div className="space-y-2">
-              <div className="text-sm text-muted-foreground">Connected to ({isIPv4 ? 'IP' : 'Internet ID'})</div>
+              <div className="text-sm text-muted-foreground">Connected to ({endpointLabel})</div>
               <div className="text-base font-medium break-all">{target}</div>
             </div>
           </div>
