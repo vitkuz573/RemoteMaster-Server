@@ -1,13 +1,12 @@
 "use client";
 
-import React, { use, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useHeaderStore, useFooterStore } from "@/lib/stores";
+import { useParams } from "next/navigation";
 
-type Params = { address: string };
-
-export default function DeviceByIpPage({ params }: { params: Promise<Params> }) {
-  const { address } = use(params);
+export default function DeviceByIpPage() {
+  const { address } = useParams<{ address: string }>();
   const target = address;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { hideHeader, showHeader } = useHeaderStore();
@@ -73,4 +72,3 @@ export default function DeviceByIpPage({ params }: { params: Promise<Params> }) 
     </div>
   );
 }
-

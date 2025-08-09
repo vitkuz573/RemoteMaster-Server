@@ -1,14 +1,14 @@
 "use client";
 
-import React, { use, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useHeaderStore, useFooterStore } from "@/lib/stores";
+import { useParams } from "next/navigation";
 
-type DeviceParams = { target: string[] };
-
-export default function DevicePage({ params }: { params: Promise<DeviceParams> }) {
-  const { target: parts } = use(params);
-  const target = Array.isArray(parts) ? parts.join('/') : String(parts);
+export default function DevicePage() {
+  const p = useParams<{ target: string[] }>();
+  const parts = (p?.target || []) as unknown as string[];
+  const target = Array.isArray(parts) ? parts.join('/') : String(parts ?? '');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { hideHeader, showHeader } = useHeaderStore();
   const { hideFooter, showFooter } = useFooterStore();
