@@ -7,9 +7,13 @@ interface HostContextMenuProps {
   x: number;
   y: number;
   onClose: () => void;
-  onConnect: () => void;
+  onConnect?: () => void;
+  onConnectIp?: () => void;
+  onConnectInternetId?: () => void;
   onProperties: () => void;
   canShowProperties: boolean;
+  hasIp?: boolean;
+  hasInternetId?: boolean;
 }
 
 export function HostContextMenu({
@@ -18,8 +22,12 @@ export function HostContextMenu({
   y,
   onClose,
   onConnect,
+  onConnectIp,
+  onConnectInternetId,
   onProperties,
   canShowProperties,
+  hasIp,
+  hasInternetId,
 }: HostContextMenuProps) {
   useEffect(() => {
     if (!open) return;
@@ -52,15 +60,40 @@ export function HostContextMenu({
       role="menu"
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <button
-        className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted"
-        onClick={() => {
-          onClose();
-          onConnect();
-        }}
-      >
-        Connect
-      </button>
+      {/* Connect options */}
+      {hasIp && (
+        <button
+          className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted"
+          onClick={() => {
+            onClose();
+            onConnectIp?.();
+          }}
+        >
+          Connect via IP
+        </button>
+      )}
+      {hasInternetId && (
+        <button
+          className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted"
+          onClick={() => {
+            onClose();
+            onConnectInternetId?.();
+          }}
+        >
+          Connect via Internet ID
+        </button>
+      )}
+      {!hasIp && !hasInternetId && onConnect && (
+        <button
+          className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted"
+          onClick={() => {
+            onClose();
+            onConnect?.();
+          }}
+        >
+          Connect
+        </button>
+      )}
       <button
         className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={() => {

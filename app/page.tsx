@@ -292,26 +292,38 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
     setMenuOpen(true);
   }, [hostSelection]);
 
-  const handleConnect = useCallback(() => {
+  const getPrimaryHost = useCallback(() => {
     const ids = hostSelection.selectedHosts.size > 0
       ? Array.from(hostSelection.selectedHosts)
       : (contextHostId ? [contextHostId] : []);
-    if (ids.length === 0) return;
+    if (ids.length === 0) return null;
 
     const firstId = ids[0] as string | undefined;
     const host = firstId ? hosts.find(h => h.id === firstId) : undefined;
-    const ip = host?.ip || host?.ipAddress;
-    const internetId = (host as any)?.internetId as string | undefined;
-    if (ip) {
-      router.push(`/device/ip/${encodeURIComponent(ip)}`);
+    return host ?? null;
+  }, [hostSelection.selectedHosts, contextHostId, hosts]);
+
+  const handleConnectIp = useCallback(() => {
+    const host = getPrimaryHost();
+    if (!host) return;
+    const ip = host.ip || (host as any).ipAddress;
+    if (!ip) {
+      toast.error('No IP address available for this host');
       return;
     }
-    if (internetId) {
-      router.push(`/device/internetid/${encodeURIComponent(internetId)}`);
+    router.push(`/device/ip/${encodeURIComponent(ip)}`);
+  }, [getPrimaryHost, router]);
+
+  const handleConnectInternetId = useCallback(() => {
+    const host = getPrimaryHost();
+    if (!host) return;
+    const internetId = (host as any).internetId as string | undefined;
+    if (!internetId) {
+      toast.error('No Internet ID available for this host');
       return;
     }
-    toast.error('Unable to determine device endpoint');
-  }, [hostSelection.selectedHosts, contextHostId, hosts, router]);
+    router.push(`/device/internetid/${encodeURIComponent(internetId)}`);
+  }, [getPrimaryHost, router]);
 
   const handleProperties = useCallback(() => {
     if (hostSelection.selectedHosts.size !== 1) return;
@@ -345,9 +357,12 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
         x={menuPos.x}
         y={menuPos.y}
         onClose={() => setMenuOpen(false)}
-        onConnect={handleConnect}
+        onConnectIp={handleConnectIp}
+        onConnectInternetId={handleConnectInternetId}
         onProperties={handleProperties}
         canShowProperties={canShowProperties}
+        hasIp={(() => { const h = getPrimaryHost(); return !!(h && (h.ip || (h as any).ipAddress)); })()}
+        hasInternetId={(() => { const h = getPrimaryHost(); return !!(h && (h as any).internetId); })()}
       />
       {/* Properties Dialog */}
       <Dialog open={!!currentHost} onOpenChange={(open) => { if (!open) setPropertiesHostId(null); }}>
