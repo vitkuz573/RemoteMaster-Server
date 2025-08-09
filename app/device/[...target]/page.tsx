@@ -4,10 +4,11 @@ import React, { use, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useHeaderStore, useFooterStore } from "@/lib/stores";
 
-type DeviceParams = { target: string };
+type DeviceParams = { target: string[] };
 
 export default function DevicePage({ params }: { params: Promise<DeviceParams> }) {
-  const { target } = use(params);
+  const { target: parts } = use(params);
+  const target = Array.isArray(parts) ? parts.join('/') : String(parts);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { hideHeader, showHeader } = useHeaderStore();
   const { hideFooter, showFooter } = useFooterStore();
