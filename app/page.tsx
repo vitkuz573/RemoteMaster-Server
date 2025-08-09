@@ -311,7 +311,12 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
       toast.error('No IP address available for this host');
       return;
     }
-    router.push(`/device/ip/${encodeURIComponent(ip)}`);
+    const url = `/device/ip/${encodeURIComponent(ip)}`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      router.push(url);
+    }
   }, [getPrimaryHost, router]);
 
   const handleConnectInternetId = useCallback(() => {
@@ -322,7 +327,12 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
       toast.error('No Internet ID available for this host');
       return;
     }
-    router.push(`/device/internetid/${encodeURIComponent(internetId)}`);
+    const url = `/device/internetid/${encodeURIComponent(internetId)}`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      router.push(url);
+    }
   }, [getPrimaryHost, router]);
 
   const handleProperties = useCallback(() => {
