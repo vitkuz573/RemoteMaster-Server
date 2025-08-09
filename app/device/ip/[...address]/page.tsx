@@ -6,8 +6,9 @@ import { useHeaderStore, useFooterStore } from "@/lib/stores";
 import { useParams } from "next/navigation";
 
 export default function DeviceByIpPage() {
-  const { address } = useParams<{ address: string }>();
-  const target = address;
+  const p = useParams<{ address: string[] }>();
+  const parts = (p?.address || []) as unknown as string[];
+  const target = Array.isArray(parts) ? parts.join('/') : String(parts ?? '');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { hideHeader, showHeader } = useHeaderStore();
   const { hideFooter, showFooter } = useFooterStore();
