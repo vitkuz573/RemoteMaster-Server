@@ -42,6 +42,19 @@ const nextConfig: NextConfig = {
     
     return config;
   },
+  async rewrites() {
+    return [
+      // Normalize device routes to safe internal paths to avoid dot/colon edge cases
+      {
+        source: '/device/ip/:address*',
+        destination: '/device/_ip/:address*',
+      },
+      {
+        source: '/device/internetid/:id*',
+        destination: '/device/_internetid/:id*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
