@@ -2,6 +2,7 @@
 
 import React, { memo, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import { Building2, ChevronRight } from 'lucide-react';
@@ -37,15 +38,18 @@ export const TreeItem = memo(function TreeItem({
   `, [isSelected]);
 
   return (
-    <button onClick={onClick} className={className}>
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={onClick}
+      className={className}
+    >
       <span className="flex items-center">
         <ChevronRight className="h-3 w-3 mr-2" />
         {title}
       </span>
-      <span className={badgeClassName}>
-        {hosts}
-      </span>
-    </button>
+      <Badge variant={isSelected ? 'default' : 'secondary'}>{hosts}</Badge>
+    </Button>
   );
 });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 interface HostContextMenuProps {
   open: boolean;
@@ -62,40 +63,52 @@ export function HostContextMenu({
     >
       {/* Connect options */}
       {hasIp && (
-        <button
-          className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted"
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start"
           onClick={() => {
             onClose();
             onConnectIp?.();
           }}
         >
           Connect via IP
-        </button>
+        </Button>
       )}
       {hasInternetId && (
-        <button
-          className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted"
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start"
           onClick={() => {
             onClose();
             onConnectInternetId?.();
           }}
         >
           Connect via Internet ID
-        </button>
+        </Button>
       )}
       {!hasIp && !hasInternetId && onConnect && (
-        <button
-          className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted"
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start"
           onClick={() => {
             onClose();
             onConnect?.();
           }}
         >
           Connect
-        </button>
+        </Button>
       )}
-      <button
-        className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="w-full justify-start disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={() => {
           if (!canShowProperties) return;
           onClose();
@@ -104,7 +117,7 @@ export function HostContextMenu({
         disabled={!canShowProperties}
       >
         Properties
-      </button>
+      </Button>
     </div>
   );
 }

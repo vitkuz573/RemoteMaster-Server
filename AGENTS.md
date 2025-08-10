@@ -30,6 +30,7 @@ Prereqs: Node 18+. Set env in `.env.local` (e.g., `NEXT_PUBLIC_API_URL=http://lo
 - **Files**: kebab-case for filenames; `PascalCase` component names; hooks start with `use*`.
 - **Imports**: Use `@/` root alias for local modules.
 - **UI**: Use shadcn primitives under `components/ui/`; keep props minimal and typed.
+- **Shadcn components policy**: Do NOT modify files that implement shadcn UI primitives under `components/ui/` (e.g., `button`, `input`, `dialog`, etc.). If customization is needed, compose via wrappers or pass className/props from callers. For structural changes or upstream fixes, regenerate/update the component following shadcn docs instead of editing directly.
 
 ## Testing Guidelines
 
@@ -46,4 +47,3 @@ Prereqs: Node 18+. Set env in `.env.local` (e.g., `NEXT_PUBLIC_API_URL=http://lo
 
 - Never commit secrets; use `.env.local` (gitignored). MSW runs only in development.
 - Access env via `app-config.ts`; keep config reads centralized and typed.
-
