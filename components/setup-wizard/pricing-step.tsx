@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle, Shield } from 'lucide-react';
-import { OrganizationForm } from './types';
+import type { OrganizationForm } from './types';
 
 interface PricingPlan {
   id: string;

@@ -53,7 +53,6 @@ export default function LoginPage() {
     setIsApiAvailable,
     setIsCheckingApi,
     setKnownTenants,
-    resetForm,
     clearError,
   } = useLoginStore();
 

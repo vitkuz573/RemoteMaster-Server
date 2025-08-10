@@ -6,9 +6,8 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useApiAvailability } from '@/hooks/use-api-availability';
 import { 
   Wifi, 
@@ -31,11 +30,10 @@ export function ApiStatus({
   compact = false 
 }: ApiStatusProps) {
   const { 
-    isConnecting, 
-    isConnected, 
-    lastSync, 
-    pendingRequests, 
-    errors 
+    isApiAvailable: isConnected, 
+    isCheckingApi: isConnecting, 
+    lastCheckedAt, 
+    error 
   } = useApiAvailability();
 
   const formatLastSync = (date: Date | null) => {
@@ -76,7 +74,7 @@ export function ApiStatus({
             <span className="text-xs text-muted-foreground">
               {getStatusText()}
             </span>
-            {(pendingRequests > 0 || isConnecting) && (
+            {(isConnecting) && (
               <RefreshCw className="w-3 h-3 animate-spin text-blue-500" />
             )}
           </div>
@@ -97,10 +95,10 @@ export function ApiStatus({
               <span>Last sync:</span>
               <span className="text-xs">{formatLastSync(lastSync)}</span>
             </div>
-            {pendingRequests > 0 && (
+            {isConnecting && (
               <div className="flex items-center gap-2">
-                <span>Pending:</span>
-                <span className="text-xs">{pendingRequests}</span>
+                <span>Status:</span>
+                <span className="text-xs">Checking…</span>
               </div>
             )}
           </div>
@@ -155,31 +153,29 @@ export function ApiStatus({
           <span className="text-sm text-muted-foreground">Last Sync</span>
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3 text-muted-foreground" />
-            <span className="text-sm">{formatLastSync(lastSync)}</span>
+            <span className="text-sm">{formatLastSync(lastCheckedAt)}</span>
           </div>
         </div>
 
         {/* Pending Requests */}
-        {pendingRequests > 0 && (
+        {isConnecting && (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Pending</span>
+            <span className="text-sm text-muted-foreground">Status</span>
             <div className="flex items-center gap-1">
               <RefreshCw className="w-3 h-3 animate-spin text-blue-500" />
-              <span className="text-sm">{pendingRequests}</span>
+              <span className="text-sm">Checking…</span>
             </div>
           </div>
         )}
 
         {/* Recent Errors */}
-        {showDetails && errors.length > 0 && (
+        {showDetails && !!error && (
           <div className="space-y-2">
             <span className="text-sm text-muted-foreground">Recent Errors</span>
             <div className="space-y-1">
-              {errors.slice(-3).map((error, index) => (
-                <div key={index} className="text-xs text-red-600 bg-red-50 p-2 rounded">
-                  {error}
-                </div>
-              ))}
+              <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+                {error}
+              </div>
             </div>
           </div>
         )}

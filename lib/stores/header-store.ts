@@ -5,8 +5,8 @@ interface HeaderConfig {
   showNotifications?: boolean;
   showProfile?: boolean;
   showSidebarToggle?: boolean;
-  customTitle?: string;
-  customSubtitle?: string;
+  customTitle?: string | undefined;
+  customSubtitle?: string | undefined;
 }
 
 interface HeaderState {

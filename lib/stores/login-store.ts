@@ -5,6 +5,8 @@ interface KnownTenant {
   name: string;
   domain: string;
   logo?: string;
+  idp?: string;
+  byoidConfig?: { issuerUrl?: string; status?: string } | null;
 }
 
 interface LoginState {

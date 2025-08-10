@@ -3,8 +3,6 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { 
   CheckCircle, 
   Download, 
@@ -15,7 +13,7 @@ import {
   CreditCard,
   Shield
 } from 'lucide-react';
-import { OrganizationForm } from './types';
+import type { OrganizationForm } from './types';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 

@@ -2,6 +2,9 @@
   "name": "remotemaster-server",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "node scripts/generate-build-info.js && next dev --turbopack",
     "build": "node scripts/generate-build-info.js && next build",

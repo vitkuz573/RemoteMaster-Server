@@ -1,0 +1,12 @@
+version: '3.9'
+services:
+  ui:
+    build: .
+    image: remotemaster-server-ui:local
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      NEXT_PUBLIC_ERROR_REPORTING_ENABLED: ${NEXT_PUBLIC_ERROR_REPORTING_ENABLED:-false}
+      NEXT_PUBLIC_CSP_REPORTING_ENABLED: ${NEXT_PUBLIC_CSP_REPORTING_ENABLED:-true}
+

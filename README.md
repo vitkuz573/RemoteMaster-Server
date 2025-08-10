@@ -162,6 +162,17 @@ npm run build
 npm start
 ```
 
+### Docker
+
+Build and run a production image:
+
+```bash
+docker build -t remotemaster-server-ui .
+docker run --rm -p 3000:3000 \
+  -e NEXT_PUBLIC_API_URL="https://api.example.com" \
+  remotemaster-server-ui
+```
+
 ### Environment Variables
 
 Create a `.env.local` file with:
@@ -172,6 +183,21 @@ NEXT_PUBLIC_API_URL=your-api-url
 ```
 
 **Note:** MSW (Mock Service Worker) automatically runs in development mode for API mocking.
+
+Environment variables are validated with Zod at startup. Invalid or missing values fall back to safe defaults in development and should be explicitly configured in production.
+
+### E2E Tests
+
+- Install Playwright and its browsers after dependencies:
+  - `npm i -D @playwright/test @axe-core/playwright`
+  - `npx playwright install --with-deps`
+- Run: `npx playwright test` (or set `E2E_BASE_URL` for non‑default URL)
+
+### Security & Scanning
+
+- CI runs `npm audit` (prod deps), CodeQL SAST, Semgrep, Trivy container scan.
+- CSP is enabled with reporting endpoint at `/api/csp-report` (report‑only header in dev).
+- Client error reporting can be enabled via `NEXT_PUBLIC_ERROR_REPORTING_ENABLED=true`.
 
 ## 🤝 Contributing
 

@@ -4,14 +4,14 @@ import { useHeaderStore } from '@/lib/stores';
 import { Header } from './header';
 
 interface ConditionalHeaderProps {
-  className?: string;
-  sidebarOpen?: boolean;
-  onToggleSidebar?: () => void;
-  notifications?: any[];
-  notificationCount?: number;
-  notificationsEnabled?: boolean;
-  onToggleNotifications?: () => void;
-  onLogoutClick?: () => void;
+  className?: string | undefined;
+  sidebarOpen?: boolean | undefined;
+  onToggleSidebar?: (() => void) | undefined;
+  notifications?: any[] | undefined;
+  notificationCount?: number | undefined;
+  notificationsEnabled?: boolean | undefined;
+  onToggleNotifications?: (() => void) | undefined;
+  onLogoutClick?: (() => void) | undefined;
 }
 
 export function ConditionalHeader({

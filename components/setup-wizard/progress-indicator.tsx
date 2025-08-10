@@ -5,18 +5,16 @@ import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle } from 'lucide-react';
-import { WizardStepConfig, WizardStep } from './types';
+import type { WizardStepConfig, WizardStep } from './types';
 
 interface ProgressIndicatorProps {
   steps: WizardStepConfig[];
-  currentStep: WizardStep;
   currentStepIndex: number;
   isLoading?: boolean;
 }
 
 export function ProgressIndicator({
   steps,
-  currentStep,
   currentStepIndex,
   isLoading = false
 }: ProgressIndicatorProps) {

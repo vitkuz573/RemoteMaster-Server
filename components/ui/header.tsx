@@ -12,14 +12,14 @@ import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface HeaderProps {
-  className?: string;
-  sidebarOpen?: boolean;
-  onToggleSidebar?: () => void;
-  notifications?: any[];
-  notificationCount?: number;
-  notificationsEnabled?: boolean;
-  onToggleNotifications?: () => void;
-  onLogoutClick?: () => void;
+  className?: string | undefined;
+  sidebarOpen?: boolean | undefined;
+  onToggleSidebar?: (() => void) | undefined;
+  notifications?: any[] | undefined;
+  notificationCount?: number | undefined;
+  notificationsEnabled?: boolean | undefined;
+  onToggleNotifications?: (() => void) | undefined;
+  onLogoutClick?: (() => void) | undefined;
 }
 
 export function Header({ 

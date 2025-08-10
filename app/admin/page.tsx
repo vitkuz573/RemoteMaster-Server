@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useEffect, Suspense } from 'react';
 import { AuthGate } from '@/components/auth-gate';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -18,27 +17,6 @@ import {
   AdminPageDataLoading 
 } from '@/components/data-providers';
 
-interface Organization {
-  id: string;
-  tenantId?: string;
-  name: string;
-  domain: string;
-  industry?: string;
-  size?: string;
-  contactName?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  plan: string;
-  status: 'pending' | 'active' | 'suspended';
-  createdAt?: string;
-  registeredAt?: string;
-  idpConfig?: {
-    provider: string;
-    clientId: string;
-    domain: string;
-  };
-  byoidConfig?: any;
-}
 
 function AdminBody() {
   const router = useRouter();
@@ -46,7 +24,7 @@ function AdminBody() {
   const {
     refreshing,
     isNavigatingToHome,
-    isAuthenticated,
+    
     showLogin,
     adminPassword,
     loginError,
@@ -60,8 +38,7 @@ function AdminBody() {
     setLoginError,
     setIsApiAvailable,
     setIsCheckingApi,
-    resetForm,
-    clearError,
+    
   } = useAdminStore();
 
   // Show header on admin page

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Suspense, useMemo, useEffect, useRef, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { AuthGate } from '@/components/auth-gate';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -274,7 +273,7 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
   const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [contextHostId, setContextHostId] = useState<string | null>(null);
   const [propertiesHostId, setPropertiesHostId] = useState<string | null>(null);
-  const router = useRouter();
+  
 
   const selectedCount = hostSelection.selectedHosts.size;
   const canShowProperties = selectedCount === 1;
@@ -304,7 +303,7 @@ function HostGridWithContext({ hosts }: { hosts: Array<{ id: string; name: strin
   }, [hostSelection.selectedHosts, contextHostId, hosts]);
 
   const openDeviceWindow = useCallback((url: string): void => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') return;
     try {
       const width = 1200;
       const height = 800;

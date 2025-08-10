@@ -56,7 +56,7 @@ export function ContactStep({
                 errors.contactName ? 'border-red-500 focus:border-red-500' : ''
               }`}
             />
-            <FieldSuccess show={touchedFields.contactName && !errors.contactName} />
+            <FieldSuccess show={Boolean(touchedFields.contactName) && !errors.contactName} />
           </div>
           <FieldError message={errors.contactName?.message} />
         </div>
@@ -80,7 +80,7 @@ export function ContactStep({
                 errors.contactEmail ? 'border-red-500 focus:border-red-500' : ''
               }`}
             />
-            <FieldSuccess show={touchedFields.contactEmail && !errors.contactEmail} />
+            <FieldSuccess show={Boolean(touchedFields.contactEmail) && !errors.contactEmail} />
           </div>
           <FieldError message={errors.contactEmail?.message} />
         </div>
@@ -103,7 +103,7 @@ export function ContactStep({
                 errors.contactPhone ? 'border-red-500 focus:border-red-500' : ''
               }`}
             />
-            <FieldSuccess show={touchedFields.contactPhone && !errors.contactPhone} />
+            <FieldSuccess show={Boolean(touchedFields.contactPhone) && !errors.contactPhone} />
           </div>
           <FieldError message={errors.contactPhone?.message} />
         </div>

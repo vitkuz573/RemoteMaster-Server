@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Footer } from "@/components/ui/footer";
-import { ConditionalHeader } from "@/components/ui/conditional-header";
+ 
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -12,6 +11,7 @@ import { ConditionalHeaderWrapper } from "@/components/ui/conditional-header-wra
 import { ConditionalFooterWrapper } from "@/components/ui/conditional-footer-wrapper";
 import { MSWProvider } from "@/components/msw-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ErrorReporter } from "@/components/error-reporter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,6 +55,7 @@ export default function RootLayout({
               <ConditionalFooterWrapper />
             </TooltipProvider>
             <Toaster />
+            <ErrorReporter />
           </MSWProvider>
         </ThemeProvider>
       </body>
