@@ -61,6 +61,7 @@ export function HostContextMenu({
   return (
     <ContextMenu open={open} onOpenChange={(isOpen: boolean) => { if (!isOpen) onClose(); }}>
       <ContextMenuContent
+        data-host-context-menu
         className="w-48"
         style={{ position: "fixed", left: x, top: y }}
         onMouseDown={(e) => e.stopPropagation()}
