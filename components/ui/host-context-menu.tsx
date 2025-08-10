@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+} from "@/components/ui/context-menu";
 
 interface HostContextMenuProps {
   open: boolean;
@@ -54,70 +59,58 @@ export function HostContextMenu({
   if (!open) return null;
 
   return (
-    <div
-      data-host-context-menu
-      className="fixed z-50 min-w-40 rounded-md border bg-popover p-1 shadow-md"
-      style={{ left: x, top: y }}
-      role="menu"
-      onMouseDown={(e) => e.stopPropagation()}
-    >
-      {/* Connect options */}
-      {hasIp && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start"
-          onClick={() => {
-            onClose();
-            onConnectIp?.();
-          }}
-        >
-          Connect via IP
-        </Button>
-      )}
-      {hasInternetId && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start"
-          onClick={() => {
-            onClose();
-            onConnectInternetId?.();
-          }}
-        >
-          Connect via Internet ID
-        </Button>
-      )}
-      {!hasIp && !hasInternetId && onConnect && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start"
-          onClick={() => {
-            onClose();
-            onConnect?.();
-          }}
-        >
-          Connect
-        </Button>
-      )}
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="w-full justify-start disabled:opacity-50 disabled:cursor-not-allowed"
-        onClick={() => {
-          if (!canShowProperties) return;
-          onClose();
-          onProperties();
-        }}
-        disabled={!canShowProperties}
+    <ContextMenu open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <ContextMenuContent
+        className="w-48"
+        style={{ position: "fixed", left: x, top: y }}
+        onMouseDown={(e) => e.stopPropagation()}
       >
-        Properties
-      </Button>
-    </div>
+        {hasIp && (
+          <ContextMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              onClose();
+              onConnectIp?.();
+            }}
+          >
+            Connect via IP
+          </ContextMenuItem>
+        )}
+        {hasInternetId && (
+          <ContextMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              onClose();
+              onConnectInternetId?.();
+            }}
+          >
+            Connect via Internet ID
+          </ContextMenuItem>
+        )}
+        {!hasIp && !hasInternetId && onConnect && (
+          <ContextMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              onClose();
+              onConnect?.();
+            }}
+          >
+            Connect
+          </ContextMenuItem>
+        )}
+        {(hasIp || hasInternetId || onConnect) && <ContextMenuSeparator />}
+        <ContextMenuItem
+          disabled={!canShowProperties}
+          onSelect={(e) => {
+            if (!canShowProperties) return;
+            e.preventDefault();
+            onClose();
+            onProperties();
+          }}
+        >
+          Properties
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
