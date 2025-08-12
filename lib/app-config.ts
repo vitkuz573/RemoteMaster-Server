@@ -4,9 +4,18 @@
  */
 import { env } from './env';
 
+// Derive short name from capital letters of the name (Unicode-aware).
+// Fallback: first two characters uppercased if no uppercase letters found.
+const deriveShortName = (fullName: string) => {
+  const caps = fullName.match(/\p{Lu}/gu);
+  if (caps && caps.length > 0) return caps.join('');
+  return fullName.slice(0, 2).toUpperCase();
+};
+
 export const appConfig = {
   name: 'RemoteMaster',
-  shortName: 'RM',
+  // Optional explicit short name; if not provided, computed from `name`.
+  _shortName: undefined as string | undefined,
   description: 'Remote Server Management Platform',
   developer: 'RemoteMaster Software',
   version: '2.1.4',
@@ -48,6 +57,11 @@ export const appConfig = {
     return `${this.version}${this.environment === 'development' ? '-dev' : ''}`;
   },
   
+  // Short name: explicit override or derived from capital letters in `name`.
+  get shortName() {
+    return this._shortName ?? deriveShortName(this.name);
+  },
+
   get buildInfo() {
     return `${this.buildHash}${this.buildBranch !== 'main' ? `@${this.buildBranch}` : ''}`;
   },
