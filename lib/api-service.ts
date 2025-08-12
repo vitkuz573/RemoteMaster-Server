@@ -84,7 +84,7 @@ class ApiService {
     try {
       const { refreshToken, setAccessToken, logout } = useAuthStore.getState();
       if (!refreshToken) return false;
-      const res = await fetch(`${this.baseUrl}/auth/refresh`, {
+      const res = await fetch(`${this.baseUrl}/tokens/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
@@ -144,7 +144,7 @@ class ApiService {
         };
       };
       message: string;
-    }>('/organizations/register', {
+    }>('/organizations', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -152,11 +152,9 @@ class ApiService {
 
   async getOrganizations(params?: {
     domain?: string;
-    id?: string;
   }) {
     const searchParams = new URLSearchParams();
     if (params?.domain) searchParams.append('domain', params.domain);
-    if (params?.id) searchParams.append('id', params.id);
 
     const endpoint = `/organizations${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     
@@ -172,6 +170,12 @@ class ApiService {
       }>;
       organization?: any;
     }>(endpoint);
+  }
+
+  async getOrganization(id: string) {
+    return this.request<{
+      organization: any;
+    }>(`/organizations/${id}`);
   }
 
   // Authentication operations
@@ -196,7 +200,7 @@ class ApiService {
       };
       token: string;
       message: string;
-    }>('/auth/login', {
+    }>('/sessions', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -216,16 +220,17 @@ class ApiService {
       message: string;
       requestId: string;
       estimatedReviewTime: string;
-    }>('/byoid-setup', {
+    }>(`/organizations/${data.organizationId}/idp-config`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async getBYOIDSetup(organizationId?: string) {
-    const endpoint = organizationId 
-      ? `/byoid-setup?organizationId=${organizationId}`
-      : '/byoid-setup';
+    if (!organizationId) {
+      throw new Error('organizationId is required');
+    }
+    const endpoint = `/organizations/${organizationId}/idp-config`;
     
     return this.request<{
       requests?: Array<{
@@ -295,7 +300,7 @@ class ApiService {
         organizationId: string;
       };
       message: string;
-    }>('/user/current', options);
+    }>('/users/me', options);
   }
 
   // Get organizations with hosts and units
@@ -324,7 +329,7 @@ class ApiService {
         }>;
       }>;
       message: string;
-    }>('/organizations/with-units');
+    }>('/organizations?embed=units');
   }
 
   // Get pricing plans
@@ -343,7 +348,7 @@ class ApiService {
         maxUsers: number;
       }>;
       message: string;
-    }>('/pricing/plans');
+    }>('/plans');
   }
 
   // Dev helpers
@@ -360,7 +365,7 @@ class ApiService {
       success: boolean;
       industries: string[];
       message: string;
-    }>('/reference/industries');
+    }>('/references/industries');
   }
 
   // Get company sizes
@@ -369,7 +374,7 @@ class ApiService {
       success: boolean;
       companySizes: string[];
       message: string;
-    }>('/reference/company-sizes');
+    }>('/references/company-sizes');
   }
 
   // Calculate monthly cost based on plan and users
@@ -387,7 +392,7 @@ class ApiService {
         isUnlimited: boolean;
       };
       message: string;
-    }>('/pricing/calculate', {
+    }>('/quotes', {
       method: 'POST',
       body: JSON.stringify({ planId, expectedUsers }),
     });
@@ -411,7 +416,7 @@ class ApiService {
         end_session_endpoint?: string;
       };
       message: string;
-    }>('/auth/discover', {
+    }>('/oidc/discovery', {
       method: 'POST',
       body: JSON.stringify({ issuerUrl }),
     });

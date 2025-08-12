@@ -20,6 +20,8 @@ import {
   User,
   Copy,
   Wand2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { appConfig } from '@/lib/app-config';
 import { useHeaderStore, useLoginStore } from '@/lib/stores';
@@ -389,6 +391,7 @@ export default function LoginPage() {
                 )}
                 
                 <Button 
+                  id="login-submit"
                   type="submit" 
                   className="w-full h-11" 
                   disabled={isLoading || isCheckingApi || !isApiAvailable}
@@ -419,17 +422,7 @@ export default function LoginPage() {
             </CardContent>
           </Card>
 
-          {/* Dev Credentials Helper (development only) */}
-          {process.env.NODE_ENV === 'development' && !isCheckingApi && isApiAvailable && (
-            <DevCredentialsPanel 
-              onAutofill={({ email, password, domain }) => {
-                setLoginMode('credentials');
-                setDomain(domain);
-                setEmail(email);
-                setPassword(password);
-              }}
-            />
-          )}
+          {/* Dev Credentials Helper moved below to allow wider layout */}
 
 
 
@@ -485,6 +478,21 @@ export default function LoginPage() {
         </div>
       </div>
 
+      {/* Wide Dev Credentials section (development only) */}
+      {process.env.NODE_ENV === 'development' && !isCheckingApi && isApiAvailable && (
+        <div className="px-3 md:px-6 pb-8">
+          <div className="mx-auto w-full max-w-[100rem] md:max-w-5xl">
+            <DevCredentialsPanel
+              onAutofill={({ email, password, domain }) => {
+                setLoginMode('credentials');
+                setDomain(domain);
+                setEmail(email);
+                setPassword(password);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );
@@ -492,19 +500,40 @@ export default function LoginPage() {
 
 // Inline dev panel to avoid over-abstracting
 function DevCredentialsPanel({ onAutofill }: { onAutofill: (c: { email: string; password: string; domain: string }) => void }) {
-  const [items, setItems] = React.useState<Array<{ email: string; password: string; role: 'admin' | 'user'; domain: string }>>([]);
-  const [open, setOpen] = React.useState(true);
+  type CredItem = { email: string; password: string; role: 'admin' | 'user'; domain: string };
+  const [items, setItems] = React.useState<CredItem[]>([]);
+  const [open, setOpen] = React.useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem('devCredsPanelOpen');
+      return v === null ? true : v === '1';
+    } catch { return true; }
+  });
+  const [query, setQuery] = React.useState('');
+  const [roleFilter, setRoleFilter] = React.useState<'all' | 'admin' | 'user'>('all');
+  const [showPasswords, setShowPasswords] = React.useState<Record<string, boolean>>({});
 
   React.useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const data = await apiService.getDevCredentials();
-        if (mounted) setItems(data.items ?? []);
+        if (mounted) setItems((data.items ?? []).sort((a, b) => a.domain.localeCompare(b.domain)));
       } catch {}
     })();
     return () => { mounted = false };
   }, []);
+
+  React.useEffect(() => {
+    try { localStorage.setItem('devCredsPanelOpen', open ? '1' : '0'); } catch {}
+  }, [open]);
+
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return items.filter(i =>
+      (roleFilter === 'all' || i.role === roleFilter) &&
+      (!q || i.email.toLowerCase().includes(q) || i.domain.toLowerCase().includes(q))
+    );
+  }, [items, query, roleFilter]);
 
   if (!items.length) return null;
 
@@ -512,52 +541,134 @@ function DevCredentialsPanel({ onAutofill }: { onAutofill: (c: { email: string; 
     <Card className="border-dashed">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm">Dev Credentials</CardTitle>
-          <Button variant="ghost" size="sm" onClick={() => setOpen(!open)}>
-            {open ? 'Hide' : 'Show'}
-          </Button>
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-sm">Dev Credentials</CardTitle>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase">development</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search email or domain"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="h-8 w-36 md:w-56 text-xs"
+            />
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value as any)}
+              className="h-8 rounded border bg-background text-xs px-2"
+              aria-label="Filter by role"
+            >
+              <option value="all">All</option>
+              <option value="admin">Admin</option>
+              <option value="user">User</option>
+            </select>
+            <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="dev-credentials-content">
+              {open ? 'Hide' : 'Show'}
+            </Button>
+          </div>
         </div>
-        <CardDescription>Click to copy or autofill the form</CardDescription>
+        <CardDescription className="text-[11px]">Copy, autofill, or fill and sign in</CardDescription>
       </CardHeader>
       {open && (
-        <CardContent className="space-y-2">
-          <div className="max-h-56 overflow-auto space-y-2">
-            {items.map((c) => (
-              <div key={c.email} className="flex items-center gap-2 text-xs">
-                <span className="shrink-0 rounded px-2 py-0.5 bg-muted text-muted-foreground uppercase">
+        <CardContent id="dev-credentials-content" className="space-y-1 p-3">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <div className="hidden md:block">Tip: MSW generates admin@domain and user@domain with password password123</div>
+            <div className="flex items-center gap-2">
+              <label className="inline-flex items-center gap-1 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="accent-current"
+                  checked={Object.values(showPasswords).some(Boolean)}
+                  onChange={(e) => {
+                    if (!e.target.checked) setShowPasswords({});
+                  }}
+                />
+                Show passwords
+              </label>
+            </div>
+          </div>
+          <div className="max-h-72 overflow-auto space-y-1">
+            {filtered.map((c) => (
+              <div key={c.email} className="flex items-center gap-1 text-[11px] leading-tight">
+                <span className="shrink-0 rounded px-1.5 py-0.5 bg-muted text-muted-foreground uppercase">
                   {c.role}
                 </span>
                 <span className="truncate font-mono" title={c.email}>{c.email}</span>
                 <span className="text-muted-foreground">·</span>
-                <span className="truncate font-mono" title={c.password}>{c.password}</span>
+                {showPasswords[c.email] ? (
+                  <span className="truncate font-mono" title={c.password}>{c.password}</span>
+                ) : (
+                  <span className="truncate font-mono" title="••••••••">••••••••</span>
+                )}
+                <span className="text-muted-foreground">·</span>
+                <span className="truncate text-muted-foreground" title={c.domain}>{c.domain}</span>
                 <div className="ml-auto flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    title="Copy email"
-                    onClick={async () => { try { await navigator.clipboard.writeText(c.email) } catch {} }}
+                    className="h-7 w-7 p-0"
+                    title={showPasswords[c.email] ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowPasswords((prev) => ({ ...prev, [c.email]: !prev[c.email] }))}
                   >
-                    <Copy className="w-4 h-4" />
+                    {showPasswords[c.email] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="h-7 w-7 p-0"
+                    title="Copy email"
+                    onClick={async () => { try { await navigator.clipboard.writeText(c.email) } catch {} }}
+                    aria-label={`Copy email ${c.email}`}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 p-0"
                     title="Copy password"
                     onClick={async () => { try { await navigator.clipboard.writeText(c.password) } catch {} }}
+                    aria-label={`Copy password for ${c.email}`}
                   >
-                    <Copy className="w-4 h-4" />
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 p-0"
+                    title="Copy email:password"
+                    onClick={async () => { try { await navigator.clipboard.writeText(`${c.email}:${c.password}`) } catch {} }}
+                    aria-label={`Copy credentials for ${c.email}`}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-7 px-2"
                     title="Autofill form"
                     onClick={() => onAutofill(c)}
                   >
-                    <Wand2 className="w-4 h-4 mr-1" /> Fill
+                    <Wand2 className="w-3.5 h-3.5 mr-1" /> Fill
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-7 px-2"
+                    title="Fill and sign in"
+                    onClick={() => {
+                      onAutofill(c);
+                      setTimeout(() => document.getElementById('login-submit')?.dispatchEvent(new MouseEvent('click', { bubbles: true })), 0);
+                    }}
+                  >
+                    <ArrowRight className="w-3.5 h-3.5 mr-1" /> Fill & Go
                   </Button>
                 </div>
               </div>
             ))}
+            {!filtered.length && (
+              <div className="text-center text-xs text-muted-foreground py-4">No matches</div>
+            )}
           </div>
         </CardContent>
       )}

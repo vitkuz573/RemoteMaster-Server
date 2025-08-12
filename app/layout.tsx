@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
  
 import { TooltipProvider } from "@/components/ui/tooltip";
-
 import { Toaster } from "@/components/ui/sonner";
 import { appConfig } from "@/lib/app-config";
 
@@ -33,8 +32,22 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <MSWProvider>
+            <TooltipProvider>
+              <div className="flex min-h-screen flex-col">
+                <ConditionalHeaderWrapper />
+                <main className="flex-1">
+                  {children}
+                </main>
+                <ConditionalFooterWrapper />
+              </div>
+            </TooltipProvider>
+            <Toaster />
+            <ErrorReporter />
+          </MSWProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

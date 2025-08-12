@@ -124,8 +124,77 @@ export const handlers = [
     await delay(200)
     const url = new URL(request.url)
     const domain = url.searchParams.get('domain')
-    const id = url.searchParams.get('id')
+    const embed = url.searchParams.get('embed')
     
+    // If requesting organizations with embedded units
+    if (embed === 'units') {
+      // Convert mock units to the expected format
+      const organizationsWithUnits: Record<string, any> = {};
+      
+      mockOrganizations.forEach((org: MockOrganization) => {
+        const orgUnits = mockUnits.filter((unit: MockOrganizationalUnit) => 
+          unit.hosts.some((host: any) => host.id.includes(org.id) || org.id.includes(host.id))
+        );
+        
+        if (orgUnits.length === 0) {
+          // Generate some units for this organization
+          const generatedUnits = generateMockOrganizationalUnits(2);
+          orgUnits.push(...generatedUnits);
+        } else {
+          // Ensure no duplicate names in existing units
+          const usedNames = new Set<string>();
+          const uniqueUnits = orgUnits.filter((unit: MockOrganizationalUnit) => {
+            if (usedNames.has(unit.name)) {
+              return false; // Skip duplicates
+            }
+            usedNames.add(unit.name);
+            return true;
+          });
+          orgUnits.length = 0; // Clear array
+          orgUnits.push(...uniqueUnits);
+        }
+        
+        const unitsMap: Record<string, any> = {};
+        orgUnits.forEach((unit: MockOrganizationalUnit) => {
+          unitsMap[unit.id] = {
+            id: unit.id,
+            name: unit.name,
+            description: unit.description,
+            hosts: unit.hosts.map((host: any) => ({
+              id: host.id,
+              name: host.name,
+              status: host.status,
+              type: host.type,
+              ip: host.ip,
+              ipAddress: host.ipAddress,
+              mac: host.mac,
+              internetId: host.internetId,
+              os: host.os,
+              lastSeen: host.lastSeen,
+              cpuUsage: host.cpuUsage,
+              memoryUsage: host.memoryUsage,
+              diskUsage: host.diskUsage
+            }))
+          };
+        });
+        
+        organizationsWithUnits[org.id] = {
+          id: org.id,
+          name: org.name,
+          domain: org.domain,
+          status: org.status,
+          plan: org.plan,
+          organizationalUnits: unitsMap
+        };
+      });
+      
+      return HttpResponse.json({
+        success: true,
+        organizations: organizationsWithUnits,
+        message: 'Organizations with units retrieved successfully'
+      })
+    }
+
     let organizations = mockOrganizations
     
     if (domain) {
@@ -136,10 +205,6 @@ export const handlers = [
         org.id.toLowerCase() === domain.toLowerCase()
       )
     }
-    
-    if (id) {
-      organizations = organizations.filter((org: MockOrganization) => org.id === id)
-    }
 
     return HttpResponse.json({
       success: true,
@@ -149,7 +214,17 @@ export const handlers = [
     })
   }),
 
-  http.post('http://localhost:3001/organizations/register', async ({ request }) => {
+  http.get('http://localhost:3001/organizations/:id', async ({ params }) => {
+    await delay(100)
+    const { id } = params as any;
+    const organization = mockOrganizations.find((org: MockOrganization) => org.id === id);
+    if (!organization) {
+      return HttpResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
+    return HttpResponse.json({ success: true, organization })
+  }),
+
+  http.post('http://localhost:3001/organizations', async ({ request }) => {
     await delay(500)
     const data = await request.json() as any
     
@@ -213,8 +288,8 @@ export const handlers = [
     })
   }),
 
-  // Enhanced Authentication
-  http.post('http://localhost:3001/auth/login', async ({ request }) => {
+  // Sessions (login)
+  http.post('http://localhost:3001/sessions', async ({ request }) => {
     await delay(300)
     const data = await request.json() as any
     
@@ -302,7 +377,7 @@ export const handlers = [
     })
   }),
 
-  http.get('http://localhost:3001/user/current', async () => {
+  http.get('http://localhost:3001/users/me', async () => {
     await delay(100)
     
     // Get a random user from mock data or generate one
@@ -325,7 +400,7 @@ export const handlers = [
   }),
 
   // Pricing
-  http.get('http://localhost:3001/pricing/plans', async () => {
+  http.get('http://localhost:3001/plans', async () => {
     await delay(150)
     return HttpResponse.json({
       success: true,
@@ -335,7 +410,7 @@ export const handlers = [
   }),
 
   // Token refresh
-  http.post('http://localhost:3001/auth/refresh', async ({ request }) => {
+  http.post('http://localhost:3001/tokens/refresh', async ({ request }) => {
     await delay(200)
     const body = await request.json() as any
     const valid = typeof body?.refreshToken === 'string' && body.refreshToken.startsWith('refresh_')
@@ -361,7 +436,7 @@ export const handlers = [
     return HttpResponse.json({ success: true, items });
   }),
 
-  http.post('http://localhost:3001/pricing/calculate', async ({ request }) => {
+  http.post('http://localhost:3001/quotes', async ({ request }) => {
     await delay(50)
     const { planId, expectedUsers } = await request.json() as any
     
@@ -394,7 +469,7 @@ export const handlers = [
   }),
 
   // Reference data
-  http.get('http://localhost:3001/reference/industries', async () => {
+  http.get('http://localhost:3001/references/industries', async () => {
     await delay(50)
     return HttpResponse.json({
       success: true,
@@ -403,7 +478,7 @@ export const handlers = [
     })
   }),
 
-  http.get('http://localhost:3001/reference/company-sizes', async () => {
+  http.get('http://localhost:3001/references/company-sizes', async () => {
     await delay(50) 
     return HttpResponse.json({
       success: true,
@@ -413,7 +488,7 @@ export const handlers = [
   }),
 
   // BYOID setup
-  http.post('http://localhost:3001/byoid-setup', async ({ request }) => {
+  http.post('http://localhost:3001/organizations/:organizationId/idp-config', async ({ request, params }) => {
     await delay(800)
     const data = await request.json() as any
     
@@ -432,10 +507,9 @@ export const handlers = [
     })
   }),
 
-  http.get('http://localhost:3001/byoid-setup', async ({ request }) => {
+  http.get('http://localhost:3001/organizations/:organizationId/idp-config', async ({ params }) => {
     await delay(800)
-    const url = new URL(request.url)
-    const organizationId = url.searchParams.get('organizationId')
+    const { organizationId } = params as any;
     
     return HttpResponse.json({
       success: true,
@@ -453,7 +527,7 @@ export const handlers = [
   }),
 
   // OpenID Connect discovery
-  http.post('http://localhost:3001/auth/discover', async ({ request }) => {
+  http.post('http://localhost:3001/oidc/discovery', async ({ request }) => {
     await delay(800)
     const { issuerUrl } = await request.json() as any
     
@@ -476,73 +550,5 @@ export const handlers = [
     })
   }),
 
-  // Organizations with units
-  http.get('http://localhost:3001/organizations/with-units', async () => {
-    await delay(200)
-    
-    // Convert mock units to the expected format
-    const organizationsWithUnits: Record<string, any> = {};
-    
-    mockOrganizations.forEach((org: MockOrganization) => {
-      const orgUnits = mockUnits.filter((unit: MockOrganizationalUnit) => 
-        unit.hosts.some((host: any) => host.id.includes(org.id) || org.id.includes(host.id))
-      );
-      
-      if (orgUnits.length === 0) {
-        // Generate some units for this organization
-        const generatedUnits = generateMockOrganizationalUnits(2);
-        orgUnits.push(...generatedUnits);
-      } else {
-        // Ensure no duplicate names in existing units
-        const usedNames = new Set<string>();
-        const uniqueUnits = orgUnits.filter((unit: MockOrganizationalUnit) => {
-          if (usedNames.has(unit.name)) {
-            return false; // Skip duplicates
-          }
-          usedNames.add(unit.name);
-          return true;
-        });
-        orgUnits.length = 0; // Clear array
-        orgUnits.push(...uniqueUnits);
-      }
-      
-      const unitsMap: Record<string, any> = {};
-      orgUnits.forEach((unit: MockOrganizationalUnit) => {
-        unitsMap[unit.id] = {
-          id: unit.id,
-          name: unit.name,
-          description: unit.description,
-          hosts: unit.hosts.map((host: any) => ({
-            id: host.id,
-            name: host.name,
-            status: host.status,
-            type: host.type,
-            ipAddress: host.ipAddress,
-            mac: host.mac,
-            internetId: host.internetId,
-            os: host.os,
-            lastSeen: host.lastSeen,
-            cpuUsage: host.cpuUsage,
-            memoryUsage: host.memoryUsage,
-            diskUsage: host.diskUsage
-          }))
-        };
-      });
-      
-      organizationsWithUnits[org.id] = {
-        id: org.id,
-        name: org.name,
-        domain: org.domain,
-        status: org.status,
-        plan: org.plan,
-        organizationalUnits: unitsMap
-      };
-    });
-    
-    return HttpResponse.json({
-      success: true,
-      organizations: organizationsWithUnits,
-      message: 'Organizations with units retrieved successfully'
-    })
-  })
+  // end handlers
 ]

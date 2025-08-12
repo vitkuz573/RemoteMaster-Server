@@ -89,8 +89,7 @@ export function useAuth(options: UseAuthOptions = {}) {
           const controller = new AbortController();
           inFlight.current = controller;
           const { user: userData } = await apiService.getCurrentUser({ signal: controller.signal });
-          const { organizations } = await apiService.getOrganizations({ id: userData.organizationId } as any);
-          const organization = organizations?.[0];
+          const { organization } = await apiService.getOrganization(userData.organizationId);
 
           login({ accessToken: token, refreshToken, expiresIn: null }, {
             ...userData,

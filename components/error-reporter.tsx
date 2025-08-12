@@ -8,7 +8,7 @@ export function ErrorReporter() {
     if (!env.NEXT_PUBLIC_ERROR_REPORTING_ENABLED) return;
     const onError = (event: ErrorEvent) => {
       try {
-        fetch('/api/log', {
+        fetch('/api/logs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -25,7 +25,7 @@ export function ErrorReporter() {
     };
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       try {
-        fetch('/api/log', {
+        fetch('/api/logs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -46,4 +46,3 @@ export function ErrorReporter() {
 
   return null;
 }
-

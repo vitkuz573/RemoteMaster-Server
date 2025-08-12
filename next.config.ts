@@ -16,7 +16,7 @@ const csp = (
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "report-uri /api/csp-report",
+  "report-uri /api/csp-reports",
 ].join('; ')
 
 const securityHeaders = (isDev: boolean): Header[] => [
