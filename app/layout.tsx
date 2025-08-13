@@ -11,6 +11,7 @@ import { ConditionalFooterWrapper } from "@/components/ui/conditional-footer-wra
 import { MSWProvider } from "@/components/msw-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorReporter } from "@/components/error-reporter";
+import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 import { AppErrorBoundary } from "@/components/app-error-boundary";
 
 const geistSans = Geist({
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </TooltipProvider>
             <Toaster />
             <ErrorReporter />
+            <WebVitalsReporter />
           </MSWProvider>
         </ThemeProvider>
       </body>

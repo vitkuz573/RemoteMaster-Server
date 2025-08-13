@@ -31,6 +31,7 @@ const ClientEnvSchema = z.object({
   NEXT_PUBLIC_BUILD_TIMESTAMP: z.string().optional(),
 
   NEXT_PUBLIC_ERROR_REPORTING_ENABLED: z.preprocess((v) => toBool(v), z.boolean()).default(false),
+  NEXT_PUBLIC_WEB_VITALS_ENABLED: z.preprocess((v) => toBool(v), z.boolean()).default(false),
   NEXT_PUBLIC_CSP_REPORTING_ENABLED: z.preprocess((v) => toBool(v), z.boolean()).default(true),
   // Feature flags (client-safe)
   NEXT_PUBLIC_FEATURE_DEV_CREDENTIALS: z.preprocess((v) => toBool(v, process.env.NODE_ENV !== 'production'), z.boolean()).default(process.env.NODE_ENV !== 'production'),
@@ -63,6 +64,7 @@ const raw = {
   NEXT_PUBLIC_BUILD_TIMESTAMP: process.env.NEXT_PUBLIC_BUILD_TIMESTAMP,
 
   NEXT_PUBLIC_ERROR_REPORTING_ENABLED: process.env.NEXT_PUBLIC_ERROR_REPORTING_ENABLED,
+  NEXT_PUBLIC_WEB_VITALS_ENABLED: process.env.NEXT_PUBLIC_WEB_VITALS_ENABLED,
   NEXT_PUBLIC_CSP_REPORTING_ENABLED: process.env.NEXT_PUBLIC_CSP_REPORTING_ENABLED,
   NEXT_PUBLIC_FEATURE_DEV_CREDENTIALS: process.env.NEXT_PUBLIC_FEATURE_DEV_CREDENTIALS,
   NEXT_PUBLIC_FEATURE_DEBUG_TOASTS: process.env.NEXT_PUBLIC_FEATURE_DEBUG_TOASTS,
