@@ -11,6 +11,7 @@ import { ConditionalFooterWrapper } from "@/components/ui/conditional-footer-wra
 import { MSWProvider } from "@/components/msw-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorReporter } from "@/components/error-reporter";
+import { AppErrorBoundary } from "@/components/app-error-boundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,13 +37,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <MSWProvider>
             <TooltipProvider>
-              <div className="flex min-h-screen flex-col">
-                <ConditionalHeaderWrapper />
-                <main className="flex-1">
-                  {children}
-                </main>
-                <ConditionalFooterWrapper />
-              </div>
+              <AppErrorBoundary>
+                <div className="flex min-h-screen flex-col">
+                  <ConditionalHeaderWrapper />
+                  <main className="flex-1">
+                    {children}
+                  </main>
+                  <ConditionalFooterWrapper />
+                </div>
+              </AppErrorBoundary>
             </TooltipProvider>
             <Toaster />
             <ErrorReporter />

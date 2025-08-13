@@ -2,6 +2,23 @@ import { appConfig } from './app-config';
 import { toast } from 'sonner';
 import { useAuthStore } from './stores';
 import { fetchJson, HttpError } from './http';
+import {
+  CurrentUserSchema,
+  DevCredentialsSchema,
+  LoginResponseSchema,
+  OidcDiscoverySchema,
+  OrganizationsResponseSchema,
+  OrgsWithUnitsSchema,
+  PricingPlansSchema,
+  QuoteSchema,
+} from '@/types/api-schemas'
+
+const parseOrThrow = <T>(schema: { parse: (d: unknown) => T }, data: unknown, ctx: string): T => {
+  try { return schema.parse(data) } catch (e) {
+    const err = e as Error
+    throw new Error(`Invalid response for ${ctx}: ${err.message}`)
+  }
+}
 
 // API Service for external API calls
 class ApiService {
@@ -143,24 +160,12 @@ class ApiService {
 
     const endpoint = `/organizations${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
     
-    return this.request<{
-      organizations?: Array<{
-        id: string;
-        name: string;
-        domain: string;
-        status: string;
-        plan: string;
-        registeredAt: string;
-        byoidConfig?: any;
-      }>;
-      organization?: any;
-    }>(endpoint);
+    const raw = await this.request<any>(endpoint)
+    return parseOrThrow(OrganizationsResponseSchema, raw, 'getOrganizations')
   }
 
   async getOrganization(id: string) {
-    return this.request<{
-      organization: any;
-    }>(`/organizations/${id}`);
+    return this.request<{ organization: any }>(`/organizations/${id}`);
   }
 
   // Authentication operations
@@ -169,26 +174,8 @@ class ApiService {
     password: string;
     domain: string;
   }) {
-    return this.request<{
-      success: boolean;
-      user: {
-        id: string;
-        email: string;
-        name: string;
-        role: string;
-        organization: {
-          id: string;
-          name: string;
-          domain: string;
-          tenantId: string;
-        };
-      };
-      token: string;
-      message: string;
-    }>('/sessions', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    const raw = await this.request<any>('/sessions', { method: 'POST', body: JSON.stringify(data) })
+    return parseOrThrow(LoginResponseSchema, raw, 'login')
   }
 
   // BYOID (Bring Your Own Identity) operations
@@ -217,26 +204,12 @@ class ApiService {
     }
     const endpoint = `/organizations/${organizationId}/idp-config`;
     
-    return this.request<{
-      requests?: Array<{
-        id: string;
-        organizationName: string;
-        organizationDomain: string;
-        issuerUrl: string;
-        status: string;
-        submittedAt: string;
-      }>;
-      request?: any;
-    }>(endpoint);
+    return this.request<any>(endpoint)
   }
 
   // Health check
   async getHealth(options?: RequestInit) {
-    return this.request<{
-      status: string;
-      timestamp: string;
-      version: string;
-    }>('/health', options);
+    return this.request<{ status: string; timestamp: string; version: string }>('/health', options);
   }
 
   // Notification management
@@ -274,137 +247,48 @@ class ApiService {
 
   // Get current user information
   async getCurrentUser(options?: RequestInit) {
-    return this.request<{
-      success: boolean;
-      user: {
-        id: string;
-        name: string;
-        email: string;
-        role: string;
-        avatar: string | null;
-        organizationId: string;
-      };
-      message: string;
-    }>('/users/me', options);
+    const raw = await this.request<any>('/users/me', options)
+    return parseOrThrow(CurrentUserSchema, raw, 'getCurrentUser')
   }
 
   // Get organizations with hosts and units
   async getOrganizationsWithUnits() {
-    return this.request<{
-      success: boolean;
-      organizations: Record<string, {
-        id: string;
-        name: string;
-        domain: string;
-        status: string;
-        plan: string;
-        organizationalUnits: Record<string, {
-          id: string;
-          name: string;
-          hosts: Array<{
-            id: string;
-            name: string;
-            status: string;
-            type: string;
-            ip?: string;
-            ipAddress?: string;
-            mac?: string;
-            internetId?: string;
-          }>;
-        }>;
-      }>;
-      message: string;
-    }>('/organizations?embed=units');
+    const raw = await this.request<any>('/organizations?embed=units')
+    return parseOrThrow(OrgsWithUnitsSchema, raw, 'getOrganizationsWithUnits')
   }
 
   // Get pricing plans
   async getPricingPlans() {
-    return this.request<{
-      success: boolean;
-      plans: Array<{
-        id: string;
-        name: string;
-        description: string;
-        price: number;
-        billingCycle: string;
-        features: string[];
-        maxOrganizationalUnits: number;
-        maxHosts: number;
-        maxUsers: number;
-      }>;
-      message: string;
-    }>('/plans');
+    const raw = await this.request<any>('/plans')
+    return parseOrThrow(PricingPlansSchema, raw, 'getPricingPlans')
   }
 
   // Dev helpers
   async getDevCredentials() {
-    return this.request<{
-      success: boolean;
-      items: Array<{ email: string; password: string; role: 'admin' | 'user'; domain: string }>;
-    }>('/dev/credentials');
+    const raw = await this.request<any>('/dev/credentials')
+    return parseOrThrow(DevCredentialsSchema, raw, 'getDevCredentials')
   }
 
   // Get industries
   async getIndustries() {
-    return this.request<{
-      success: boolean;
-      industries: string[];
-      message: string;
-    }>('/references/industries');
+    return this.request<{ success: boolean; industries: string[]; message: string }>('/references/industries')
   }
 
   // Get company sizes
   async getCompanySizes() {
-    return this.request<{
-      success: boolean;
-      companySizes: string[];
-      message: string;
-    }>('/references/company-sizes');
+    return this.request<{ success: boolean; companySizes: string[]; message: string }>('/references/company-sizes')
   }
 
   // Calculate monthly cost based on plan and users
   async calculateMonthlyCost(planId: string, expectedUsers: number) {
-    return this.request<{
-      success: boolean;
-      calculation: {
-        planId: string;
-        planName: string;
-        baseCost: number;
-        userCost: number;
-        totalCost: number;
-        expectedUsers: number;
-        actualUsers: number;
-        isUnlimited: boolean;
-      };
-      message: string;
-    }>('/quotes', {
-      method: 'POST',
-      body: JSON.stringify({ planId, expectedUsers }),
-    });
+    const raw = await this.request<any>('/quotes', { method: 'POST', body: JSON.stringify({ planId, expectedUsers }) })
+    return parseOrThrow(QuoteSchema, raw, 'calculateMonthlyCost')
   }
 
   // Discover OpenID Connect provider
   async discoverOpenIDProvider(issuerUrl: string) {
-    return this.request<{
-      success: boolean;
-      discovery: {
-        issuer: string;
-        authorization_endpoint: string;
-        token_endpoint: string;
-        userinfo_endpoint: string;
-        jwks_uri: string;
-        response_types_supported: string[];
-        subject_types_supported: string[];
-        id_token_signing_alg_values_supported: string[];
-        scopes_supported: string[];
-        claims_supported: string[];
-        end_session_endpoint?: string;
-      };
-      message: string;
-    }>('/oidc/discovery', {
-      method: 'POST',
-      body: JSON.stringify({ issuerUrl }),
-    });
+    const raw = await this.request<any>('/oidc/discovery', { method: 'POST', body: JSON.stringify({ issuerUrl }) })
+    return parseOrThrow(OidcDiscoverySchema, raw, 'discoverOpenIDProvider')
   }
 }
 

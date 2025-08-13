@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "[husky] pre-commit: lint, typecheck, tests"
+
+# Allow bypass via SKIP_HOOKS=1
+if [ "$SKIP_HOOKS" = "1" ]; then
+  echo "[husky] hooks skipped via SKIP_HOOKS"
+  exit 0
+fi
+
+npm run lint || exit 1
+npm run typecheck || exit 1
+# Optional: fast tests
+npm run test --silent || exit 1
+
