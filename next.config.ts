@@ -167,20 +167,6 @@ const nextConfig: NextConfig = {
     formats: ['image/webp'],
     minimumCacheTTL: 60,
   },
-  
-  // Webpack optimizations
-  webpack: (config, { dev, isServer }) => {
-    // Optimize for development
-    if (dev) {
-      // Enable faster refresh
-      config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
-      };
-    }
-    
-    return config;
-  },
   // Minimize noisy console logs in production bundles
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
