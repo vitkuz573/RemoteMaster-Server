@@ -580,7 +580,14 @@ function DevCredentialsPanel({ onAutofill }: { onAutofill: (c: { email: string; 
                   className="accent-current"
                   checked={Object.values(showPasswords).some(Boolean)}
                   onChange={(e) => {
-                    if (!e.target.checked) setShowPasswords({});
+                    const checked = e.target.checked;
+                    if (checked) {
+                      // Show all passwords for listed credentials
+                      setShowPasswords(Object.fromEntries(items.map(i => [i.email, true])));
+                    } else {
+                      // Hide all passwords
+                      setShowPasswords({});
+                    }
                   }}
                 />
                 Show passwords

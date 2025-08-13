@@ -1,6 +1,7 @@
 import { appConfig } from './app-config';
 import { toast } from 'sonner';
 import { useAuthStore } from './stores';
+import { fetchJson, HttpError } from './http';
 
 // API Service for external API calls
 class ApiService {
@@ -12,70 +13,54 @@ class ApiService {
     this.showNotifications = showNotifications;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    
-    const defaultHeaders: HeadersInit = {
+    const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers || {}),
     };
 
-    const config: RequestInit = {
-      ...options,
-      headers: defaultHeaders,
-    };
-
-    try {
-      // Attach Authorization header if available
+    const withAuth = () => {
       try {
         const { accessToken } = useAuthStore.getState();
         if (accessToken) {
-          (config.headers as Record<string, string>)['Authorization'] = `Bearer ${accessToken}`;
+          (headers as Record<string, string>)['Authorization'] = `Bearer ${accessToken}`;
         }
       } catch {}
+    };
 
-      const doFetch = async (): Promise<Response> => fetch(url, config);
-      let response = await doFetch();
-      
-      if (!response.ok) {
-        // On 401 try to refresh token once
-        if (response.status === 401) {
+    try {
+      withAuth();
+      const doCall = async () =>
+        await fetchJson<T>(url, {
+          ...options,
+          headers,
+          timeoutMs: 10_000,
+          retries: 1,
+        });
+
+      try {
+        return await doCall();
+      } catch (err) {
+        if (err instanceof HttpError && err.status === 401) {
           const refreshed = await this.tryRefreshToken();
           if (refreshed) {
+            // update header and retry once without counting as a retry in fetchJson
             const { accessToken: newToken } = useAuthStore.getState();
-            if (newToken) {
-              (config.headers as Record<string, string>)['Authorization'] = `Bearer ${newToken}`;
-            }
-            response = await doFetch();
+            if (newToken) (headers as Record<string, string>)['Authorization'] = `Bearer ${newToken}`;
+            return await fetchJson<T>(url, { ...options, headers, timeoutMs: 10_000, retries: 0 });
           }
         }
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMessage = (errorData && (errorData.error || errorData.message)) || `HTTP error! status: ${response.status}`;
-          if (this.showNotifications) {
-            toast.error(errorMessage, {
-              description: `Request to ${endpoint} failed`,
-              duration: 5000,
-            });
-          }
-          throw new Error(errorMessage);
-        }
+        throw err;
       }
-
-      return await response.json();
     } catch (error) {
-      console.error(`API request failed for ${endpoint}:`, error);
-
+      const errorMessage = error instanceof Error ? error.message : 'Request failed';
       if (this.showNotifications) {
-        toast.error('Network request failed', {
+        toast.error(errorMessage, {
           description: `Request to ${endpoint} failed`,
           duration: 5000,
         });
       }
-
       throw error as Error;
     }
   }
