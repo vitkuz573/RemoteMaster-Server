@@ -18,7 +18,7 @@ export const appConfig = {
   _shortName: undefined as string | undefined,
   description: 'Remote Server Management Platform',
   developer: 'RemoteMaster Software',
-  version: '2.1.4',
+  version: env.NEXT_PUBLIC_APP_VERSION || '2.1.4',
   buildDate: env.NEXT_PUBLIC_BUILD_DATE || new Date().toISOString().split('T')[0],
   buildTime: env.NEXT_PUBLIC_BUILD_TIME || new Date().toISOString(),
   buildHash: env.NEXT_PUBLIC_BUILD_HASH || 'dev',

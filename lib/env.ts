@@ -24,6 +24,8 @@ const ClientEnvSchema = z.object({
   NEXT_PUBLIC_REPO_TYPE: z.enum(['github', 'gitlab', 'bitbucket']).optional().default('github'),
   NEXT_PUBLIC_REPO_BRANCH: z.string().optional().default('main'),
 
+  NEXT_PUBLIC_APP_VERSION: z.string().optional(),
+
   NEXT_PUBLIC_BUILD_DATE: z.string().optional(),
   NEXT_PUBLIC_BUILD_TIME: z.string().optional(),
   NEXT_PUBLIC_BUILD_HASH: z.string().optional(),
@@ -56,6 +58,8 @@ const raw = {
   NEXT_PUBLIC_REPO_URL: process.env.NEXT_PUBLIC_REPO_URL,
   NEXT_PUBLIC_REPO_TYPE: process.env.NEXT_PUBLIC_REPO_TYPE as any,
   NEXT_PUBLIC_REPO_BRANCH: process.env.NEXT_PUBLIC_REPO_BRANCH,
+
+  NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
 
   NEXT_PUBLIC_BUILD_DATE: process.env.NEXT_PUBLIC_BUILD_DATE,
   NEXT_PUBLIC_BUILD_TIME: process.env.NEXT_PUBLIC_BUILD_TIME,
