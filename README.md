@@ -206,6 +206,24 @@ docker run --rm -p 3000:3000 \
   remotemaster-server-ui
 ```
 
+### Windows Notes
+
+- Use Git Bash (bundled with Git for Windows) or WSL2 for full compatibility with Husky hooks and shell scripts.
+- Все npm-скрипты кроссплатформенные и работают в PowerShell/CMD/Git Bash. Makefile — опционален (требует make).
+- Скрипт защиты ветки доступен и для PowerShell: `scripts/setup-branch-protection.ps1`.
+
+Примеры:
+
+```powershell
+# PowerShell
+npm ci
+npm run format:check; npm run lint; npm run typecheck; npm run test
+npm run storybook
+
+# Настройка защиты ветки (требует gh auth login)
+./scripts/setup-branch-protection.ps1 -OwnerRepo "vitkuz573/RemoteMaster-Server" -Branch "master" -IncludeChromatic
+```
+
 ### Environment Variables
 
 Create a `.env.local` file (see `.env.example` for all options):
