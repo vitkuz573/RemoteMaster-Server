@@ -58,8 +58,15 @@ set -e
 if [[ ${#JOB_NAMES[@]} -eq 0 ]]; then
   echo "Could not auto-detect job names; using defaults."
   JOB_NAMES=(
-    "lint-typecheck-test (18.x)"
-    "lint-typecheck-test (20.x)"
+    "Lint Workflows"
+    "lint (20.x)"
+    "lint (22.x)"
+    "typecheck (20.x)"
+    "typecheck (22.x)"
+    "test (20.x)"
+    "test (22.x)"
+    "audit"
+    "Build"
   )
 fi
 
