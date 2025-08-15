@@ -230,6 +230,7 @@ Environment variables are validated with Zod at startup. Invalid or missing valu
 - CI runs `npm audit` (prod deps), CodeQL SAST, Semgrep, Trivy container scan.
 - CSP is enabled with reporting endpoint at `/api/csp-reports` (report‑only header in dev).
 - Client error reporting can be enabled via `NEXT_PUBLIC_ERROR_REPORTING_ENABLED=true`.
+- Serves security.txt at `/.well-known/security.txt` (see SECURITY.md / GitHub policy link).
 
 ## 🤝 Contributing
 
