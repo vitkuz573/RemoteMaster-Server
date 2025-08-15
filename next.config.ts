@@ -26,7 +26,10 @@ const toBool = (v: unknown, def = false) => {
 }
 
 const enableCOI = toBool(process.env.ENABLE_COOP_COEP, false)
-const enableTrustedTypes = toBool(process.env.ENABLE_TRUSTED_TYPES, false)
+const enableTrustedTypes = toBool(
+  process.env.ENABLE_TRUSTED_TYPES,
+  process.env.NODE_ENV === 'production'
+)
 const cspReportOnly = toBool(process.env.CSP_REPORT_ONLY, false)
 
 // Optional extra allowlists (space/comma separated origins)
@@ -139,6 +142,7 @@ const securityHeaders = (isDev: boolean): Header[] => {
 }
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
   poweredByHeader: false,
   // Fix cross-origin warning in development
   allowedDevOrigins: ['127.0.0.1', 'localhost', '*.localhost'],
