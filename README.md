@@ -137,6 +137,7 @@ This project uses [Mock Service Worker (MSW)](https://mswjs.io/) for API mocking
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm run format` / `npm run format:check` - Prettier formatting (write/check)
 
 ### Makefile Shortcuts
 
@@ -207,7 +208,7 @@ docker run --rm -p 3000:3000 \
 
 ### Environment Variables
 
-Create a `.env.local` file with:
+Create a `.env.local` file (see `.env.example` for all options):
 
 ```env
 # API Configuration

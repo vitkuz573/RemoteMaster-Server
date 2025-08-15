@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-echo "[husky] pre-commit: lint, typecheck, tests"
+echo "[husky] pre-commit: format staged, lint, typecheck, tests"
 
 # Allow bypass via SKIP_HOOKS=1
 if [ "$SKIP_HOOKS" = "1" ]; then
@@ -9,8 +9,9 @@ if [ "$SKIP_HOOKS" = "1" ]; then
   exit 0
 fi
 
+npx --no lint-staged || exit 1
+
 npm run lint || exit 1
 npm run typecheck || exit 1
 # Optional: fast tests
 npm run test --silent || exit 1
-

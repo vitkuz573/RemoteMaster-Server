@@ -1,0 +1,14 @@
+# Build outputs
+.next
+out
+dist
+coverage
+node_modules
+
+# Artifacts
+*.log
+*.tsbuildinfo
+build-info.json
+
+# Generated
+public/mockServiceWorker.js

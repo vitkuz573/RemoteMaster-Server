@@ -1,0 +1,16 @@
+* text=auto eol=lf
+
+# Ensure shell scripts keep LF
+*.sh text eol=lf
+
+# Treat generated artifacts
+*.min.js linguist-generated
+*.map linguist-generated
+*.tsbuildinfo linguist-generated
+
+# Images as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
