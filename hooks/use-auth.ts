@@ -17,7 +17,8 @@ export function useAuth(options: UseAuthOptions = {}) {
   const {
     redirectOnUnauthed = true,
     redirectPath = '/login',
-    skipPaths = ['/setup', '/login'],
+    // Public routes that should never trigger auth redirects
+    skipPaths = ['/setup', '/login', '/about'],
     hydrateUser = true,
   } = options;
   const router = useRouter();
