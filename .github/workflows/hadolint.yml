@@ -1,0 +1,27 @@
+name: Dockerfile Lint
+
+on:
+  push:
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/hadolint.yml'
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/hadolint.yml'
+
+jobs:
+  hadolint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+

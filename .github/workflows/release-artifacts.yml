@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
 
 jobs:
   build-and-publish:
@@ -87,6 +88,17 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign container image (keyless)
+        env:
+          COSIGN_EXPERIMENTAL: 1
+        run: |
+          IMAGE=$(jq -r '.tags[0]' <<< '${{ steps.meta.outputs.json }}')
+          echo "Signing $IMAGE"
+          cosign sign --yes $IMAGE
+
       - name: Generate SBOM for image (CycloneDX)
         uses: anchore/sbom-action@v0
         with:
@@ -95,4 +107,3 @@ jobs:
           output-file: sbom-image.cdx.json
           upload-artifact: true
           artifact-name: sbom-image-cyclonedx-${{ github.ref_name }}
-

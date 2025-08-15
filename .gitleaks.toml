@@ -1,0 +1,12 @@
+# Minimal configuration; tune allowlists as needed
+[allowlist]
+description = "general allowlist"
+paths = [
+  "node_modules/",
+  "coverage/",
+  "dist/",
+  "out/",
+  ".next/",
+  "public/mockServiceWorker.js",
+]
+
