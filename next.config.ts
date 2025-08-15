@@ -142,6 +142,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Fix cross-origin warning in development
   allowedDevOrigins: ['127.0.0.1', 'localhost', '*.localhost'],
+  // Produce a minimal runtime for deployment artifacts
+  output: 'standalone',
   
   // Performance optimizations for development
   experimental: {
