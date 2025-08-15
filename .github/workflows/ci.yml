@@ -2,12 +2,22 @@ name: CI
 
 on:
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'CHANGELOG.md'
   push:
     branches: [ main, master ]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'CHANGELOG.md'
+  merge_group:
 
 permissions:
   contents: read
   pull-requests: read
+  dependency-graph: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -18,6 +28,10 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - name: Validate PR title (Conventional Commits)
         uses: amannn/action-semantic-pull-request@v5
         env:
@@ -26,48 +40,120 @@ jobs:
           types: |
             ["feat","fix","docs","refactor","perf","deps","test","ci","build","chore"]
 
-  lint-typecheck-test:
+  workflows-lint:
+    name: Lint Workflows
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@v4
+      - uses: rhysd/actionlint@v1
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x, 22.x]
     env:
       NEXT_TELEMETRY_DISABLED: 1
       CI: true
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-
       - name: Install dependencies
         run: npm ci
-
       - name: Lint
         run: npm run lint
+      - name: ESLint reviewdog (PR only)
+        if: github.event_name == 'pull_request'
+        uses: reviewdog/action-eslint@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          eslint_flags: .
 
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x]
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      CI: true
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
       - name: Typecheck
-        run: npm run typecheck
+        run: npm run typecheck --silent
+      - name: TypeScript reviewdog (PR only)
+        if: github.event_name == 'pull_request'
+        uses: reviewdog/action-tsc@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          level: warning
 
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x]
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      CI: true
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
       - name: Test with coverage
         run: npm run test:coverage -- --reporter=dot
-
-      - name: npm audit (production)
-        run: |
-          npm audit --omit=dev --audit-level=moderate || true
-
-      - name: Upload coverage to Codecov
+      - name: Upload coverage to Codecov (Node 20 only)
         uses: codecov/codecov-action@v4
-        if: always()
+        if: always() && matrix.node-version == '20.x'
         with:
           files: ./coverage/lcov.info
           fail_ci_if_error: false
           verbose: true
-
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -76,3 +162,113 @@ jobs:
           path: coverage
           if-no-files-found: ignore
           retention-days: 7
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      CI: true
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: npm audit policy
+        run: |
+          set -eo pipefail
+          if [[ "${{ github.event_name }}" == "push" && ( "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ) ]]; then
+            echo "Enforcing HIGH severity on main/master"
+            npm audit --omit=dev --audit-level=high
+          else
+            echo "Advisory run (non-blocking)"
+            npm audit --omit=dev --audit-level=moderate || true
+          fi
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [workflows-lint, lint, typecheck, test, audit]
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      CI: true
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-next-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('next.config.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-next-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-next-
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build cache artifact (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-cache
+          path: .next/cache
+          retention-days: 3
+
+      - name: Upload standalone build (if present)
+        if: always() && hashFiles('.next/standalone/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone
+          path: |
+            .next/standalone
+            .next/static
+            public
+          retention-days: 7
+
+  sbom:
+    name: SBOM (Dependency Graph)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      dependency-graph: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Generate and submit SBOM
+        uses: advanced-security/sbom-action@v1
+        with:
+          upload-to-dependency-graph: true
+          sbom-format: spdx-json
+          path: .
