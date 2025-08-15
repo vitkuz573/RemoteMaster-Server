@@ -36,4 +36,3 @@ export class AppErrorBoundary extends React.Component<Props, State> {
     return this.props.children
   }
 }
-
