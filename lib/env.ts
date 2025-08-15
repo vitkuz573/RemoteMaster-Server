@@ -25,6 +25,7 @@ const ClientEnvSchema = z.object({
   NEXT_PUBLIC_REPO_BRANCH: z.string().optional().default('main'),
 
   NEXT_PUBLIC_APP_VERSION: z.string().optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional().default(''),
 
   NEXT_PUBLIC_BUILD_DATE: z.string().optional(),
   NEXT_PUBLIC_BUILD_TIME: z.string().optional(),
@@ -60,6 +61,7 @@ const raw = {
   NEXT_PUBLIC_REPO_BRANCH: process.env.NEXT_PUBLIC_REPO_BRANCH,
 
   NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
+  NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   NEXT_PUBLIC_BUILD_DATE: process.env.NEXT_PUBLIC_BUILD_DATE,
   NEXT_PUBLIC_BUILD_TIME: process.env.NEXT_PUBLIC_BUILD_TIME,

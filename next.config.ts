@@ -205,4 +205,5 @@ const nextConfig: NextConfig = {
   // No rewrites needed; device routes are explicit in app/device
 };
 
-export default nextConfig;
+// Export plain Next config: runtime Sentry init remains, sourcemaps upload handled in CI
+export default nextConfig
