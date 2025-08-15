@@ -25,7 +25,7 @@ const ClientEnvSchema = z.object({
   NEXT_PUBLIC_REPO_BRANCH: z.string().optional().default('main'),
 
   NEXT_PUBLIC_APP_VERSION: z.string().optional(),
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional().default(''),
+  NEXT_PUBLIC_SENTRY_DSN: z.union([z.string().url(), z.literal('')]).optional().default(''),
 
   NEXT_PUBLIC_BUILD_DATE: z.string().optional(),
   NEXT_PUBLIC_BUILD_TIME: z.string().optional(),
