@@ -1,6 +1,8 @@
 # RemoteMaster Server UI
 
 [![CI](https://github.com/vitkuz573/RemoteMaster-Server/actions/workflows/ci.yml/badge.svg)](https://github.com/vitkuz573/RemoteMaster-Server/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/vitkuz573/RemoteMaster-Server/branch/main/graph/badge.svg)](https://app.codecov.io/gh/vitkuz573/RemoteMaster-Server)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/vitkuz573/RemoteMaster-Server/badge)](https://securityscorecards.dev/viewer/?uri=github.com/vitkuz573/RemoteMaster-Server)
 
 A modern React application built with Next.js 15 and shadcn UI, featuring enterprise-grade authentication, organizational management, and host monitoring capabilities.
 
@@ -152,6 +154,36 @@ If you prefer `make`:
 - **ESLint** - Code linting and formatting
 - **shadcn UI** - Consistent component patterns
 - **React Best Practices** - Modern React patterns and hooks
+
+## 🧪 CI Overview
+
+- Matrix: Node `20.x`, `22.x` for lint, typecheck, and tests.
+- Build job: runs `npm run build` on Node from `.nvmrc` with cached `.next/cache`.
+- Coverage: Vitest coverage uploaded to Codecov (token optional; does not fail CI).
+- Optimizations: PRs/doc-only changes are ignored to save minutes.
+- Merge Queue: CI supports `merge_group` events for GitHub Merge Queue.
+- Security: CodeQL + Semgrep (scheduled), Trivy container scan with path filters.
+- Scorecard: OSSF Scorecard runs weekly and on push.
+- PR annotations: reviewdog posts ESLint and TypeScript comments inline on diffs.
+- Workflow lint: `actionlint` validates GitHub Actions workflows.
+- Audit policy: fail on HIGH severity on `main/master`; advisory in PRs.
+- SBOM: CycloneDX JSON is generated from the Docker image and uploaded as an artifact.
+- Standalone artifact: Next.js `output: 'standalone'` produces artifacts for preview/deploy.
+ - Release artifacts: on `v*` tags, CI builds the standalone app and Docker image, pushes to GHCR, and attaches the SBOM.
+ - Harden Runner: all workflows use network policies (egress audit) to reduce supply‑chain risk.
+
+### Release Publishing
+
+- Create a `vX.Y.Z` tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+- The `Release Artifacts` workflow produces:
+  - Standalone deployment artifact (`.next/standalone`, `.next/static`, `public`).
+  - Docker image in GHCR: `ghcr.io/<owner>/<repo>:vX.Y.Z`.
+  - SBOM for the image (CycloneDX) as an artifact.
+
+### Pinning and Hardening
+
+- The `Ensure Actions Pinned` workflow (manual/scheduled) verifies actions are pinned by SHA.
+- `step-security/harden-runner` with egress audit is enabled in all workflows.
 
 ## 🚀 Deployment
 
