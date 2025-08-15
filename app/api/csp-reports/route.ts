@@ -1,19 +1,34 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function POST(request: Request) {
+// Accept both legacy CSP reports and Reporting API batches.
+// Intentionally discard payloads after minimal validation to avoid storing sensitive data.
+
+export async function POST(req: NextRequest) {
   try {
-    const contentType = request.headers.get('content-type') || ''
-    if (!contentType.includes('application/csp-report')) {
-      // Some browsers send application/json
-      // continue best-effort parsing
-    }
-    const body = await request.json().catch(() => ({}))
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.warn('CSP report:', JSON.stringify(body))
+    const ct = (req.headers.get('content-type') || '').toLowerCase()
+    // Legacy: application/csp-report
+    if (ct.includes('application/csp-report')) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const body = await req.json().catch(() => ({}))
+      // Optionally log in development only
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[CSP] Violation (legacy csp-report) received')
+      }
+    } else {
+      // Reporting API: application/reports+json
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const reports = await req.json().catch(() => [])
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[CSP] Violation (reports+json) received')
+      }
     }
   } catch {
-    // ignore
+    // ignore parse errors
   }
   return new NextResponse(null, { status: 204 })
 }
+
+export function GET() {
+  return new NextResponse(null, { status: 405, headers: { Allow: 'POST' } })
+}
+
