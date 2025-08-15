@@ -1,0 +1,38 @@
+name: Ensure Actions Pinned
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 1'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Ensure SHA pinned
+        uses: zgosalvez/github-actions-ensure-sha-pinned@v3.0.14
+        with:
+          allowlist: |-
+            actions/checkout@
+            actions/setup-node@
+            actions/cache@
+            actions/upload-artifact@
+            codecov/codecov-action@
+            rhysd/actionlint@
+            reviewdog/action-eslint@
+            reviewdog/action-tsc@
+            github/codeql-action/
+            returntocorp/semgrep-action@
+            aquasecurity/trivy-action@
+            ossf/scorecard-action@
+            advanced-security/sbom-action@
+            anchore/sbom-action@
+            docker/login-action@
+            docker/metadata-action@
+            docker/build-push-action@
