@@ -169,8 +169,10 @@ export function Footer({
              </div>
           </div>
 
-          {/* Center section - Copyright */}
-          <div className="hidden md:block">
+          {/* Center section - Links and Copyright */}
+          <div className="hidden md:flex items-center gap-4">
+            <a href="/about" className="text-xs text-muted-foreground hover:text-primary transition-colors">About</a>
+            <span className="text-muted-foreground/40">•</span>
             <p className="text-xs text-muted-foreground">
               © {appConfig.copyrightStartYear}-{new Date().getFullYear()} {appConfig.developer}. All rights reserved.
             </p>

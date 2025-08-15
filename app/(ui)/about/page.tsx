@@ -8,6 +8,8 @@ import { DiagnosticsButton } from './diagnostics-button'
 import { EndpointChecks } from './endpoint-checks'
 import { WebVitalsWidget } from './web-vitals-widget'
 import { SupportIssueButton } from './support-issue-button'
+import { ClientEnvironment } from './client-environment'
+import { FeatureFlags } from './feature-flags'
 
 export const metadata = {
   title: `About ${appConfig.name}`,
@@ -95,6 +97,7 @@ export default function AboutPage() {
             <CardDescription>Project and status pages</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
+            <ProjectBadges />
             <ul className="space-y-2 text-sm">
               {links.map((l) => (
                 <li key={l.label}>
@@ -125,6 +128,26 @@ export default function AboutPage() {
       <Separator />
 
       <section className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Client environment</CardTitle>
+            <CardDescription>Browser, locale, device</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ClientEnvironment />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Feature flags</CardTitle>
+            <CardDescription>Runtime toggles</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FeatureFlags />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Operational checks</CardTitle>
@@ -168,6 +191,18 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent>
             <WebVitalsWidget />
+          </CardContent>
+        </Card>
+      </section>
+
+      <section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Support bundle</CardTitle>
+            <CardDescription>Export diagnostics as JSON</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SupportBundleButton />
           </CardContent>
         </Card>
       </section>
@@ -225,6 +260,51 @@ function ExtLink({ href, children }: { href?: string; children: React.ReactNode 
       {children}
     </Link>
   )
+}
+
+function ProjectBadges() {
+  const gh = githubInfo(appConfig.repository.url)
+  if (!gh) return null
+  const { owner, repo } = gh
+  const branch = appConfig.repository.branch || 'main'
+  const badges = [
+    {
+      alt: 'CI',
+      src: `https://github.com/${owner}/${repo}/actions/workflows/ci.yml/badge.svg`,
+      href: `https://github.com/${owner}/${repo}/actions/workflows/ci.yml`,
+    },
+    {
+      alt: 'Codecov',
+      src: `https://codecov.io/gh/${owner}/${repo}/branch/${branch}/graph/badge.svg`,
+      href: `https://app.codecov.io/gh/${owner}/${repo}`,
+    },
+    {
+      alt: 'OpenSSF Scorecard',
+      src: `https://api.securityscorecards.dev/projects/github.com/${owner}/${repo}/badge`,
+      href: `https://securityscorecards.dev/viewer/?uri=github.com/${owner}/${repo}`,
+    },
+  ]
+  return (
+    <div className="flex flex-wrap gap-2 pb-2">
+      {badges.map((b) => (
+        <a key={b.alt} href={b.href} target="_blank" rel="noreferrer noopener">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={b.src} alt={b.alt} className="h-5" />
+        </a>
+      ))}
+    </div>
+  )
+}
+
+function githubInfo(url?: string) {
+  try {
+    if (!url) return null
+    const u = new URL(url)
+    if (u.hostname !== 'github.com') return null
+    const [owner, repo] = u.pathname.replace(/^\//,'').split('/')
+    if (!owner || !repo) return null
+    return { owner, repo }
+  } catch { return null }
 }
 
 // Note: DiagnosticsButton is a client component (see ./diagnostics-button)
