@@ -22,14 +22,25 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN groupadd -g 1001 nodejs && \
     useradd -u 1001 -g nodejs -s /bin/bash -m nextjs
 
-# Copy only necessary files
-COPY --from=builder /app/.next ./.next
+# Copy standalone output for smaller prod image
+# next.config.ts sets `output: 'standalone'`
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
+
+# Runtime env
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+EXPOSE 3000
+
+# Drop privileges
+USER nextjs
+
+# Start the Next.js server
+CMD ["node", "server.js"]
 COPY --from=deps /app/node_modules ./node_modules
 
 USER nextjs
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]
-
