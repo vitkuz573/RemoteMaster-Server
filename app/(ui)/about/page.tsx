@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { DiagnosticsButton } from './diagnostics-button'
+import { EndpointChecks } from './endpoint-checks'
+import { WebVitalsWidget } from './web-vitals-widget'
+import { SupportIssueButton } from './support-issue-button'
 
 export const metadata = {
   title: `About ${appConfig.name}`,
@@ -99,6 +102,22 @@ export default function AboutPage() {
                 </li>
               ))}
             </ul>
+            {appConfig.repository.type === 'github' && appConfig.repository.url ? (
+              <div className="pt-4">
+                <SupportIssueButton
+                  repoUrl={appConfig.repository.url}
+                  payload={{
+                    name: appConfig.name,
+                    version: appConfig.version,
+                    build: appConfig.buildInfo,
+                    branch: appConfig.buildBranch,
+                    date: appConfig.buildDate,
+                    environment: appConfig.environment,
+                    endpoints: appConfig.endpoints,
+                  }}
+                />
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </section>
@@ -106,6 +125,16 @@ export default function AboutPage() {
       <Separator />
 
       <section className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Operational checks</CardTitle>
+            <CardDescription>Live connectivity and latency</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EndpointChecks />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Endpoints</CardTitle>
@@ -117,7 +146,6 @@ export default function AboutPage() {
             <KeyValue label="Health" value={displayUrl(appConfig.endpoints.health)} link={appConfig.endpoints.health} />
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader>
             <CardTitle>Repository</CardTitle>
@@ -128,6 +156,18 @@ export default function AboutPage() {
             <KeyValue label="Branch" value={appConfig.repository.branch ?? '—'} link={appConfig.branchUrl ?? undefined} />
             <KeyValue label="Version tag" value={`v${appConfig.version}`} link={appConfig.versionUrl ?? undefined} />
             <KeyValue label="Commit" value={appConfig.buildInfo} link={appConfig.commitUrl ?? undefined} />
+          </CardContent>
+        </Card>
+      </section>
+
+      <section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance (Web Vitals)</CardTitle>
+            <CardDescription>Measured on your device</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <WebVitalsWidget />
           </CardContent>
         </Card>
       </section>
