@@ -14,7 +14,7 @@ import { FeatureFlags } from './feature-flags'
 import { SupportBundleButton } from './support-bundle-button'
 import { ReadmeBadges } from './readme-badges'
 import { OperationalToggles } from './operational-toggles'
-import { useLocale } from '@/contexts/locale-context'
+import { getDictServer } from '@/lib/i18n-server'
 import { ConfigAdvisor } from './config-advisor'
 
 export const metadata: Metadata = {
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 }
 
 export default function AboutPage() {
-  const { t } = useLocale()
+  const t = getDictServer()
   const items: Array<{ label: string; value: string; href?: string }> = [
     { label: 'Version', value: appConfig.version, href: appConfig.versionUrl ?? undefined },
     { label: 'Build', value: appConfig.buildInfo, href: appConfig.commitUrl ?? undefined },
