@@ -13,8 +13,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorReporter } from "@/components/error-reporter";
 import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 import { AppErrorBoundary } from "@/components/app-error-boundary";
-import { LocaleProvider } from "@/contexts/locale-context";
-import { getInitialLocaleServer } from "@/lib/i18n-server";
+import { IntlProvider } from './providers'
+import { getLocale } from 'next-intl/server'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,13 +33,15 @@ export const metadata: Metadata = {
 
 
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const initialLocale = getInitialLocaleServer()
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
+  const common = (await import(`@/locales/${locale}/common`)).default as any
+  const messages = { common }
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <LocaleProvider initialLocale={initialLocale}>
+          <IntlProvider locale={locale} messages={messages}>
           <MSWProvider>
             <TooltipProvider>
               <AppErrorBoundary>
@@ -56,7 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ErrorReporter />
             <WebVitalsReporter />
           </MSWProvider>
-          </LocaleProvider>
+          </IntlProvider>
         </ThemeProvider>
       </body>
     </html>
