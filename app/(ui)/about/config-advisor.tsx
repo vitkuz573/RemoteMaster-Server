@@ -1,5 +1,6 @@
 import { appConfig } from '@/lib/app-config'
 import { env } from '@/lib/env'
+import { AlertTriangle, ShieldAlert, Info } from 'lucide-react'
 
 type Advice = { level: 'danger' | 'warning' | 'info'; text: string }
 
@@ -30,19 +31,19 @@ export function ConfigAdvisor() {
   } catch {}
 
   if (advices.length === 0) return null
-
+  const icon = (lvl: Advice['level']) => lvl==='danger'? <ShieldAlert className="size-4"/> : lvl==='warning'? <AlertTriangle className="size-4"/> : <Info className="size-4"/>
+  const cls = (lvl: Advice['level']) => lvl==='danger'? 'text-red-600 dark:text-red-400' : lvl==='warning'? 'text-yellow-700 dark:text-yellow-300' : 'text-blue-700 dark:text-blue-300'
   return (
-    <ul className="space-y-2">
-      {advices.map((a, i) => (
-        <li key={i} className={
-          a.level === 'danger' ? 'text-red-600 dark:text-red-400' :
-          a.level === 'warning' ? 'text-yellow-700 dark:text-yellow-300' :
-          'text-blue-700 dark:text-blue-300'
-        }>
-          • {a.text}
-        </li>
-      ))}
-    </ul>
+    <div className="rounded-md border p-3 bg-muted/30">
+      <div className="text-xs font-medium mb-2">Configuration Advisor</div>
+      <ul className="space-y-2">
+        {advices.map((a, i) => (
+          <li key={i} className={`flex items-center gap-2 ${cls(a.level)}`}>
+            {icon(a.level)}
+            <span>{a.text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
-
