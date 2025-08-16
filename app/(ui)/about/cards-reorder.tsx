@@ -40,6 +40,7 @@ function registry(scope: HTMLElement) {
 
 export function CardsReorderToolbar() {
   const [enabled, setEnabled] = useState(false)
+  const [uiVersion, setUiVersion] = useState(0)
 
   useEffect(() => {
     // Apply saved order on mount
@@ -146,10 +147,12 @@ export function CardsReorderToolbar() {
                   const next = on ? arr.filter((x) => x !== cardId) : [...new Set([...arr, cardId])]
                   saveHidden(id, next)
                   applyVisibility(scope, next)
+                  setUiVersion((v) => v + 1)
                 }
                 const reset = () => {
                   saveHidden(id, [])
                   applyVisibility(scope, [])
+                  setUiVersion((v) => v + 1)
                 }
                 return (
                   <div key={id} className="rounded-md border">
@@ -167,16 +170,17 @@ export function CardsReorderToolbar() {
                           </label>
                         )
                       })}
+                      </div>
+                      <div className="flex items-center justify-end gap-2 px-3 py-2">
+                        <Button variant="outline" size="sm" className="h-7 px-2" onClick={reset}>Reset scope</Button>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-end gap-2 px-3 py-2">
-                      <Button variant="outline" size="sm" className="h-7 px-2" onClick={reset}>Reset scope</Button>
-                    </div>
-                  </div>
-                )
+                  )
               })}
               <div className="flex items-center justify-end">
                 <Button variant="outline" size="sm" className="h-7 px-2" onClick={() => {
                   getScopes().forEach((scope) => { const id = scope.getAttribute('data-cards-scope') || 'default'; saveHidden(id, []); applyVisibility(scope, []) })
+                  setUiVersion((v) => v + 1)
                 }}>Reset all</Button>
               </div>
             </div>
