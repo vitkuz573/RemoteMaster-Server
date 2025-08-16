@@ -12,11 +12,13 @@ export function LanguageSwitcher() {
     { id: 'ru', label: 'RU' },
   ]
 
-  const switchTo = async (l: 'en'|'ru') => {
+  const switchTo = (l: 'en'|'ru') => {
     try {
-      document.cookie = `NEXT_LOCALE=${l}; path=/; max-age=31536000`
+      document.cookie = `NEXT_LOCALE=${l}; Path=/; Max-Age=31536000`;
     } catch {}
-    router.refresh()
+    // Force a full reload to ensure server reads the updated cookie reliably
+    // (router.refresh() may not propagate header for some setups)
+    if (typeof window !== 'undefined') window.location.reload();
   }
 
   return (
