@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { BuildMismatchIndicator } from '@/components/ui/build-mismatch-indicator';
 import {useTranslations} from 'next-intl';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NotificationPanel } from '@/components/ui/notification-panel';
@@ -73,8 +74,9 @@ export function Header({
               <span className="text-sm font-bold text-primary">{appConfig.shortName}</span>
             </div>
             <div>
-              <h1 className="text-xl font-semibold">
+              <h1 className="text-xl font-semibold flex items-center gap-2">
                 {config.customTitle || appConfig.name}
+                <BuildMismatchIndicator />
               </h1>
               <p className="text-xs text-muted-foreground">
                 {config.customSubtitle || appConfig.description}

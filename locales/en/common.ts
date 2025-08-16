@@ -25,7 +25,7 @@ const en = {
   export_full_diagnostics: 'Export full diagnostics',
   open_issue_diagnostics: 'Open issue with diagnostics',
   refresh_every: 'Refresh every',
-  off: 'off'
+  off: 'off',
   open_btn: 'Open',
   copy_btn: 'Copy',
   build: 'Build',
