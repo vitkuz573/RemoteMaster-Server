@@ -109,7 +109,7 @@ export default async function AboutPage() {
       </header>
 
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" data-cards-scope="about-top">
-        <Card className="md:col-span-2 lg:col-span-3" data-card-id="versions">
+        <Card className="md:col-span-2 lg:col-span-3" data-card-id="versions" data-card-title="Versions">
           <CardHeader>
             <CardTitle>Versions</CardTitle>
             <CardDescription>App, runtime, framework and tooling</CardDescription>
@@ -126,7 +126,7 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card data-card-id="build">
+        <Card data-card-id="build" data-card-title="Build">
           <CardHeader>
             <CardTitle>{t('build')}</CardTitle>
             <CardDescription>{t('build_desc')}</CardDescription>
@@ -138,7 +138,7 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card data-card-id="support">
+        <Card data-card-id="support" data-card-title="Support">
           <CardHeader>
             <CardTitle>{t('support')}</CardTitle>
             <CardDescription>{t('support_desc')}</CardDescription>
@@ -159,7 +159,7 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card data-card-id="links">
+        <Card data-card-id="links" data-card-title="Links">
           <CardHeader>
             <CardTitle>{t('links')}</CardTitle>
             <CardDescription>{t('links_desc')}</CardDescription>
@@ -191,7 +191,7 @@ export default async function AboutPage() {
             ) : null}
           </CardContent>
         </Card>
-        <Card data-card-id="overall-status">
+        <Card data-card-id="overall-status" data-card-title="Overall status">
           <CardHeader>
             <CardTitle>Status summary</CardTitle>
             <CardDescription>Aggregated status of key endpoints</CardDescription>
@@ -200,7 +200,7 @@ export default async function AboutPage() {
             <OverallStatus />
           </CardContent>
         </Card>
-        <Card data-card-id="status-panel">
+        <Card data-card-id="status-panel" data-card-title="Status panel">
           <CardHeader>
             <CardTitle>{t('status_summary_title')}</CardTitle>
             <CardDescription>{t('status_summary_desc')}</CardDescription>
@@ -217,7 +217,7 @@ export default async function AboutPage() {
         <CardsReorderToolbar />
       </div>
       <section className="grid gap-6 md:grid-cols-2" data-cards-scope="about-mid">
-        <Card data-card-id="time-sync">
+        <Card data-card-id="time-sync" data-card-title="Time sync">
           <CardHeader>
             <CardTitle>{t('time_sync_title')}</CardTitle>
             <CardDescription>{t('time_sync_desc')}</CardDescription>
@@ -226,7 +226,7 @@ export default async function AboutPage() {
             <TimeSync />
           </CardContent>
         </Card>
-        <Card data-card-id="client-env">
+        <Card data-card-id="client-env" data-card-title="Client environment">
           <CardHeader>
             <CardTitle>{t('client_env')}</CardTitle>
             <CardDescription>{t('client_env_desc')}</CardDescription>
@@ -239,7 +239,7 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-full" data-card-id="feature-flags">
+        <Card className="col-span-full" data-card-id="feature-flags" data-card-title="Feature flags">
           <CardHeader>
             <CardTitle>{t('feature_flags')}</CardTitle>
             <CardDescription>{t('feature_flags_desc')}</CardDescription>
@@ -249,7 +249,7 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-full" data-card-id="operational-toggles">
+        <Card className="col-span-full" data-card-id="operational-toggles" data-card-title="Operational toggles">
           <CardHeader>
             <CardTitle>{t('operational_toggles')}</CardTitle>
             <CardDescription>{t('operational_toggles_desc')}</CardDescription>
@@ -260,7 +260,7 @@ export default async function AboutPage() {
         </Card>
 
         <EndpointsCardProvider>
-          <Card className="col-span-full" data-card-id="endpoints">
+          <Card className="col-span-full" data-card-id="endpoints" data-card-title="Endpoints">
             <CardHeader>
               <CardTitle>{t('endpoints')}</CardTitle>
               <CardDescription>{t('endpoints_desc')}</CardDescription>
@@ -273,7 +273,7 @@ export default async function AboutPage() {
             </CardContent>
           </Card>
         </EndpointsCardProvider>
-        <Card data-card-id="repository">
+        <Card data-card-id="repository" data-card-title="Repository">
           <CardHeader>
             <CardTitle>Repository</CardTitle>
             <CardDescription>Source and release references</CardDescription>
@@ -288,7 +288,7 @@ export default async function AboutPage() {
       </section>
 
       <section data-cards-scope="about-bottom-1">
-        <Card data-card-id="performance">
+        <Card data-card-id="performance" data-card-title="Performance">
           <CardHeader>
             <CardTitle>{t('performance')}</CardTitle>
             <CardDescription>{t('performance_desc')}</CardDescription>
@@ -300,7 +300,7 @@ export default async function AboutPage() {
       </section>
 
       <section data-cards-scope="about-bottom-2">
-        <Card data-card-id="support-bundle">
+        <Card data-card-id="support-bundle" data-card-title="Support bundle">
           <CardHeader>
             <CardTitle>{t('support_bundle')}</CardTitle>
             <CardDescription>{t('support_bundle_desc')}</CardDescription>
