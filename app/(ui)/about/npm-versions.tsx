@@ -57,6 +57,7 @@ export function NpmVersions() {
   const [showAll, setShowAll] = useState(false)
   const [includeDev, setIncludeDev] = useState(false)
   const [query, setQuery] = useState('')
+  const [onlyOutdated, setOnlyOutdated] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -130,6 +131,10 @@ export function NpmVersions() {
       allRows = [...makeRows(coreDeps, 'dep'), ...(includeDev ? makeRows(coreDevs, 'dev') : [])]
     }
 
+    if (onlyOutdated) {
+      allRows = allRows.filter((r) => r.diff && r.diff !== 'same' && r.diff !== 'unknown')
+    }
+
     if (query.trim()) {
       const q = query.toLowerCase()
       allRows = allRows.filter((r) => r.name.toLowerCase().includes(q))
@@ -145,7 +150,7 @@ export function NpmVersions() {
     })
 
     return allRows
-  }, [data, latest, showAll, includeDev, query])
+  }, [data, latest, showAll, includeDev, query, onlyOutdated])
 
   const summary = useMemo(() => {
     const total = rows.length
@@ -163,6 +168,25 @@ export function NpmVersions() {
     void navigator.clipboard?.writeText(cmd)
   }
 
+  const bulk = useMemo(() => {
+    const outdated = rows.filter((r) => r.diff && r.diff !== 'same' && r.diff !== 'unknown')
+    const majors = outdated.filter((r) => r.diff === 'major')
+    const minorsPatches = outdated.filter((r) => r.diff === 'minor' || r.diff === 'patch')
+    const cmd = (list: Row[]) => {
+      if (!list.length) return ''
+      const oneLiner = `npm i ${list.map((r) => `${r.name}@latest`).join(' ')}`
+      if (oneLiner.length <= 1000) return oneLiner
+      // Fallback to multiline for very long lists
+      return list.map((r) => `npm i ${r.name}@latest`).join('\n')
+    }
+    return {
+      all: cmd(outdated),
+      majors: cmd(majors),
+      minorsPatches: cmd(minorsPatches),
+      counts: { all: outdated.length, majors: majors.length, minorsPatches: minorsPatches.length },
+    }
+  }, [rows])
+
   return (
     <div className="rounded-md border">
       <div className="flex flex-wrap items-center gap-2 px-3 py-2 text-xs">
@@ -172,12 +196,45 @@ export function NpmVersions() {
         <div className="text-muted-foreground">•</div>
         <div className="">{summary.majors} major / {summary.minors} minor / {summary.patchs} patch</div>
         <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            disabled={!bulk.majors}
+            onClick={() => bulk.majors && copy(bulk.majors)}
+            title={bulk.counts.majors ? `Copy ${bulk.counts.majors} major updates` : 'No major updates'}
+          >
+            Copy majors
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            disabled={!bulk.minorsPatches}
+            onClick={() => bulk.minorsPatches && copy(bulk.minorsPatches)}
+            title={bulk.counts.minorsPatches ? `Copy ${bulk.counts.minorsPatches} minor/patch updates` : 'No minor/patch updates'}
+          >
+            Copy minor/patch
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            disabled={!bulk.all}
+            onClick={() => bulk.all && copy(bulk.all)}
+            title={bulk.counts.all ? `Copy ${bulk.counts.all} updates` : 'No updates'}
+          >
+            Copy all
+          </Button>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search"
             className="h-7 w-32 rounded border px-2 text-xs bg-background"
           />
+          <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setOnlyOutdated((v) => !v)}>
+            {onlyOutdated ? 'Show all' : 'Only outdated'}
+          </Button>
           <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setIncludeDev((v) => !v)}>
             {includeDev ? 'Hide dev' : 'Show dev'}
           </Button>
