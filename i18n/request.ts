@@ -1,8 +1,9 @@
-import {getRequestConfig, getLocale} from 'next-intl/server'
+import {getRequestConfig} from 'next-intl/server'
 
-// Without i18n routing: let next-intl resolve locale (cookie or default)
-export default getRequestConfig(async () => {
-  const locale = await getLocale()
-  const common = (await import(`@/locales/${locale}/common`)).default
-  return { messages: { common } }
+// Without i18n routing: rely on next-intl to pass the resolved locale param
+export default getRequestConfig(async ({locale}) => {
+  const l = await locale
+  const loc = (l === 'ru' || l === 'en') ? l : 'en'
+  const common = (await import(`@/locales/${loc}/common`)).default
+  return { locale: loc, messages: { common } }
 })
