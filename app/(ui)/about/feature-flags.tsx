@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
+import { Clipboard } from 'lucide-react'
 
 function isFeatureKey(k: string) {
   return k.startsWith('NEXT_PUBLIC_FEATURE_')
@@ -59,8 +60,8 @@ export function FeatureFlags() {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[40%]">Flag</TableHead>
-            <TableHead>Key</TableHead>
-            <TableHead>Value</TableHead>
+            <TableHead className="hidden xl:table-cell">Key</TableHead>
+            <TableHead className="hidden lg:table-cell">Value</TableHead>
             <TableHead className="text-center">Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -85,11 +86,11 @@ export function FeatureFlags() {
                     <span className="truncate">{key}</span>
                   )}
                 </TableCell>
-                <TableCell className="font-mono text-xs">{f.k}</TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">{f.raw}</TableCell>
+                <TableCell className="hidden xl:table-cell font-mono text-xs">{f.k}</TableCell>
+                <TableCell className="hidden lg:table-cell font-mono text-xs text-muted-foreground">{f.raw}</TableCell>
                 <TableCell className="text-center">
                   <div className="inline-flex items-center gap-2">
-                    <Switch checked={f.bool} onCheckedChange={() => {}} disabled />
+                    <Switch className="hidden xl:inline-flex" checked={f.bool} onCheckedChange={() => {}} disabled />
                     <Badge variant={f.bool ? 'default' : 'secondary'} className={f.bool ? '' : 'opacity-70'}>
                       {f.bool ? 'On' : 'Off'}
                     </Badge>
@@ -97,8 +98,22 @@ export function FeatureFlags() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="inline-flex items-center gap-1">
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => copy(f.k, true)}>Copy true</Button>
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => copy(f.k, false)}>Copy false</Button>
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <Button aria-label="Copy true" title="Copy true" variant="outline" size="sm" className="h-7 px-2" onClick={() => copy(f.k, true)}>
+                          <Clipboard className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Copy true</TooltipContent>
+                    </Tooltip>
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <Button aria-label="Copy false" title="Copy false" variant="outline" size="sm" className="h-7 px-2" onClick={() => copy(f.k, false)}>
+                          <Clipboard className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Copy false</TooltipContent>
+                    </Tooltip>
                   </div>
                 </TableCell>
               </TableRow>

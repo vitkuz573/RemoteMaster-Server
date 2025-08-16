@@ -231,22 +231,22 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="md:col-span-2 xl:col-span-1 py-4">
           <CardHeader>
             <CardTitle>{t('feature_flags')}</CardTitle>
             <CardDescription>{t('feature_flags_desc')}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 pb-4">
             <FeatureFlags />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="md:col-span-2 xl:col-span-1 py-4">
           <CardHeader>
             <CardTitle>{t('operational_toggles')}</CardTitle>
             <CardDescription>{t('operational_toggles_desc')}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 pb-4">
             <OperationalToggles />
           </CardContent>
         </Card>

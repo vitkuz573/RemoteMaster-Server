@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
+import { Clipboard } from 'lucide-react'
 
 type ToggleMeta = { title: string; description?: string }
 
@@ -70,8 +71,8 @@ export function OperationalToggles() {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[40%]">Toggle</TableHead>
-            <TableHead>Key</TableHead>
-            <TableHead>Value</TableHead>
+            <TableHead className="hidden xl:table-cell">Key</TableHead>
+            <TableHead className="hidden lg:table-cell">Value</TableHead>
             <TableHead className="text-center">Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -96,11 +97,11 @@ export function OperationalToggles() {
                     <span className="truncate">{short}</span>
                   )}
                 </TableCell>
-                <TableCell className="font-mono text-xs">{t.k}</TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground">{t.raw}</TableCell>
+                <TableCell className="hidden xl:table-cell font-mono text-xs">{t.k}</TableCell>
+                <TableCell className="hidden lg:table-cell font-mono text-xs text-muted-foreground">{t.raw}</TableCell>
                 <TableCell className="text-center">
                   <div className="inline-flex items-center gap-2">
-                    <Switch checked={t.bool} onCheckedChange={() => {}} disabled />
+                    <Switch className="hidden xl:inline-flex" checked={t.bool} onCheckedChange={() => {}} disabled />
                     <Badge variant={t.bool ? 'default' : 'secondary'} className={t.bool ? '' : 'opacity-70'}>
                       {t.bool ? 'On' : 'Off'}
                     </Badge>
@@ -108,8 +109,22 @@ export function OperationalToggles() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="inline-flex items-center gap-1">
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => copy(t.k, true)}>Copy true</Button>
-                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => copy(t.k, false)}>Copy false</Button>
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <Button aria-label="Copy true" title="Copy true" variant="outline" size="sm" className="h-7 px-2" onClick={() => copy(t.k, true)}>
+                          <Clipboard className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Copy true</TooltipContent>
+                    </Tooltip>
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <Button aria-label="Copy false" title="Copy false" variant="outline" size="sm" className="h-7 px-2" onClick={() => copy(t.k, false)}>
+                          <Clipboard className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Copy false</TooltipContent>
+                    </Tooltip>
                   </div>
                 </TableCell>
               </TableRow>
