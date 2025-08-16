@@ -127,3 +127,9 @@
   opacity: 0.8 !important;
   font-weight: 500 !important;
 }
+
+/* User-sized cards in About widgets */
+[data-card-user-size="1"] { grid-column: span 1 / span 1; }
+[data-card-user-size="2"] { grid-column: span 2 / span 2; }
+[data-card-user-size="3"] { grid-column: span 3 / span 3; }
+[data-card-user-size="full"] { grid-column: 1 / -1; }

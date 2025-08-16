@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { GripVertical, LayoutTemplate } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 function getScopes(): HTMLElement[] {
   return Array.from(document.querySelectorAll<HTMLElement>('[data-cards-scope]'))
@@ -26,6 +27,14 @@ function saveHidden(scopeId: string, ids: string[]) {
   try { localStorage.setItem(`about:hidden:${scopeId}`, JSON.stringify(ids)) } catch {}
 }
 
+type SizesMap = Record<string, 'auto' | '1' | '2' | '3' | 'full'>
+function loadSizes(scopeId: string): SizesMap {
+  try { return JSON.parse(localStorage.getItem(`about:size:${scopeId}`) || '{}') } catch { return {} }
+}
+function saveSizes(scopeId: string, m: SizesMap) {
+  try { localStorage.setItem(`about:size:${scopeId}`, JSON.stringify(m)) } catch {}
+}
+
 function applyVisibility(scope: HTMLElement, hidden: string[]) {
   const cards = getCards(scope)
   cards.forEach((el) => {
@@ -38,11 +47,20 @@ function registry(scope: HTMLElement) {
   return getCards(scope).map((el) => ({ id: el.getAttribute('data-card-id') || '', title: el.getAttribute('data-card-title') || (el.querySelector('[data-slot=card-title]')?.textContent || '') }))
 }
 
+function applySizes(scope: HTMLElement, sizes: SizesMap) {
+  getCards(scope).forEach((el) => {
+    const id = el.getAttribute('data-card-id') || ''
+    const size = sizes[id] || 'auto'
+    if (size === 'auto') el.removeAttribute('data-card-user-size')
+    else el.setAttribute('data-card-user-size', size)
+  })
+}
+
 export function CardsReorderToolbar() {
   const [enabled, setEnabled] = useState(false)
   const [uiVersion, setUiVersion] = useState(0)
   const [open, setOpen] = useState(false)
-  const [scopes, setScopes] = useState<{ id: string; el: HTMLElement; items: { id: string; title: string }[]; hidden: Set<string> }[]>([])
+  const [scopes, setScopes] = useState<{ id: string; el: HTMLElement; items: { id: string; title: string }[]; hidden: Set<string>; sizes: SizesMap }[]>([])
 
   function collectScopes() {
     const arr = getScopes().map((scope) => {
@@ -52,6 +70,7 @@ export function CardsReorderToolbar() {
         el: scope,
         items: registry(scope),
         hidden: new Set(loadHidden(id)),
+        sizes: loadSizes(id),
       }
     })
     setScopes(arr)
@@ -84,6 +103,7 @@ export function CardsReorderToolbar() {
       }
       const hidden = loadHidden(id)
       applyVisibility(scope, hidden)
+      applySizes(scope, loadSizes(id))
     }
   }, [])
 
@@ -179,10 +199,23 @@ export function CardsReorderToolbar() {
                     setScopes((prev) => prev.map((s) => s.id === id ? { ...s, hidden: new Set(next) } : s))
                     setUiVersion((v) => v + 1)
                   }
+                  const setSize = (cardId: string, val: 'auto' | '1' | '2' | '3' | 'full') => {
+                    const next = { ...scope.sizes, [cardId]: val }
+                    saveSizes(id, next)
+                    applySizes(scope.el, next)
+                    setScopes((prev) => prev.map((s) => s.id === id ? { ...s, sizes: next } : s))
+                    setUiVersion((v) => v + 1)
+                  }
                   const reset = () => {
                     saveHidden(id, [])
                     applyVisibility(scope.el, [])
                     setScopes((prev) => prev.map((s) => s.id === id ? { ...s, hidden: new Set() } : s))
+                    setUiVersion((v) => v + 1)
+                  }
+                  const resetSizes = () => {
+                    saveSizes(id, {})
+                    applySizes(scope.el, {})
+                    setScopes((prev) => prev.map((s) => s.id === id ? { ...s, sizes: {} } : s))
                     setUiVersion((v) => v + 1)
                   }
                   return (
@@ -192,28 +225,52 @@ export function CardsReorderToolbar() {
                         {scope.items.map((it) => {
                           const isHidden = scope.hidden.has(it.id)
                           return (
-                            <label key={it.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                            <div key={it.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                               <span className="truncate">{it.title || it.id}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">{isHidden ? 'Hidden' : 'Shown'}</span>
-                                <Checkbox checked={!isHidden} onCheckedChange={(v) => toggle(it.id, Boolean(v))} />
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">{isHidden ? 'Hidden' : 'Shown'}</span>
+                                  <Checkbox checked={!isHidden} onCheckedChange={(v) => toggle(it.id, Boolean(v))} />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">Size</span>
+                                  <Select value={scope.sizes[it.id] || 'auto'} onValueChange={(v) => setSize(it.id, v as any)}>
+                                    <SelectTrigger className="h-7 w-32 text-xs">
+                                      <SelectValue placeholder="Auto" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="auto">Auto</SelectItem>
+                                      <SelectItem value="1">1 col</SelectItem>
+                                      <SelectItem value="2">2 cols</SelectItem>
+                                      <SelectItem value="3">3 cols</SelectItem>
+                                      <SelectItem value="full">Full row</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               </div>
-                            </label>
+                            </div>
                           )
                         })}
                       </div>
                       <div className="flex items-center justify-end gap-2 px-3 py-2">
                         <Button variant="outline" size="sm" className="h-7 px-2" onClick={reset}>Reset scope</Button>
+                        <Button variant="outline" size="sm" className="h-7 px-2" onClick={resetSizes}>Reset sizes</Button>
                       </div>
                     </div>
                   )
                 })
               )}
               <div className="flex items-center justify-end">
-                <Button variant="outline" size="sm" className="h-7 px-2" onClick={() => {
-                  getScopes().forEach((scope) => { const id = scope.getAttribute('data-cards-scope') || 'default'; saveHidden(id, []); applyVisibility(scope, []) })
-                  setUiVersion((v) => v + 1)
-                }}>Reset all</Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="h-7 px-2" onClick={() => {
+                    getScopes().forEach((scope) => { const id = scope.getAttribute('data-cards-scope') || 'default'; saveHidden(id, []); applyVisibility(scope, []) })
+                    setUiVersion((v) => v + 1)
+                  }}>Reset all visibility</Button>
+                  <Button variant="outline" size="sm" className="h-7 px-2" onClick={() => {
+                    getScopes().forEach((scope) => { const id = scope.getAttribute('data-cards-scope') || 'default'; saveSizes(id, {}); applySizes(scope, {}) })
+                    setUiVersion((v) => v + 1)
+                  }}>Reset all sizes</Button>
+                </div>
               </div>
             </div>
           </DialogContent>
