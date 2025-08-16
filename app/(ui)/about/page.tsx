@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { appConfig } from '@/lib/app-config'
+import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -12,10 +13,27 @@ import { ClientEnvironment } from './client-environment'
 import { FeatureFlags } from './feature-flags'
 import { SupportBundleButton } from './support-bundle-button'
 import { ReadmeBadges } from './readme-badges'
+import { OperationalToggles } from './operational-toggles'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: `About ${appConfig.name}`,
   description: `${appConfig.description} – build and support information`,
+  openGraph: {
+    title: `About ${appConfig.name}`,
+    description: `${appConfig.description}`,
+    url: '/about',
+    siteName: appConfig.name,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: `About ${appConfig.name}`,
+    description: `${appConfig.description}`,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 }
 
 export default function AboutPage() {
@@ -147,6 +165,16 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent>
             <FeatureFlags />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Operational toggles</CardTitle>
+            <CardDescription>Enabled behaviors</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <OperationalToggles />
           </CardContent>
         </Card>
 

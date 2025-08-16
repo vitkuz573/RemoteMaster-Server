@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NotificationPanel } from '@/components/ui/notification-panel';
 import { ThemeSwitcher } from './theme-switcher';
@@ -80,6 +81,9 @@ export function Header({
         </div>
         
         <div className="flex items-center space-x-4">
+            <Button asChild variant="ghost" size="sm" className="h-9 px-2">
+              <Link href="/about">About</Link>
+            </Button>
             <ThemeSwitcher />
           {config.showNotifications && (
             <NotificationPanel
