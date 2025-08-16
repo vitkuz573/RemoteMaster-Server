@@ -54,10 +54,15 @@ const csp = (isDev: boolean): string => {
     if (isDev) style.push("'unsafe-inline'")
     directives.push(style.join(' '))
   }
-  directives.push("img-src 'self' data: blob:");
-  if (EXTRA.IMG.length) {
-    directives.push(["img-src 'self' data: blob:", ...EXTRA.IMG].join(' '))
-  }
+  // Allow known badge providers by default (strict domains, no wildcards)
+  const IMG_DEFAULTS = [
+    'https://github.com',
+    'https://codecov.io',
+    'https://api.securityscorecards.dev',
+    'https://img.shields.io',
+  ]
+  const img = ["img-src 'self' data: blob:", ...IMG_DEFAULTS, ...(EXTRA.IMG ?? [])]
+  directives.push(img.join(' '))
   {
     const font = ["font-src 'self' data:", ...(EXTRA.FONT ?? [])]
     directives.push(font.join(' '))
