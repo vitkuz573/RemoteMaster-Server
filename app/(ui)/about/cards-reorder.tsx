@@ -41,6 +41,33 @@ function registry(scope: HTMLElement) {
 export function CardsReorderToolbar() {
   const [enabled, setEnabled] = useState(false)
   const [uiVersion, setUiVersion] = useState(0)
+  const [open, setOpen] = useState(false)
+  const [scopes, setScopes] = useState<{ id: string; el: HTMLElement; items: { id: string; title: string }[]; hidden: Set<string> }[]>([])
+
+  function collectScopes() {
+    const arr = getScopes().map((scope) => {
+      const id = scope.getAttribute('data-cards-scope') || 'default'
+      return {
+        id,
+        el: scope,
+        items: registry(scope),
+        hidden: new Set(loadHidden(id)),
+      }
+    })
+    setScopes(arr)
+  }
+
+  useEffect(() => {
+    if (!open) return
+    // Delay to ensure page DOM is painted
+    const t = setTimeout(() => collectScopes(), 0)
+    return () => clearTimeout(t)
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    collectScopes()
+  }, [uiVersion, open])
 
   useEffect(() => {
     // Apply saved order on mount
@@ -122,7 +149,7 @@ export function CardsReorderToolbar() {
           </TooltipTrigger>
           <TooltipContent>{enabled ? 'Reorder: on' : 'Reorder: off'}</TooltipContent>
         </Tooltip>
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
           <Tooltip>
             <TooltipTrigger asChild>
               <DialogTrigger asChild>
@@ -138,45 +165,50 @@ export function CardsReorderToolbar() {
               <DialogTitle>Manage widgets</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              {getScopes().map((scope) => {
-                const id = scope.getAttribute('data-cards-scope') || 'default'
-                const items = registry(scope)
-                const hidden = new Set(loadHidden(id))
-                const toggle = (cardId: string, on: boolean) => {
-                  const arr = Array.from(hidden)
-                  const next = on ? arr.filter((x) => x !== cardId) : [...new Set([...arr, cardId])]
-                  saveHidden(id, next)
-                  applyVisibility(scope, next)
-                  setUiVersion((v) => v + 1)
-                }
-                const reset = () => {
-                  saveHidden(id, [])
-                  applyVisibility(scope, [])
-                  setUiVersion((v) => v + 1)
-                }
-                return (
-                  <div key={id} className="rounded-md border">
-                    <div className="px-3 py-2 text-xs text-muted-foreground">Scope: {id}</div>
-                    <div className="divide-y">
-                      {items.map((it) => {
-                        const isHidden = hidden.has(it.id)
-                        return (
-                          <label key={it.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
-                            <span className="truncate">{it.title || it.id}</span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">{isHidden ? 'Hidden' : 'Shown'}</span>
-                              <Checkbox checked={!isHidden} onCheckedChange={(v) => toggle(it.id, Boolean(v))} />
-                            </div>
-                          </label>
-                        )
-                      })}
+              {scopes.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No widgets detected.</div>
+              ) : (
+                scopes.map((scope) => {
+                  const id = scope.id
+                  const toggle = (cardId: string, on: boolean) => {
+                    const arr = Array.from(scope.hidden)
+                    const next = on ? arr.filter((x) => x !== cardId) : [...new Set([...arr, cardId])]
+                    saveHidden(id, next)
+                    applyVisibility(scope.el, next)
+                    // update local state instantly
+                    setScopes((prev) => prev.map((s) => s.id === id ? { ...s, hidden: new Set(next) } : s))
+                    setUiVersion((v) => v + 1)
+                  }
+                  const reset = () => {
+                    saveHidden(id, [])
+                    applyVisibility(scope.el, [])
+                    setScopes((prev) => prev.map((s) => s.id === id ? { ...s, hidden: new Set() } : s))
+                    setUiVersion((v) => v + 1)
+                  }
+                  return (
+                    <div key={id} className="rounded-md border">
+                      <div className="px-3 py-2 text-xs text-muted-foreground">Scope: {id}</div>
+                      <div className="divide-y">
+                        {scope.items.map((it) => {
+                          const isHidden = scope.hidden.has(it.id)
+                          return (
+                            <label key={it.id} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                              <span className="truncate">{it.title || it.id}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">{isHidden ? 'Hidden' : 'Shown'}</span>
+                                <Checkbox checked={!isHidden} onCheckedChange={(v) => toggle(it.id, Boolean(v))} />
+                              </div>
+                            </label>
+                          )
+                        })}
                       </div>
                       <div className="flex items-center justify-end gap-2 px-3 py-2">
                         <Button variant="outline" size="sm" className="h-7 px-2" onClick={reset}>Reset scope</Button>
                       </div>
                     </div>
                   )
-              })}
+                })
+              )}
               <div className="flex items-center justify-end">
                 <Button variant="outline" size="sm" className="h-7 px-2" onClick={() => {
                   getScopes().forEach((scope) => { const id = scope.getAttribute('data-cards-scope') || 'default'; saveHidden(id, []); applyVisibility(scope, []) })
