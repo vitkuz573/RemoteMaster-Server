@@ -13,6 +13,6 @@ export default getRequestConfig(async () => {
       if (accept.includes('ru')) loc = 'ru'
     }
   } catch {}
-  const common = (await import(`@/locales/${loc}/common`)).default
+  const common = (await import(`../locales/${loc}/common`)).default
   return { locale: loc, messages: { common } }
 })
