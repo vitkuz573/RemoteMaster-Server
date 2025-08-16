@@ -14,6 +14,7 @@ import { FeatureFlags } from './feature-flags'
 import { SupportBundleButton } from './support-bundle-button'
 import { ReadmeBadges } from './readme-badges'
 import { OperationalToggles } from './operational-toggles'
+import { getDict } from './i18n'
 
 export const metadata: Metadata = {
   title: `About ${appConfig.name}`,
@@ -37,6 +38,7 @@ export const metadata: Metadata = {
 }
 
 export default function AboutPage() {
+  const t = getDict()
   const items: Array<{ label: string; value: string; href?: string }> = [
     { label: 'Version', value: appConfig.version, href: appConfig.versionUrl ?? undefined },
     { label: 'Build', value: appConfig.buildInfo, href: appConfig.commitUrl ?? undefined },
@@ -85,8 +87,8 @@ export default function AboutPage() {
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Build</CardTitle>
-            <CardDescription>Versioning and deployment metadata</CardDescription>
+            <CardTitle>{t.build}</CardTitle>
+            <CardDescription>{t.build_desc}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {items.map((it) => (
@@ -97,8 +99,8 @@ export default function AboutPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Support</CardTitle>
-            <CardDescription>How to get help</CardDescription>
+            <CardTitle>{t.support}</CardTitle>
+            <CardDescription>{t.support_desc}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <KeyValue label="Availability" value={appConfig.support.availability ?? '—'} />
@@ -113,8 +115,8 @@ export default function AboutPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Links</CardTitle>
-            <CardDescription>Project and status pages</CardDescription>
+            <CardTitle>{t.links}</CardTitle>
+            <CardDescription>{t.links_desc}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <ReadmeBadges />
@@ -150,8 +152,8 @@ export default function AboutPage() {
       <section className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Client environment</CardTitle>
-            <CardDescription>Browser, locale, device</CardDescription>
+            <CardTitle>{t.client_env}</CardTitle>
+            <CardDescription>{t.client_env_desc}</CardDescription>
           </CardHeader>
           <CardContent>
             <ClientEnvironment />
@@ -160,8 +162,8 @@ export default function AboutPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Feature flags</CardTitle>
-            <CardDescription>Runtime toggles</CardDescription>
+            <CardTitle>{t.feature_flags}</CardTitle>
+            <CardDescription>{t.feature_flags_desc}</CardDescription>
           </CardHeader>
           <CardContent>
             <FeatureFlags />
@@ -170,8 +172,8 @@ export default function AboutPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Operational toggles</CardTitle>
-            <CardDescription>Enabled behaviors</CardDescription>
+            <CardTitle>{t.operational_toggles}</CardTitle>
+            <CardDescription>{t.operational_toggles_desc}</CardDescription>
           </CardHeader>
           <CardContent>
             <OperationalToggles />
@@ -180,8 +182,8 @@ export default function AboutPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Operational checks</CardTitle>
-            <CardDescription>Live connectivity and latency</CardDescription>
+            <CardTitle>{t.operational_checks}</CardTitle>
+            <CardDescription>{t.operational_checks_desc}</CardDescription>
           </CardHeader>
           <CardContent>
             <EndpointChecks />
@@ -190,8 +192,8 @@ export default function AboutPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Endpoints</CardTitle>
-            <CardDescription>Runtime service configuration</CardDescription>
+            <CardTitle>{t.endpoints}</CardTitle>
+            <CardDescription>{t.endpoints_desc}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <KeyValue label="API" value={displayUrl(appConfig.endpoints.api)} link={appConfig.endpoints.api} />
@@ -216,8 +218,8 @@ export default function AboutPage() {
       <section>
         <Card>
           <CardHeader>
-            <CardTitle>Performance (Web Vitals)</CardTitle>
-            <CardDescription>Measured on your device</CardDescription>
+            <CardTitle>{t.performance}</CardTitle>
+            <CardDescription>{t.performance_desc}</CardDescription>
           </CardHeader>
           <CardContent>
             <WebVitalsWidget />
@@ -228,8 +230,8 @@ export default function AboutPage() {
       <section>
         <Card>
           <CardHeader>
-            <CardTitle>Support bundle</CardTitle>
-            <CardDescription>Export diagnostics as JSON</CardDescription>
+            <CardTitle>{t.support_bundle}</CardTitle>
+            <CardDescription>{t.support_bundle_desc}</CardDescription>
           </CardHeader>
           <CardContent>
             <SupportBundleButton />

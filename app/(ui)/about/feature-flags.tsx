@@ -1,4 +1,6 @@
 import { env } from '@/lib/env'
+import { featureMeta } from '@/lib/feature-flags.meta'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 function isFeatureKey(k: string) {
   return k.startsWith('NEXT_PUBLIC_FEATURE_')
@@ -16,13 +18,32 @@ export function FeatureFlags() {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {flags.map((f) => (
-        <div key={f.k}>
-          <div className="text-xs text-muted-foreground">{f.k.replace('NEXT_PUBLIC_FEATURE_', '')}</div>
-          <div className="font-mono text-xs">{f.v}</div>
-        </div>
-      ))}
-    </div>
+    <TooltipProvider>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {flags.map((f) => {
+          const key = f.k.replace('NEXT_PUBLIC_FEATURE_', '')
+          const meta = featureMeta[key]
+          return (
+            <div key={f.k}>
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                {meta ? (
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger className="underline decoration-dotted underline-offset-2">
+                      {meta.title}
+                    </TooltipTrigger>
+                    {meta.description ? (
+                      <TooltipContent className="max-w-xs">{meta.description}</TooltipContent>
+                    ) : null}
+                  </Tooltip>
+                ) : (
+                  key
+                )}
+              </div>
+              <div className="font-mono text-xs">{f.v}</div>
+            </div>
+          )
+        })}
+      </div>
+    </TooltipProvider>
   )
 }

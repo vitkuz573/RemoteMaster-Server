@@ -6,8 +6,9 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "node scripts/generate-build-info.js && next dev --turbopack",
-    "build": "node scripts/generate-build-info.js && next build",
+    "dev": "node scripts/generate-build-info.js && node scripts/generate-readme-badges.js && next dev --turbopack",
+    "build": "node scripts/generate-build-info.js && node scripts/generate-readme-badges.js && next build",
+    "build:badges": "node scripts/generate-readme-badges.js",
     "build:info": "node scripts/generate-build-info.js",
     "start": "next start",
     "lint": "next lint",
