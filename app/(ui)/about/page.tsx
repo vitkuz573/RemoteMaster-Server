@@ -108,6 +108,9 @@ export default async function AboutPage() {
         />
       </header>
 
+      <div className="flex items-center justify-end mb-2">
+        <CardsReorderToolbar />
+      </div>
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" data-cards-scope="about-top">
         <Card className="md:col-span-2 lg:col-span-3" data-card-id="versions" data-card-title="Versions">
           <CardHeader>
@@ -212,10 +215,6 @@ export default async function AboutPage() {
       </section>
 
       <Separator />
-
-      <div className="flex items-center justify-end mb-2">
-        <CardsReorderToolbar />
-      </div>
       <section className="grid gap-6 md:grid-cols-2" data-cards-scope="about-mid">
         <Card data-card-id="time-sync" data-card-title="Time sync">
           <CardHeader>
