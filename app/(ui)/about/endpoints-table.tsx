@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ChevronDown, CheckCircle2, XCircle, ExternalLink, Copy, RefreshCw, Braces } from 'lucide-react'
 import { useEndpointsContext } from '@/contexts/endpoints-context'
+import { env } from '@/lib/env'
 
 type Method = 'GET' | 'HEAD'
 type Check = { name: string; url?: string; method?: Method }
@@ -149,6 +150,37 @@ function Sparkline({ points }: { points: number[] }) {
 
 export function EndpointsTable() {
   const checks = useMemo<Check[]>(() => {
+    // Helper: parse NEXT_PUBLIC_ENDPOINTS if provided
+    const cfg = env.NEXT_PUBLIC_ENDPOINTS
+    const parsedFromEnv: Check[] = []
+    if (cfg && cfg.trim()) {
+      try {
+        if (cfg.trim().startsWith('[') || cfg.trim().startsWith('{')) {
+          const arr = JSON.parse(cfg)
+          if (Array.isArray(arr)) {
+            for (const it of arr) {
+              if (!it) continue
+              const name = String(it.name || '').trim()
+              const url = String(it.url || '').trim()
+              const method = String(it.method || 'GET').toUpperCase() as Method
+              if (name && url) parsedFromEnv.push({ name, url, method: method === 'HEAD' ? 'HEAD' : 'GET' })
+            }
+          }
+        } else {
+          // CSV: Name|URL|METHOD,Name|URL|METHOD
+          const items = cfg.split(/[;,\n]/).map((s) => s.trim()).filter(Boolean)
+          for (const item of items) {
+            const [name, url, methodRaw] = item.split('|')
+            if (!name || !url) continue
+            const method = String(methodRaw || 'GET').toUpperCase() as Method
+            parsedFromEnv.push({ name: name.trim(), url: url.trim(), method: method === 'HEAD' ? 'HEAD' : 'GET' })
+          }
+        }
+      } catch {
+        // ignore parse errors; fall back to defaults
+      }
+    }
+    if (parsedFromEnv.length) return parsedFromEnv
     const arr: Check[] = [
       { name: 'API', url: appConfig.endpoints.api, method: 'HEAD' },
       { name: 'Health', url: appConfig.endpoints.health, method: 'GET' },
