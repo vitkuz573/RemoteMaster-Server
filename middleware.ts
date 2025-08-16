@@ -1,15 +1,10 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import createMiddleware from 'next-intl/middleware'
-import { routing } from '@/i18n/routing'
+// (i18n routing removed)
 
 // Enterprise: enforce HTTPS in production behind proxies/CDNs
-const intl = createMiddleware(routing)
-
 export function middleware(request: NextRequest) {
-  // Run next-intl middleware first (handles locale prefixes/redirects)
-  const intlResponse = intl(request)
-  if (intlResponse) return intlResponse
+  // i18n routing disabled; keep enterprise checks only
   if (process.env.NODE_ENV === 'production') {
     const proto = request.headers.get('x-forwarded-proto') || request.nextUrl.protocol.replace(':', '')
     if (proto !== 'https') {
@@ -37,7 +32,10 @@ export function middleware(request: NextRequest) {
   return NextResponse.next()
 }
 
-// Run on all app paths except excluded; include API for fetch-metadata
+// Skip static assets and API routes
 export const config = {
-  matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/api/:path*',
+  ],
 }
