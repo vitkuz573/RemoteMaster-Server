@@ -1,8 +1,15 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
+import createMiddleware from 'next-intl/middleware'
+import { routing } from '@/i18n/routing'
 
 // Enterprise: enforce HTTPS in production behind proxies/CDNs
+const intl = createMiddleware(routing)
+
 export function middleware(request: NextRequest) {
+  // Run next-intl middleware first (handles locale prefixes/redirects)
+  const intlResponse = intl(request)
+  if (intlResponse) return intlResponse
   if (process.env.NODE_ENV === 'production') {
     const proto = request.headers.get('x-forwarded-proto') || request.nextUrl.protocol.replace(':', '')
     if (proto !== 'https') {
@@ -30,12 +37,7 @@ export function middleware(request: NextRequest) {
   return NextResponse.next()
 }
 
-// Skip static assets and API routes
+// Run on all app paths except excluded; include API for fetch-metadata
 export const config = {
-  matcher: [
-    // All app routes except static assets
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-    // Also run on API routes for fetch-metadata protection
-    '/api/:path*',
-  ],
+  matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
 }
