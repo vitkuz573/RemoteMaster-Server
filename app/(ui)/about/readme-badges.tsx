@@ -1,11 +1,13 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { appConfig } from '@/lib/app-config'
 
 type Badge = { alt: string; src: string; href?: string }
 
 function extractBadges(md: string): Badge[] {
   const block = md.match(/<!--\s*badges:start\s*-->[\s\S]*?<!--\s*badges:end\s*-->/i)
-  const chunk = block ? block[0] : md.slice(0, 500) // fallback: try early README
+  if (!block) return []
+  const chunk = block[0]
   const out: Badge[] = []
   const reLinked = /\[!\[(.*?)\]\((.*?)\)\]\((.*?)\)/g
   const rePlain = /!\[(.*?)\]\((.*?)\)/g
@@ -19,7 +21,46 @@ function extractBadges(md: string): Badge[] {
     const [, alt, src] = m
     if (!out.some((b) => b.src === src)) out.push({ alt, src })
   }
-  return out
+  return transformBadges(out)
+}
+
+function transformBadges(list: Badge[]): Badge[] {
+  const branch = appConfig.repository.branch || 'main'
+  const repoUrl = appConfig.repository.url || ''
+  let owner: string | undefined
+  let repo: string | undefined
+  try {
+    const u = new URL(repoUrl)
+    if (u.hostname === 'github.com') {
+      const parts = u.pathname.replace(/^\//,'').split('/')
+      owner = parts[0]
+      repo = parts[1]
+    }
+  } catch {}
+
+  return list.map((b) => {
+    try {
+      const u = new URL(b.src)
+      // Rewrite GitHub Actions badge to shields
+      if (u.hostname === 'github.com' && /\/actions\/workflows\/.+\/badge\.svg$/.test(u.pathname) && owner && repo) {
+        const workflow = u.pathname.split('/').slice(-2, -1)[0]
+        return {
+          alt: b.alt || 'CI',
+          src: `https://img.shields.io/github/actions/workflow/status/${owner}/${repo}/${workflow}?branch=${encodeURIComponent(branch)}`,
+          href: b.href,
+        }
+      }
+      // Rewrite Codecov badge to shields
+      if (u.hostname === 'codecov.io' && /\/gh\/.+\/branch\/.+\/graph\/badge\.svg$/.test(u.pathname) && owner && repo) {
+        return {
+          alt: b.alt || 'codecov',
+          src: `https://img.shields.io/codecov/c/github/${owner}/${repo}/${encodeURIComponent(branch)}`,
+          href: b.href,
+        }
+      }
+    } catch {}
+    return b
+  })
 }
 
 export async function ReadmeBadges() {
@@ -47,4 +88,3 @@ export async function ReadmeBadges() {
     return null
   }
 }
-
