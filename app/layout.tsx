@@ -14,7 +14,7 @@ import { ErrorReporter } from "@/components/error-reporter";
 import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 import { AppErrorBoundary } from "@/components/app-error-boundary";
 import { LocaleProvider } from "@/contexts/locale-context";
-import { getInitialLocale } from "@/lib/i18n";
+import { getInitialLocaleServer } from "@/lib/i18n-server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const initialLocale = getInitialLocale()
+  const initialLocale = getInitialLocaleServer()
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
