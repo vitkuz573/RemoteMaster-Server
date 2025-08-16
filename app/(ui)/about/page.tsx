@@ -19,8 +19,9 @@ import { TimeSync } from './time-sync'
 import { SentryTest } from './sentry-test'
 import { ConfigAdvisor } from './config-advisor'
 import { StatusPanel } from './status-panel'
-import { CurlSnippets } from './curl-snippets'
+import { CurlSnippets as CurlBlock } from './curl-snippets'
 import { EndpointActions } from './endpoint-actions'
+import { OpenIssueDiagnostics } from './open-issue-diagnostics'
 import { OverallStatus } from './overall-status'
 import { CurlSnippets } from './curl-snippets'
 
@@ -247,7 +248,7 @@ export default async function AboutPage() {
               <EndpointActions url={appConfig.endpoints.health} />
             </div>
             <div className="pt-2">
-              <CurlSnippets />
+              <CurlBlock />
             </div>
           </CardContent>
         </Card>
@@ -284,7 +285,18 @@ export default async function AboutPage() {
             <CardDescription>{t('support_bundle_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <SupportBundleButton />
+            <div className="flex items-center gap-3 flex-wrap">
+              <SupportBundleButton />
+              <OpenIssueDiagnostics repoUrl={appConfig.repository.url} payload={{
+                name: appConfig.name,
+                version: appConfig.version,
+                build: appConfig.buildInfo,
+                branch: appConfig.buildBranch,
+                date: appConfig.buildDate,
+                environment: appConfig.environment,
+                endpoints: appConfig.endpoints,
+              }} />
+            </div>
             <div className="mt-4">
               <SentryTest />
             </div>

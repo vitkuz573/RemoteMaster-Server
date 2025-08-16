@@ -14,7 +14,7 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export function CurlSnippets() {
-  const [shell, setShell] = useState<'bash'|'powershell'>('bash')
+  const [shell, setShell] = useState<'bash'|'powershell'|'wget'|'cmd'>('bash')
   const cmds = useMemo(() => {
     const api = appConfig.endpoints.api
     const health = appConfig.endpoints.health
@@ -25,11 +25,20 @@ export function CurlSnippets() {
       if (api) list.push({ label: 'API timing', cmd: `curl -s -o /dev/null -w "HTTP:%{http_code} TIME_TOTAL:%{time_total}s" ${api}` })
       if (health) list.push({ label: 'Health GET', cmd: `curl -s ${health}` })
       if (status) list.push({ label: 'Status GET', cmd: `curl -s ${status}` })
-    } else {
+    } else if (shell === 'powershell') {
       if (api) list.push({ label: 'API HEAD', cmd: `iwr -Method Head ${api}` })
       if (api) list.push({ label: 'API timing', cmd: `$r = Measure-Command { iwr -UseBasicParsing ${api} | Out-Null }; Write-Output ("TIME_TOTAL:{0}s" -f $r.TotalSeconds)` })
       if (health) list.push({ label: 'Health GET', cmd: `iwr -UseBasicParsing ${health}` })
       if (status) list.push({ label: 'Status GET', cmd: `iwr -UseBasicParsing ${status}` })
+    } else if (shell === 'wget') {
+      if (api) list.push({ label: 'API HEAD', cmd: `wget --spider ${api}` })
+      if (health) list.push({ label: 'Health GET', cmd: `wget -qO- ${health}` })
+      if (status) list.push({ label: 'Status GET', cmd: `wget -qO- ${status}` })
+    } else {
+      // Windows CMD with curl.exe
+      if (api) list.push({ label: 'API HEAD', cmd: `curl.exe -I ${api}` })
+      if (health) list.push({ label: 'Health GET', cmd: `curl.exe -s ${health}` })
+      if (status) list.push({ label: 'Status GET', cmd: `curl.exe -s ${status}` })
     }
     return list
   }, [shell])
@@ -39,12 +48,30 @@ export function CurlSnippets() {
   const issueBody = '```\n' + cmds.map(c=>`# ${c.label}\n${c.cmd}`).join('\n\n') + '\n```'
   const issueUrl = repo ? `${repo}/issues/new?title=${encodeURIComponent('[Support] Endpoint checks via CLI')}&body=${encodeURIComponent(issueBody)}` : null
 
+  const download = () => {
+    const ext = shell === 'powershell' ? 'ps1' : 'sh'
+    const header = shell === 'powershell' ? '' : '#!/usr/bin/env bash\n'
+    const content = header + cmds.map(c=>c.cmd).join('\n') + '\n'
+    const blob = new Blob([content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `endpoints.${ext}`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-xs">
         <span>Shell:</span>
         <Button size="sm" variant={shell==='bash'?'default':'outline'} onClick={()=>setShell('bash')}>Bash</Button>
         <Button size="sm" variant={shell==='powershell'?'default':'outline'} onClick={()=>setShell('powershell')}>PowerShell</Button>
+        <Button size="sm" variant={shell==='wget'?'default':'outline'} onClick={()=>setShell('wget')}>Wget</Button>
+        <Button size="sm" variant={shell==='cmd'?'default':'outline'} onClick={()=>setShell('cmd')}>CMD</Button>
+        <Button size="sm" variant="outline" onClick={download}>Download</Button>
         {issueUrl ? (
           <a className="ml-2 underline" href={issueUrl} target="_blank" rel="noreferrer noopener">Open issue with snippets</a>
         ) : null}
