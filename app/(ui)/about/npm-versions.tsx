@@ -161,9 +161,6 @@ export function NpmVersions() {
     return { total, outdated, majors, minors, patchs }
   }, [rows])
 
-  if (error || !data) return null
-  if (!rows.length) return null
-
   function copy(cmd: string) {
     void navigator.clipboard?.writeText(cmd)
   }
@@ -186,6 +183,10 @@ export function NpmVersions() {
       counts: { all: outdated.length, majors: majors.length, minorsPatches: minorsPatches.length },
     }
   }, [rows])
+
+  // Perform early exits only after all hooks are declared to keep hook order stable
+  if (error || !data) return null
+  if (!rows.length) return null
 
   return (
     <div className="rounded-md border">
