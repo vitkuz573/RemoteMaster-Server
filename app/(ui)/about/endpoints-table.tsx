@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { appConfig } from '@/lib/app-config'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -180,15 +179,7 @@ export function EndpointsTable() {
         // ignore parse errors; fall back to defaults
       }
     }
-    if (parsedFromEnv.length) return parsedFromEnv
-    const arr: Check[] = [
-      { name: 'API', url: appConfig.endpoints.api, method: 'HEAD' },
-      { name: 'Health', url: appConfig.endpoints.health, method: 'GET' },
-      { name: 'Status', url: appConfig.endpoints.status, method: 'GET' },
-    ]
-    if (appConfig.endpoints.metrics) arr.push({ name: 'Metrics', url: appConfig.endpoints.metrics, method: 'GET' })
-    if (appConfig.endpoints.logs) arr.push({ name: 'Logs', url: appConfig.endpoints.logs, method: 'GET' })
-    return arr
+    return parsedFromEnv
   }, [])
 
   const { results, loading, run, runOne, history } = useEndpointStatus(checks)
@@ -231,6 +222,7 @@ export function EndpointsTable() {
   return (
     <TooltipProvider>
       {/* Header controls moved to CardAction via EndpointsHeaderControls */}
+      {checks.length > 0 ? (
       <Table>
         <TableHeader>
           <TableRow>
@@ -308,7 +300,13 @@ export function EndpointsTable() {
           })}
         </TableBody>
       </Table>
+      ) : (
+        <div className="rounded-md border p-3 text-sm text-muted-foreground">
+          No endpoints configured. Set NEXT_PUBLIC_ENDPOINTS in .env.local (JSON or CSV).
+        </div>
+      )}
       {/* Inline details */}
+      {results.length > 0 && (
       <div className="mt-3 grid gap-2">
         {results.map((r) => (
           <details key={r.name} className="rounded-md border p-3">
@@ -353,6 +351,7 @@ export function EndpointsTable() {
           </details>
         ))}
       </div>
+      )}
     </TooltipProvider>
   )
 }
