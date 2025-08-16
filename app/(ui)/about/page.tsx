@@ -18,6 +18,9 @@ import { getTranslations } from 'next-intl/server'
 import { TimeSync } from './time-sync'
 import { SentryTest } from './sentry-test'
 import { ConfigAdvisor } from './config-advisor'
+import { StatusPanel } from './status-panel'
+import { CurlSnippets } from './curl-snippets'
+import { EndpointActions } from './endpoint-actions'
 import { OverallStatus } from './overall-status'
 import { CurlSnippets } from './curl-snippets'
 
@@ -162,6 +165,15 @@ export default async function AboutPage() {
             <OverallStatus />
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Status summary</CardTitle>
+            <CardDescription>Aggregated status of key endpoints</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <StatusPanel />
+          </CardContent>
+        </Card>
       </section>
 
       <Separator />
@@ -222,9 +234,18 @@ export default async function AboutPage() {
             <CardDescription>{t('endpoints_desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <KeyValue label="API" value={displayUrl(appConfig.endpoints.api)} link={appConfig.endpoints.api} />
-            <KeyValue label="Status" value={displayUrl(appConfig.endpoints.status)} link={appConfig.endpoints.status} />
-            <KeyValue label="Health" value={displayUrl(appConfig.endpoints.health)} link={appConfig.endpoints.health} />
+            <div className="flex items-center justify-between gap-3">
+              <KeyValue label="API" value={displayUrl(appConfig.endpoints.api)} link={appConfig.endpoints.api} />
+              <EndpointActions url={appConfig.endpoints.api} />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <KeyValue label="Status" value={displayUrl(appConfig.endpoints.status)} link={appConfig.endpoints.status} />
+              <EndpointActions url={appConfig.endpoints.status} />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <KeyValue label="Health" value={displayUrl(appConfig.endpoints.health)} link={appConfig.endpoints.health} />
+              <EndpointActions url={appConfig.endpoints.health} />
+            </div>
             <div className="pt-2">
               <CurlSnippets />
             </div>
