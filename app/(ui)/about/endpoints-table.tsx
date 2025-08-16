@@ -162,31 +162,39 @@ export function EndpointsTable() {
   const { results, loading, run, runOne, history } = useEndpointStatus(checks)
   const { intervalSec, setIntervalSec, setRemaining, remaining, setSummary, setRunner } = useEndpointsContext()
   const countdownRef = useRef<number | null>(null)
+  const runRef = useRef(run)
+
+  // Keep latest run in a ref to avoid effect dependency loops
+  useEffect(() => { runRef.current = run }, [run])
 
   useEffect(() => {
     if (!intervalSec) { if (countdownRef.current) { window.clearInterval(countdownRef.current); countdownRef.current = null } return }
     setRemaining(intervalSec)
     countdownRef.current = window.setInterval(() => {
       setRemaining((r) => {
-        if (r <= 1) { void run(); return intervalSec }
+        if (r <= 1) { void runRef.current(); return intervalSec }
         return r - 1
       })
     }, 1000)
     return () => { if (countdownRef.current) window.clearInterval(countdownRef.current) }
-  }, [intervalSec, run])
+  }, [intervalSec, setRemaining])
 
   const copy = (s: string) => void navigator.clipboard?.writeText(s)
 
-  // Publish summary and runner to context
+  // Publish summary to context when results change
   useEffect(() => {
     const total = results.length || checks.length
     const ok = results.filter(r => r.ok).length
     const worstMs = results.length ? Math.max(...results.map(r => r.ms ?? 0)) : null
     const slow = results.filter(r => (r.ms ?? 0) >= 1500).length
     setSummary({ total, ok, slow, worstMs })
-    setRunner(() => run)
+  }, [results, checks.length, setSummary])
+
+  // Provide a stable runner into context (once), executing latest run from ref
+  useEffect(() => {
+    setRunner(() => () => runRef.current())
     return () => setRunner(undefined)
-  }, [results, checks.length, run, setRunner, setSummary])
+  }, [setRunner])
 
   return (
     <TooltipProvider>
