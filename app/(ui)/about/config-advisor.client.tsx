@@ -9,6 +9,7 @@ type Advice = { level: 'danger' | 'warning' | 'info'; text: string }
 export function ConfigAdvisorClient({ advices, signature }: { advices: Advice[]; signature: string }) {
   const storageKey = 'advisor:dismissed'
   const [visible, setVisible] = useState(true)
+  const [extra, setExtra] = useState<Advice[]>([])
   const t = useTranslations('common')
   const icon = (lvl: Advice['level']) => lvl==='danger'? <ShieldAlert className="size-4"/> : lvl==='warning'? <AlertTriangle className="size-4"/> : <Info className="size-4"/>
   const cls = (lvl: Advice['level']) => lvl==='danger'? 'text-red-600 dark:text-red-400' : lvl==='warning'? 'text-yellow-700 dark:text-yellow-300' : 'text-blue-700 dark:text-blue-300'
@@ -20,6 +21,15 @@ export function ConfigAdvisorClient({ advices, signature }: { advices: Advice[];
       else setVisible(true)
     } catch {}
   }, [signature])
+
+  useEffect(() => {
+    let alive = true
+    fetch('/api/config-lint', { cache: 'no-store' })
+      .then(r => r.json())
+      .then((d) => { if (alive) setExtra(Array.isArray(d?.advices) ? d.advices : []) })
+      .catch(() => { if (alive) setExtra([]) })
+    return () => { alive = false }
+  }, [])
 
   const dismiss = () => {
     try { localStorage.setItem(storageKey, signature) } catch {}
@@ -42,7 +52,7 @@ export function ConfigAdvisorClient({ advices, signature }: { advices: Advice[];
         </button>
       </div>
       <ul className="space-y-2">
-        {advices.map((a, i) => (
+        {[...advices, ...extra].map((a, i) => (
           <li key={i} className={`flex items-center gap-2 ${cls(a.level)}`}>
             {icon(a.level)}
             <span className="text-sm">{a.text}</span>

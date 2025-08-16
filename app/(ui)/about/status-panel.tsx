@@ -13,6 +13,7 @@ type Result = { name: string; ok: boolean; code?: number; ms?: number; url?: str
 function useChecks(checks: Check[]) {
   const [results, setResults] = useState<Result[]>([])
   const [loading, setLoading] = useState(false)
+  const [history, setHistory] = useState<Record<string, number[]>>({})
   const run = async () => {
     setLoading(true)
     try {
@@ -30,10 +31,30 @@ function useChecks(checks: Check[]) {
         }
       }
       setResults(entries)
+      // update sparkline history in sessionStorage (keep last 20)
+      const next: Record<string, number[]> = { ...history }
+      for (const e of entries) {
+        const key = `about:status:hist:${e.name}`
+        let arr: number[] = []
+        try { arr = JSON.parse(sessionStorage.getItem(key) || '[]') } catch { arr = [] }
+        arr = [...arr, e.ms ?? 0].slice(-20)
+        next[e.name] = arr
+        try { sessionStorage.setItem(key, JSON.stringify(arr)) } catch {}
+      }
+      setHistory(next)
     } finally { setLoading(false) }
   }
   useEffect(() => { void run() }, [])
-  return { results, loading, run }
+  useEffect(() => {
+    const loaded: Record<string, number[]> = {}
+    for (const c of checks) {
+      const key = `about:status:hist:${c.name}`
+      try { loaded[c.name] = JSON.parse(sessionStorage.getItem(key) || '[]') } catch { loaded[c.name] = [] }
+    }
+    setHistory(loaded)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  return { results, loading, run, history }
 }
 
 export function StatusPanel() {
@@ -43,7 +64,7 @@ export function StatusPanel() {
     { name: 'Status', url: appConfig.endpoints.status, method: 'GET' },
   ]), [])
 
-  const { results, loading, run } = useChecks(checks)
+  const { results, loading, run, history } = useChecks(checks)
   const allOk = results.length > 0 && results.every(r => r.ok)
   const slow = results.some(r => (r.ms ?? 0) >= 1500)
   const variant = results.length === 0 ? 'outline' : allOk ? (slow ? 'secondary' : 'default') : 'destructive'
@@ -88,6 +109,7 @@ export function StatusPanel() {
             <div className="flex items-center gap-2">
               {r.url ? <a className="text-xs underline" href={r.url} target="_blank" rel="noreferrer noopener">Open</a> : null}
             </div>
+            <Sparkline data={history[r.name] ?? []} />
           </div>
         ))}
       </div>
@@ -97,5 +119,20 @@ export function StatusPanel() {
         <span className="flex items-center gap-1"><XCircle className="size-3 text-red-600"/>{t('fail_label')}</span>
       </div>
     </div>
+  )
+}
+
+function Sparkline({ data }: { data: number[] }) {
+  const w = 60, h = 16
+  if (!data || data.length === 0) return <svg width={w} height={h} />
+  const max = Math.max(...data, 1)
+  const min = Math.min(...data, 0)
+  const scaleX = (i: number) => (i / Math.max(data.length - 1, 1)) * (w - 2) + 1
+  const scaleY = (v: number) => h - 1 - ((v - min) / (max - min || 1)) * (h - 2)
+  const d = data.map((v, i) => `${i === 0 ? 'M' : 'L'}${scaleX(i)},${scaleY(v)}`).join(' ')
+  return (
+    <svg width={w} height={h} className="text-muted-foreground">
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="1" />
+    </svg>
   )
 }
