@@ -168,8 +168,8 @@ export default async function AboutPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Status summary</CardTitle>
-            <CardDescription>Aggregated status of key endpoints</CardDescription>
+            <CardTitle>{t('status_summary_title')}</CardTitle>
+            <CardDescription>{t('status_summary_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <StatusPanel />
@@ -182,8 +182,8 @@ export default async function AboutPage() {
       <section className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Time sync</CardTitle>
-            <CardDescription>Client vs server time offset</CardDescription>
+            <CardTitle>{t('time_sync_title')}</CardTitle>
+            <CardDescription>{t('time_sync_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <TimeSync />
