@@ -10,6 +10,7 @@ import { WebVitalsWidget } from './web-vitals-widget'
 import { SupportIssueButton } from './support-issue-button'
 import { ClientEnvironment } from './client-environment'
 import { FeatureFlags } from './feature-flags'
+import { SupportBundleButton } from './support-bundle-button'
 
 export const metadata = {
   title: `About ${appConfig.name}`,
