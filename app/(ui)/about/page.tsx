@@ -22,6 +22,7 @@ import { StatusPanel } from './status-panel'
 import { CurlSnippets as CurlBlock } from './curl-snippets'
 import { EndpointActions } from './endpoint-actions'
 import { OpenIssueDiagnostics } from './open-issue-diagnostics'
+import { BuildInfoCompare } from './build-info-compare'
 import { OverallStatus } from './overall-status'
 import { CurlSnippets } from './curl-snippets'
 
@@ -106,6 +107,9 @@ export default async function AboutPage() {
             {items.map((it) => (
               <Info key={it.label} label={it.label} value={it.value} link={it.href} />
             ))}
+            <div className="pt-2">
+              <BuildInfoCompare />
+            </div>
           </CardContent>
         </Card>
 

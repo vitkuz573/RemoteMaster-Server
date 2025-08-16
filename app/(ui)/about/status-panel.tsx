@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { appConfig } from '@/lib/app-config'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle2, AlertTriangle, XCircle, Timer } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { CheckCircle2, AlertTriangle, XCircle, Timer, Download } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 type Check = { name: string; url?: string; method?: 'GET'|'HEAD' }
 type Result = { name: string; ok: boolean; code?: number; ms?: number; url?: string }
@@ -46,16 +48,30 @@ export function StatusPanel() {
   const slow = results.some(r => (r.ms ?? 0) >= 1500)
   const variant = results.length === 0 ? 'outline' : allOk ? (slow ? 'secondary' : 'default') : 'destructive'
   const okCount = results.filter(r => r.ok).length
+  const t = useTranslations('common')
+
+  const download = () => {
+    const blob = new Blob([JSON.stringify({ results, generatedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'status-results.json'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Badge variant={variant as any}>
-          {results.length === 0 ? 'unknown' : allOk ? `OK • ${okCount}/${checks.length}` : `Issues • ${okCount}/${checks.length}`}
+          {results.length === 0 ? t('unknown') : allOk ? `${t('ok_label')} • ${okCount}/${checks.length}` : `Issues • ${okCount}/${checks.length}`}
         </Badge>
         <button className="text-xs underline" onClick={run} disabled={loading}>
-          {loading ? 'Checking…' : 'Re-check'}
+          {loading ? t('measuring') : t('recheck_btn')}
         </button>
+        <Button size="sm" variant="outline" onClick={download}><Download className="size-3 mr-1"/>{t('export_json')}</Button>
       </div>
       <div className="space-y-2 text-sm">
         {results.map((r) => (
@@ -76,11 +92,10 @@ export function StatusPanel() {
         ))}
       </div>
       <div className="pt-1 text-xs text-muted-foreground flex items-center gap-4">
-        <span className="flex items-center gap-1"><CheckCircle2 className="size-3 text-green-600"/>OK</span>
-        <span className="flex items-center gap-1"><AlertTriangle className="size-3 text-yellow-600"/>Slow ≥ 1500ms</span>
-        <span className="flex items-center gap-1"><XCircle className="size-3 text-red-600"/>Fail</span>
+        <span className="flex items-center gap-1"><CheckCircle2 className="size-3 text-green-600"/>{t('ok_label')}</span>
+        <span className="flex items-center gap-1"><AlertTriangle className="size-3 text-yellow-600"/>{t('slow_label')}</span>
+        <span className="flex items-center gap-1"><XCircle className="size-3 text-red-600"/>{t('fail_label')}</span>
       </div>
     </div>
   )
 }
-

@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useTranslations } from 'next-intl'
 
 type Result = { offsetMs: number; rttMs: number } | null
 
 export function TimeSync() {
   const [res, setRes] = useState<Result>(null)
   const [loading, setLoading] = useState(false)
+  const t = useTranslations('common')
 
   const run = async () => {
     setLoading(true)
@@ -40,9 +42,8 @@ export function TimeSync() {
         {res ? `offset ${res.offsetMs} ms • rtt ${res.rttMs} ms` : 'unknown'}
       </Badge>
       <Button size="sm" variant="outline" onClick={run} disabled={loading}>
-        {loading ? 'Measuring…' : 'Re-check'}
+        {loading ? t('measuring') : t('recheck_btn')}
       </Button>
     </div>
   )
 }
-

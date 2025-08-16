@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { appConfig } from '@/lib/app-config'
 import { Button } from '@/components/ui/button'
 
@@ -15,6 +16,7 @@ function CopyButton({ text }: { text: string }) {
 
 export function CurlSnippets() {
   const [shell, setShell] = useState<'bash'|'powershell'|'wget'|'cmd'>('bash')
+  const t = useTranslations('common')
   const cmds = useMemo(() => {
     const api = appConfig.endpoints.api
     const health = appConfig.endpoints.health
@@ -66,14 +68,14 @@ export function CurlSnippets() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-xs">
-        <span>Shell:</span>
-        <Button size="sm" variant={shell==='bash'?'default':'outline'} onClick={()=>setShell('bash')}>Bash</Button>
-        <Button size="sm" variant={shell==='powershell'?'default':'outline'} onClick={()=>setShell('powershell')}>PowerShell</Button>
-        <Button size="sm" variant={shell==='wget'?'default':'outline'} onClick={()=>setShell('wget')}>Wget</Button>
-        <Button size="sm" variant={shell==='cmd'?'default':'outline'} onClick={()=>setShell('cmd')}>CMD</Button>
-        <Button size="sm" variant="outline" onClick={download}>Download</Button>
+        <span>{t('shell_label')}</span>
+        <Button size="sm" variant={shell==='bash'?'default':'outline'} onClick={()=>setShell('bash')}>{t('bash_tab')}</Button>
+        <Button size="sm" variant={shell==='powershell'?'default':'outline'} onClick={()=>setShell('powershell')}>{t('powershell_tab')}</Button>
+        <Button size="sm" variant={shell==='wget'?'default':'outline'} onClick={()=>setShell('wget')}>{t('wget_tab')}</Button>
+        <Button size="sm" variant={shell==='cmd'?'default':'outline'} onClick={()=>setShell('cmd')}>{t('cmd_tab')}</Button>
+        <Button size="sm" variant="outline" onClick={download}>{t('download_btn')}</Button>
         {issueUrl ? (
-          <a className="ml-2 underline" href={issueUrl} target="_blank" rel="noreferrer noopener">Open issue with snippets</a>
+          <a className="ml-2 underline" href={issueUrl} target="_blank" rel="noreferrer noopener">{t('open_issue_snippets')}</a>
         ) : null}
       </div>
       {cmds.map((c) => (
