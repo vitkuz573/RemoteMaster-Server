@@ -27,6 +27,7 @@ RUN groupadd -g 1001 nodejs && \
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/README.md ./README.md
 
 # Runtime env
 ENV PORT=3000

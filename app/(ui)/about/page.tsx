@@ -11,6 +11,7 @@ import { SupportIssueButton } from './support-issue-button'
 import { ClientEnvironment } from './client-environment'
 import { FeatureFlags } from './feature-flags'
 import { SupportBundleButton } from './support-bundle-button'
+import { ReadmeBadges } from './readme-badges'
 
 export const metadata = {
   title: `About ${appConfig.name}`,
@@ -98,7 +99,7 @@ export default function AboutPage() {
             <CardDescription>Project and status pages</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <ProjectBadges />
+            <ReadmeBadges />
             <ul className="space-y-2 text-sm">
               {links.map((l) => (
                 <li key={l.label}>
@@ -263,39 +264,7 @@ function ExtLink({ href, children }: { href?: string; children: React.ReactNode 
   )
 }
 
-function ProjectBadges() {
-  const gh = githubInfo(appConfig.repository.url)
-  if (!gh) return null
-  const { owner, repo } = gh
-  const branch = appConfig.repository.branch || 'main'
-  const badges = [
-    {
-      alt: 'CI',
-      src: `https://img.shields.io/github/actions/workflow/status/${owner}/${repo}/ci.yml?branch=${branch}`,
-      href: `https://github.com/${owner}/${repo}/actions/workflows/ci.yml`,
-    },
-    {
-      alt: 'Codecov',
-      src: `https://img.shields.io/codecov/c/github/${owner}/${repo}/${branch}`,
-      href: `https://app.codecov.io/gh/${owner}/${repo}`,
-    },
-    {
-      alt: 'OpenSSF Scorecard',
-      src: `https://api.securityscorecards.dev/projects/github.com/${owner}/${repo}/badge`,
-      href: `https://securityscorecards.dev/viewer/?uri=github.com/${owner}/${repo}`,
-    },
-  ]
-  return (
-    <div className="flex flex-wrap gap-2 pb-2">
-      {badges.map((b) => (
-        <a key={b.alt} href={b.href} target="_blank" rel="noreferrer noopener">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={b.src} alt={b.alt} className="h-5" />
-        </a>
-      ))}
-    </div>
-  )
-}
+// fallback util (kept if needed elsewhere)
 
 function githubInfo(url?: string) {
   try {

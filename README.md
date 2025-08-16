@@ -1,8 +1,10 @@
 # RemoteMaster Server UI
 
+<!-- badges:start -->
 [![CI](https://github.com/vitkuz573/RemoteMaster-Server/actions/workflows/ci.yml/badge.svg)](https://github.com/vitkuz573/RemoteMaster-Server/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/vitkuz573/RemoteMaster-Server/branch/main/graph/badge.svg)](https://app.codecov.io/gh/vitkuz573/RemoteMaster-Server)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/vitkuz573/RemoteMaster-Server/badge)](https://securityscorecards.dev/viewer/?uri=github.com/vitkuz573/RemoteMaster-Server)
+<!-- badges:end -->
 
 A modern React application built with Next.js 15 and shadcn UI, featuring enterprise-grade authentication, organizational management, and host monitoring capabilities.
 
