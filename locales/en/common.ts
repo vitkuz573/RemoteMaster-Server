@@ -26,6 +26,7 @@ const en = {
   open_issue_diagnostics: 'Open issue with diagnostics',
   refresh_every: 'Refresh every',
   off: 'off',
+  next_in: 'next: {sec}s',
   open_btn: 'Open',
   copy_btn: 'Copy',
   build: 'Build',

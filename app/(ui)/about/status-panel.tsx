@@ -72,10 +72,17 @@ export function StatusPanel() {
   const t = useTranslations('common')
 
   const [intervalSec, setIntervalSec] = useState<number | null>(null)
+  const [remaining, setRemaining] = useState<number>(0)
   useEffect(() => {
     if (!intervalSec) return
-    const id = setInterval(() => { void run() }, intervalSec * 1000)
-    return () => clearInterval(id)
+    setRemaining(intervalSec)
+    const tick = setInterval(() => {
+      setRemaining((r) => {
+        if (r <= 1) { void run(); return intervalSec }
+        return r - 1
+      })
+    }, 1000)
+    return () => clearInterval(tick)
   }, [intervalSec])
 
   const download = () => {
@@ -115,6 +122,7 @@ export function StatusPanel() {
             <option value="30">30s</option>
             <option value="60">60s</option>
           </select>
+          {intervalSec ? <span className="ml-2">{t('next_in', {sec: remaining})}</span> : null}
         </div>
       </div>
       <div className="space-y-2 text-sm">

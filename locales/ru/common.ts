@@ -26,6 +26,7 @@ const ru = {
   open_issue_diagnostics: 'Создать issue с диагностикой',
   refresh_every: 'Обновлять каждые',
   off: 'выкл',
+  next_in: 'следующая: {sec}с',
   open_btn: 'Открыть',
   copy_btn: 'Скопировать',
   build: 'Сборка',

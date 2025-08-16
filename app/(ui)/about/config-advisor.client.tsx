@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { AlertTriangle, ShieldAlert, Info, X } from 'lucide-react'
+import { AlertTriangle, ShieldAlert, Info, X, Download } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 
 type Advice = { level: 'danger' | 'warning' | 'info'; text: string }
@@ -50,6 +51,28 @@ export function ConfigAdvisorClient({ advices, signature }: { advices: Advice[];
         <button aria-label={t('advisor_dismiss')} className="text-xs text-muted-foreground hover:text-foreground" onClick={dismiss}>
           <X className="size-3.5" />
         </button>
+      </div>
+      <div className="mb-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            try {
+              const payload = { advices: [...advices, ...extra], generatedAt: new Date().toISOString() }
+              const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = 'config-report.json'
+              document.body.appendChild(a)
+              a.click()
+              a.remove()
+              URL.revokeObjectURL(url)
+            } catch {}
+          }}
+        >
+          <Download className="size-3 mr-1"/>{t('export_config_report')}
+        </Button>
       </div>
       <ul className="space-y-2">
         {[...advices, ...extra].map((a, i) => (
