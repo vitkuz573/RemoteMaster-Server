@@ -49,16 +49,16 @@ export async function PackageInfo() {
     ]
 
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {groups.map((g) => (
           <div key={g.title} className="rounded-md border p-3">
             <div className="text-xs font-medium text-muted-foreground mb-2">{g.title}</div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="space-y-1.5">
               {g.items.map((it) => (
-                <span key={it.label} className="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs">
-                  <span className="text-muted-foreground">{it.label}</span>
-                  <span className="font-mono">{it.value}</span>
-                </span>
+                <div key={it.label} className="grid grid-cols-[100px_1fr] gap-2 items-baseline">
+                  <div className="text-xs text-muted-foreground whitespace-nowrap">{it.label}</div>
+                  <div className="font-mono text-sm break-words">{it.value}</div>
+                </div>
               ))}
             </div>
           </div>

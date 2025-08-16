@@ -26,6 +26,7 @@ import { BuildInfoCompare } from './build-info-compare'
 import { FullDiagnostics } from './full-diagnostics'
 import { MdSummary } from './md-summary'
 import { PackageInfo } from './package-info'
+import { NpmVersions } from './npm-versions'
 import { EndpointHeaders } from './endpoint-headers'
 import { StorageQuota } from './storage-quota'
 import { OverallStatus } from './overall-status'
@@ -103,6 +104,23 @@ export default async function AboutPage() {
       </header>
 
       <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="md:col-span-2 lg:col-span-3">
+          <CardHeader>
+            <CardTitle>Versions</CardTitle>
+            <CardDescription>App, runtime, framework and tooling</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-3">
+              <BuildInfoCompare />
+            </div>
+            <div className="mb-3">
+              <NpmVersions />
+            </div>
+            {/* @ts-expect-error Server Component */}
+            <PackageInfo />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>{t('build')}</CardTitle>
@@ -112,20 +130,6 @@ export default async function AboutPage() {
             {items.map((it) => (
               <Info key={it.label} label={it.label} value={it.value} link={it.href} />
             ))}
-            <div className="pt-2">
-              <BuildInfoCompare />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Versions</CardTitle>
-            <CardDescription>App, runtime, framework and tooling</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* @ts-expect-error Server Component */}
-            <PackageInfo />
           </CardContent>
         </Card>
 
