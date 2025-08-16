@@ -16,9 +16,10 @@ export function LanguageSwitcher() {
     try {
       document.cookie = `NEXT_LOCALE=${l}; Path=/; Max-Age=31536000`;
     } catch {}
-    // Force a full reload to ensure server reads the updated cookie reliably
-    // (router.refresh() may not propagate header for some setups)
-    if (typeof window !== 'undefined') window.location.reload();
+    // Prefer soft refresh; fallback to reload if locale unchanged after refresh
+    try { router.refresh() } catch {}
+    // Safety: enforce a reload shortly after to ensure cookie is applied on server
+    setTimeout(() => { if (typeof window !== 'undefined') window.location.reload() }, 50)
   }
 
   return (

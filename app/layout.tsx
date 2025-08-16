@@ -38,7 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const common = (await import(`@/locales/${locale}/common`)).default as any
   const messages = { common }
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <IntlProvider locale={locale} messages={messages}>
