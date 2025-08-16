@@ -11,7 +11,7 @@ import { useEndpointsContext } from '@/contexts/endpoints-context'
 import { env } from '@/lib/env'
 
 type Method = 'GET' | 'HEAD'
-type Check = { name: string; url?: string; method?: Method }
+type Check = { name: string; url?: string; method?: Method; timeoutMs?: number; expect?: string; group?: string; invalid?: boolean }
 
 type Result = {
   name: string
@@ -23,6 +23,7 @@ type Result = {
   error?: string
   headers?: { k: string; v: string }[]
   snippet?: string
+  invalid?: boolean
 }
 
 const headerAllowlist = ['content-type', 'server', 'date', 'cache-control', 'x-powered-by']
@@ -48,13 +49,19 @@ function useEndpointStatus(checks: Check[]) {
         const start = performance.now()
         try {
           if (!c.url) { out.push({ name: c.name, url: c.url, method: c.method ?? 'GET', ok: false, error: 'No URL' }); continue }
-          const res = await fetch(c.url, { method: c.method ?? 'GET', cache: 'no-store' })
+          if (c.invalid) { out.push({ name: c.name, url: c.url, method: c.method ?? 'GET', ok: false, error: 'Invalid URL', invalid: true }); continue }
+          const controller = new AbortController()
+          const t = window.setTimeout(() => controller.abort(), Math.max(1000, c.timeoutMs ?? 10000))
+          const res = await fetch(c.url, { method: c.method ?? 'GET', cache: 'no-store', signal: controller.signal })
+          window.clearTimeout(t)
           const ms = Math.round(performance.now() - start)
           let snippet: string | undefined
           if ((c.method ?? 'GET') === 'GET') {
             try { snippet = (await res.clone().text()).slice(0, 300) } catch {}
           }
-          out.push({ name: c.name, url: c.url, method: c.method ?? 'GET', ok: res.ok, code: res.status, ms, headers: filterHeaders(res.headers), snippet })
+          const expectOk = matchExpectedCode(res.status, c.expect)
+          const ok = expectOk ?? res.ok
+          out.push({ name: c.name, url: c.url, method: c.method ?? 'GET', ok, code: res.status, ms, headers: filterHeaders(res.headers), snippet })
         } catch (e) {
           const ms = Math.round(performance.now() - start)
           out.push({ name: c.name, url: c.url, method: c.method ?? 'GET', ok: false, ms, error: e instanceof Error ? e.message : String(e) })
@@ -86,13 +93,22 @@ function useEndpointStatus(checks: Check[]) {
         setResults((prev) => prev.map((r) => r.name === name ? ({ ...r, ok: false, error: 'No URL' }) : r))
         return
       }
-      const res = await fetch(c.url, { method: c.method ?? 'GET', cache: 'no-store' })
+      if (c.invalid) {
+        setResults((prev) => prev.map((r) => r.name === name ? ({ ...r, ok: false, error: 'Invalid URL', invalid: true }) : r))
+        return
+      }
+      const controller = new AbortController()
+      const t = window.setTimeout(() => controller.abort(), Math.max(1000, c.timeoutMs ?? 10000))
+      const res = await fetch(c.url, { method: c.method ?? 'GET', cache: 'no-store', signal: controller.signal })
+      window.clearTimeout(t)
       const ms = Math.round(performance.now() - start)
       let snippet: string | undefined
       if ((c.method ?? 'GET') === 'GET') {
         try { snippet = (await res.clone().text()).slice(0, 300) } catch {}
       }
-      const updated: Result = { name: c.name, url: c.url, method: c.method ?? 'GET', ok: res.ok, code: res.status, ms, headers: filterHeaders(res.headers), snippet }
+      const expectOk = matchExpectedCode(res.status, c.expect)
+      const ok = expectOk ?? res.ok
+      const updated: Result = { name: c.name, url: c.url, method: c.method ?? 'GET', ok, code: res.status, ms, headers: filterHeaders(res.headers), snippet }
       setResults((prev) => prev.map((r) => r.name === name ? updated : r))
     } catch (e) {
       const ms = Math.round(performance.now() - start)
@@ -126,6 +142,18 @@ function curlFor(r: Result): string {
   return r.method === 'HEAD'
     ? `curl -I --max-time 5 ${u}`
     : `curl -sS -f --max-time 10 -H "Accept: application/json" ${u}`
+}
+
+function matchExpectedCode(code: number, expect?: string): boolean | null {
+  if (!expect) return null
+  const spec = expect.trim()
+  if (/^\d+\.\.(\d+)$/.test(spec)) {
+    const [a, b] = spec.split('..').map((x) => Number(x))
+    if (Number.isFinite(a) && Number.isFinite(b)) return code >= a && code <= b
+  }
+  const parts = spec.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean)
+  if (parts.length) return parts.some((p) => Number(p) === code)
+  return null
 }
 
 function Sparkline({ points }: { points: number[] }) {
@@ -162,17 +190,24 @@ export function EndpointsTable() {
               const name = String(it.name || '').trim()
               const url = String(it.url || '').trim()
               const method = String(it.method || 'GET').toUpperCase() as Method
-              if (name && url) parsedFromEnv.push({ name, url, method: method === 'HEAD' ? 'HEAD' : 'GET' })
+              const timeoutMs = it.timeoutMs ? Number(it.timeoutMs) : (it.timeout ? Number(it.timeout) : undefined)
+              const expect = typeof it.expect === 'string' ? it.expect : undefined
+              const group = typeof it.group === 'string' ? it.group : undefined
+              let invalid = false
+              try { new URL(url) } catch { invalid = true }
+              if (name && url) parsedFromEnv.push({ name, url, method: method === 'HEAD' ? 'HEAD' : 'GET', timeoutMs, expect, group, invalid })
             }
           }
         } else {
           // CSV: Name|URL|METHOD,Name|URL|METHOD
           const items = cfg.split(/[;,\n]/).map((s) => s.trim()).filter(Boolean)
           for (const item of items) {
-            const [name, url, methodRaw] = item.split('|')
+            const [name, url, methodRaw, group, timeout, expect] = item.split('|')
             if (!name || !url) continue
             const method = String(methodRaw || 'GET').toUpperCase() as Method
-            parsedFromEnv.push({ name: name.trim(), url: url.trim(), method: method === 'HEAD' ? 'HEAD' : 'GET' })
+            let invalid = false
+            try { new URL(url) } catch { invalid = true }
+            parsedFromEnv.push({ name: name.trim(), url: url.trim(), method: method === 'HEAD' ? 'HEAD' : 'GET', group: group?.trim() || undefined, timeoutMs: timeout ? Number(timeout) : undefined, expect: expect?.trim() || undefined, invalid })
           }
         }
       } catch {
@@ -183,7 +218,7 @@ export function EndpointsTable() {
   }, [])
 
   const { results, loading, run, runOne, history } = useEndpointStatus(checks)
-  const { intervalSec, setIntervalSec, setRemaining, remaining, setSummary, setRunner } = useEndpointsContext()
+  const { intervalSec, setIntervalSec, setRemaining, remaining, setSummary, setRunner, group, setGroups } = useEndpointsContext()
   const countdownRef = useRef<number | null>(null)
   const runRef = useRef(run)
 
@@ -219,6 +254,12 @@ export function EndpointsTable() {
     return () => setRunner(undefined)
   }, [setRunner])
 
+  // Groups list (from config)
+  useEffect(() => {
+    const gs = Array.from(new Set(checks.map((c) => c.group).filter((x): x is string => Boolean(x))))
+    setGroups(gs)
+  }, [checks, setGroups])
+
   return (
     <TooltipProvider>
       {/* Header controls moved to CardAction via EndpointsHeaderControls */}
@@ -235,7 +276,7 @@ export function EndpointsTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {checks.map((c) => {
+      {checks.filter((c) => !group || c.group === group).map((c) => {
             const r = results.find((x) => x.name === c.name)
             const ok = r?.ok
             const statusIcon = ok ? (

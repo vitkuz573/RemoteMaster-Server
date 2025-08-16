@@ -18,6 +18,10 @@ type Ctx = {
   setSummary: (s: EndpointsSummary) => void
   runAll?: () => void
   setRunner: (fn: (() => void) | undefined) => void
+  group: string | null
+  setGroup: (g: string | null) => void
+  groups: string[]
+  setGroups: (arr: string[]) => void
 }
 
 const EndpointsCtx = createContext<Ctx | null>(null)
@@ -27,6 +31,8 @@ export function EndpointsProvider({ children }: { children: React.ReactNode }) {
   const [remaining, setRemaining] = useState(0)
   const [summary, setSummary] = useState<EndpointsSummary>({ total: 0, ok: 0, slow: 0, worstMs: null })
   const [runAll, _setRunner] = useState<(() => void) | undefined>(undefined)
+  const [group, setGroup] = useState<string | null>(null)
+  const [groups, setGroups] = useState<string[]>([])
   const value = useMemo<Ctx>(() => ({
     intervalSec,
     setIntervalSec,
@@ -36,7 +42,11 @@ export function EndpointsProvider({ children }: { children: React.ReactNode }) {
     setSummary,
     runAll,
     setRunner: _setRunner,
-  }), [intervalSec, remaining, summary, runAll])
+    group,
+    setGroup,
+    groups,
+    setGroups,
+  }), [intervalSec, remaining, summary, runAll, group, groups])
   return <EndpointsCtx.Provider value={value}>{children}</EndpointsCtx.Provider>
 }
 
@@ -45,4 +55,3 @@ export function useEndpointsContext() {
   if (!ctx) throw new Error('useEndpointsContext must be used within EndpointsProvider')
   return ctx
 }
-
