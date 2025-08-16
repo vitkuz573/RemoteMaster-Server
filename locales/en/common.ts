@@ -22,6 +22,8 @@ const en = {
   ok_label: 'OK',
   slow_label: 'Slow ≥ 1500ms',
   fail_label: 'Fail',
+  export_full_diagnostics: 'Export full diagnostics',
+  open_issue_diagnostics: 'Open issue with diagnostics',
   open_btn: 'Open',
   copy_btn: 'Copy',
   build: 'Build',

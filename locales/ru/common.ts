@@ -22,6 +22,8 @@ const ru = {
   ok_label: 'OK',
   slow_label: 'Медленно ≥ 1500мс',
   fail_label: 'Ошибка',
+  export_full_diagnostics: 'Экспорт полной диагностики',
+  open_issue_diagnostics: 'Создать issue с диагностикой',
   open_btn: 'Открыть',
   copy_btn: 'Скопировать',
   build: 'Сборка',

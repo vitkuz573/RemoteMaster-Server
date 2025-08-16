@@ -23,6 +23,7 @@ import { CurlSnippets as CurlBlock } from './curl-snippets'
 import { EndpointActions } from './endpoint-actions'
 import { OpenIssueDiagnostics } from './open-issue-diagnostics'
 import { BuildInfoCompare } from './build-info-compare'
+import { FullDiagnostics } from './full-diagnostics'
 import { OverallStatus } from './overall-status'
 import { CurlSnippets } from './curl-snippets'
 
@@ -300,6 +301,7 @@ export default async function AboutPage() {
                 environment: appConfig.environment,
                 endpoints: appConfig.endpoints,
               }} />
+              <FullDiagnostics />
             </div>
             <div className="mt-4">
               <SentryTest />
