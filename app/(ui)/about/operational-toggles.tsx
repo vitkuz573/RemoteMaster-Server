@@ -5,6 +5,8 @@ import { env } from '@/lib/env'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Switch } from '@/components/ui/switch'
 
 type ToggleMeta = { title: string; description?: string }
 
@@ -64,40 +66,57 @@ export function OperationalToggles() {
           {onlyEnabled ? 'Show all' : 'Only enabled'}
         </Button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {toggles.map((t) => {
-          const short = t.k.replace('NEXT_PUBLIC_', '')
-          const meta = operationalMeta[short]
-          return (
-            <div key={t.k} className="rounded-md border p-3">
-              <div className="text-xs text-muted-foreground flex items-center gap-2">
-                {meta ? (
-                  <Tooltip delayDuration={200}>
-                    <TooltipTrigger className="underline decoration-dotted underline-offset-2">
-                      {meta.title}
-                    </TooltipTrigger>
-                    {meta.description ? (
-                      <TooltipContent className="max-w-xs">{meta.description}</TooltipContent>
-                    ) : null}
-                  </Tooltip>
-                ) : (
-                  short
-                )}
-                <Badge variant={t.bool ? 'default' : 'secondary'} className={t.bool ? '' : 'opacity-70'}>
-                  {t.bool ? 'On' : 'Off'}
-                </Badge>
-              </div>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="font-mono text-xs text-muted-foreground">{t.raw}</span>
-                <div className="ml-auto flex items-center gap-1">
-                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => copy(t.k, true)}>Copy true</Button>
-                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => copy(t.k, false)}>Copy false</Button>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[40%]">Toggle</TableHead>
+            <TableHead>Key</TableHead>
+            <TableHead>Value</TableHead>
+            <TableHead className="text-center">Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {toggles.map((t) => {
+            const short = t.k.replace('NEXT_PUBLIC_', '')
+            const meta = operationalMeta[short]
+            return (
+              <TableRow key={t.k}>
+                <TableCell className="max-w-0">
+                  {meta ? (
+                    <Tooltip delayDuration={200}>
+                      <TooltipTrigger className="underline decoration-dotted underline-offset-2 truncate">
+                        {meta.title}
+                      </TooltipTrigger>
+                      {meta.description ? (
+                        <TooltipContent className="max-w-xs">{meta.description}</TooltipContent>
+                      ) : null}
+                    </Tooltip>
+                  ) : (
+                    <span className="truncate">{short}</span>
+                  )}
+                </TableCell>
+                <TableCell className="font-mono text-xs">{t.k}</TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">{t.raw}</TableCell>
+                <TableCell className="text-center">
+                  <div className="inline-flex items-center gap-2">
+                    <Switch checked={t.bool} onCheckedChange={() => {}} disabled />
+                    <Badge variant={t.bool ? 'default' : 'secondary'} className={t.bool ? '' : 'opacity-70'}>
+                      {t.bool ? 'On' : 'Off'}
+                    </Badge>
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="inline-flex items-center gap-1">
+                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => copy(t.k, true)}>Copy true</Button>
+                    <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => copy(t.k, false)}>Copy false</Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
     </TooltipProvider>
   )
 }
