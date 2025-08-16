@@ -25,6 +25,9 @@ import { OpenIssueDiagnostics } from './open-issue-diagnostics'
 import { BuildInfoCompare } from './build-info-compare'
 import { FullDiagnostics } from './full-diagnostics'
 import { MdSummary } from './md-summary'
+import { PackageInfo } from './package-info'
+import { EndpointHeaders } from './endpoint-headers'
+import { StorageQuota } from './storage-quota'
 import { OverallStatus } from './overall-status'
 import { CurlSnippets } from './curl-snippets'
 
@@ -111,6 +114,10 @@ export default async function AboutPage() {
             ))}
             <div className="pt-2">
               <BuildInfoCompare />
+            </div>
+            <div className="pt-2">
+              {/* @ts-expect-error Server Component */}
+              <PackageInfo />
             </div>
           </CardContent>
         </Card>
@@ -207,6 +214,9 @@ export default async function AboutPage() {
           </CardHeader>
           <CardContent>
             <ClientEnvironment />
+            <div className="mt-2">
+              <StorageQuota />
+            </div>
           </CardContent>
         </Card>
 
@@ -250,6 +260,7 @@ export default async function AboutPage() {
               <KeyValue label="API" value={displayUrl(appConfig.endpoints.api)} link={appConfig.endpoints.api} />
               <EndpointActions url={appConfig.endpoints.api} />
             </div>
+            <EndpointHeaders />
             <div className="flex items-center justify-between gap-3">
               <KeyValue label="Status" value={displayUrl(appConfig.endpoints.status)} link={appConfig.endpoints.status} />
               <EndpointActions url={appConfig.endpoints.status} />
