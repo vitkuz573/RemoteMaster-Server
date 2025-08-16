@@ -31,6 +31,7 @@ import { EndpointHeaders } from './endpoint-headers'
 import { StorageQuota } from './storage-quota'
 import { OverallStatus } from './overall-status'
 import { CurlSnippets } from './curl-snippets'
+import { EndpointsTable } from './endpoints-table'
 
 export const metadata: Metadata = {
   title: `About ${appConfig.name}`,
@@ -251,38 +252,13 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('operational_checks')}</CardTitle>
-            <CardDescription>{t('operational_checks_desc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <EndpointChecks />
-          </CardContent>
-        </Card>
-
-        <Card>
+        <Card className="col-span-full">
           <CardHeader>
             <CardTitle>{t('endpoints')}</CardTitle>
             <CardDescription>{t('endpoints_desc')}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <KeyValue label="API" value={displayUrl(appConfig.endpoints.api)} link={appConfig.endpoints.api} />
-              <EndpointActions url={appConfig.endpoints.api} />
-            </div>
-            <EndpointHeaders />
-            <div className="flex items-center justify-between gap-3">
-              <KeyValue label="Status" value={displayUrl(appConfig.endpoints.status)} link={appConfig.endpoints.status} />
-              <EndpointActions url={appConfig.endpoints.status} />
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <KeyValue label="Health" value={displayUrl(appConfig.endpoints.health)} link={appConfig.endpoints.health} />
-              <EndpointActions url={appConfig.endpoints.health} />
-            </div>
-            <div className="pt-2">
-              <CurlBlock />
-            </div>
+          <CardContent>
+            <EndpointsTable />
           </CardContent>
         </Card>
         <Card>
