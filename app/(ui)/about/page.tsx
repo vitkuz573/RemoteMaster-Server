@@ -213,7 +213,7 @@ export default async function AboutPage() {
 
       <Separator />
 
-      <div className="flex items-center justify-end mb-[-8px]">
+      <div className="flex items-center justify-end mb-2">
         <CardsReorderToolbar />
       </div>
       <section className="grid gap-6 md:grid-cols-2" data-cards-scope="about-mid">
