@@ -1,29 +1,103 @@
-import { env } from '@/lib/env'
+"use client"
 
-function isOperationalKey(k: string) {
-  // Public, non-feature toggles that indicate behavior (e.g., *_ENABLED)
-  return k.startsWith('NEXT_PUBLIC_') && !k.startsWith('NEXT_PUBLIC_FEATURE_') && /ENABLE(D)?/i.test(k)
+import { useMemo, useState } from 'react'
+import { env } from '@/lib/env'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+
+type ToggleMeta = { title: string; description?: string }
+
+const operationalMeta: Record<string, ToggleMeta> = {
+  ERROR_REPORTING_ENABLED: {
+    title: 'Error reporting',
+    description: 'Enable client error reporting (e.g., Sentry capture).',
+  },
+  WEB_VITALS_ENABLED: {
+    title: 'Web Vitals',
+    description: 'Collect and report Web Vitals metrics.',
+  },
+  CSP_REPORTING_ENABLED: {
+    title: 'CSP reporting',
+    description: 'Enable Content-Security-Policy violation reporting.',
+  },
 }
 
 export function OperationalToggles() {
-  const toggles = Object.entries(env)
-    .filter(([k]) => isOperationalKey(k))
-    .map(([k, v]) => ({ k, v: String(v as any) }))
-    .sort((a, b) => a.k.localeCompare(b.k))
+  const all = useMemo(() => {
+    const entries = Object.entries(env)
+      .filter(([k]) => k.startsWith('NEXT_PUBLIC_') && !k.startsWith('NEXT_PUBLIC_FEATURE_') && /ENABLE(D)?/i.test(k))
+      .map(([k, v]) => ({ k, bool: Boolean(v as any), raw: String(v as any) }))
+      .sort((a, b) => a.k.localeCompare(b.k))
+    return entries
+  }, [])
+
+  const [query, setQuery] = useState('')
+  const [onlyEnabled, setOnlyEnabled] = useState(false)
+
+  const toggles = useMemo(() => {
+    let list = all
+    if (onlyEnabled) list = list.filter((t) => t.bool)
+    if (query.trim()) {
+      const q = query.toLowerCase()
+      list = list.filter((t) => t.k.toLowerCase().includes(q))
+    }
+    return list
+  }, [all, onlyEnabled, query])
 
   if (toggles.length === 0) {
     return <div className="text-sm text-muted-foreground">No operational toggles detected.</div>
   }
 
+  const copy = (k: string, v: boolean) => void navigator.clipboard?.writeText(`${k}=${v ? 'true' : 'false'}`)
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {toggles.map((t) => (
-        <div key={t.k}>
-          <div className="text-xs text-muted-foreground">{t.k.replace('NEXT_PUBLIC_', '')}</div>
-          <div className="font-mono text-xs">{t.v}</div>
-        </div>
-      ))}
-    </div>
+    <TooltipProvider>
+      <div className="mb-2 flex items-center gap-2 text-xs">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search"
+          className="h-7 w-32 rounded border px-2 text-xs bg-background"
+        />
+        <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setOnlyEnabled((v) => !v)}>
+          {onlyEnabled ? 'Show all' : 'Only enabled'}
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {toggles.map((t) => {
+          const short = t.k.replace('NEXT_PUBLIC_', '')
+          const meta = operationalMeta[short]
+          return (
+            <div key={t.k} className="rounded-md border p-3">
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                {meta ? (
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger className="underline decoration-dotted underline-offset-2">
+                      {meta.title}
+                    </TooltipTrigger>
+                    {meta.description ? (
+                      <TooltipContent className="max-w-xs">{meta.description}</TooltipContent>
+                    ) : null}
+                  </Tooltip>
+                ) : (
+                  short
+                )}
+                <Badge variant={t.bool ? 'default' : 'secondary'} className={t.bool ? '' : 'opacity-70'}>
+                  {t.bool ? 'On' : 'Off'}
+                </Badge>
+              </div>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="font-mono text-xs text-muted-foreground">{t.raw}</span>
+                <div className="ml-auto flex items-center gap-1">
+                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => copy(t.k, true)}>Copy true</Button>
+                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => copy(t.k, false)}>Copy false</Button>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </TooltipProvider>
   )
 }
-
