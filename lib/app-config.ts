@@ -49,7 +49,9 @@ export const appConfig = {
   endpoints: {
     api: env.NEXT_PUBLIC_API_URL,
     health: env.NEXT_PUBLIC_HEALTH_URL,
-    status: env.NEXT_PUBLIC_STATUS_URL
+    status: env.NEXT_PUBLIC_STATUS_URL,
+    metrics: (env as any).NEXT_PUBLIC_METRICS_URL as string | undefined,
+    logs: (env as any).NEXT_PUBLIC_LOGS_URL as string | undefined,
   },
   
   // Computed properties

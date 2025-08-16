@@ -11,6 +11,8 @@ const ClientEnvSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:3001'),
   NEXT_PUBLIC_HEALTH_URL: z.string().url().default('http://localhost:3001/health'),
   NEXT_PUBLIC_STATUS_URL: z.string().url().default('http://localhost:3001/status'),
+  NEXT_PUBLIC_METRICS_URL: z.string().url().optional(),
+  NEXT_PUBLIC_LOGS_URL: z.string().url().optional(),
 
   NEXT_PUBLIC_SUPPORT_AVAILABILITY: z.string().optional().default('Mon–Fri, 9:00–18:00'),
   NEXT_PUBLIC_SUPPORT_RESPONSE_TIME: z.string().optional().default('within 24h'),
@@ -47,6 +49,8 @@ const raw = {
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   NEXT_PUBLIC_HEALTH_URL: process.env.NEXT_PUBLIC_HEALTH_URL,
   NEXT_PUBLIC_STATUS_URL: process.env.NEXT_PUBLIC_STATUS_URL,
+  NEXT_PUBLIC_METRICS_URL: process.env.NEXT_PUBLIC_METRICS_URL,
+  NEXT_PUBLIC_LOGS_URL: process.env.NEXT_PUBLIC_LOGS_URL,
 
   NEXT_PUBLIC_SUPPORT_AVAILABILITY: process.env.NEXT_PUBLIC_SUPPORT_AVAILABILITY,
   NEXT_PUBLIC_SUPPORT_RESPONSE_TIME: process.env.NEXT_PUBLIC_SUPPORT_RESPONSE_TIME,

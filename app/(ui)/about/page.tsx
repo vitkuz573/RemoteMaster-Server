@@ -32,6 +32,9 @@ import { StorageQuota } from './storage-quota'
 import { OverallStatus } from './overall-status'
 import { CurlSnippets } from './curl-snippets'
 import { EndpointsTable } from './endpoints-table'
+import { EndpointsCardProvider } from './endpoints-provider'
+import { EndpointsHeaderControls } from './endpoints-header-controls'
+import { CardAction } from '@/components/ui/card'
 
 export const metadata: Metadata = {
   title: `About ${appConfig.name}`,
@@ -252,15 +255,20 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-full">
-          <CardHeader>
-            <CardTitle>{t('endpoints')}</CardTitle>
-            <CardDescription>{t('endpoints_desc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <EndpointsTable />
-          </CardContent>
-        </Card>
+        <EndpointsCardProvider>
+          <Card className="col-span-full">
+            <CardHeader>
+              <CardTitle>{t('endpoints')}</CardTitle>
+              <CardDescription>{t('endpoints_desc')}</CardDescription>
+              <CardAction>
+                <EndpointsHeaderControls />
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <EndpointsTable />
+            </CardContent>
+          </Card>
+        </EndpointsCardProvider>
         <Card>
           <CardHeader>
             <CardTitle>Repository</CardTitle>

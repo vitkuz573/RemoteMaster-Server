@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ChevronDown, CheckCircle2, XCircle, ExternalLink, Copy, RefreshCw, Braces } from 'lucide-react'
+import { useEndpointsContext } from '@/contexts/endpoints-context'
 
 type Method = 'GET' | 'HEAD'
 type Check = { name: string; url?: string; method?: Method }
@@ -127,16 +128,39 @@ function curlFor(r: Result): string {
     : `curl -sS -f --max-time 10 -H "Accept: application/json" ${u}`
 }
 
-export function EndpointsTable() {
-  const checks = useMemo<Check[]>(() => ([
-    { name: 'API', url: appConfig.endpoints.api, method: 'HEAD' },
-    { name: 'Health', url: appConfig.endpoints.health, method: 'GET' },
-    { name: 'Status', url: appConfig.endpoints.status, method: 'GET' },
-  ]), [])
+function Sparkline({ points }: { points: number[] }) {
+  const w = 60, h = 16
+  if (!points || points.length === 0) return null
+  const max = Math.max(...points, 1)
+  const min = Math.min(...points, 0)
+  const span = Math.max(max - min, 1)
+  const step = w / Math.max(points.length - 1, 1)
+  const path = points.map((v, i) => {
+    const x = i * step
+    const y = h - ((v - min) / span) * h
+    return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="text-muted-foreground">
+      <path d={path} fill="none" stroke="currentColor" strokeWidth="1" />
+    </svg>
+  )
+}
 
-  const { results, loading, run, runOne } = useEndpointStatus(checks)
-  const [intervalSec, setIntervalSec] = useState<number | null>(null)
-  const [remaining, setRemaining] = useState<number>(0)
+export function EndpointsTable() {
+  const checks = useMemo<Check[]>(() => {
+    const arr: Check[] = [
+      { name: 'API', url: appConfig.endpoints.api, method: 'HEAD' },
+      { name: 'Health', url: appConfig.endpoints.health, method: 'GET' },
+      { name: 'Status', url: appConfig.endpoints.status, method: 'GET' },
+    ]
+    if (appConfig.endpoints.metrics) arr.push({ name: 'Metrics', url: appConfig.endpoints.metrics, method: 'GET' })
+    if (appConfig.endpoints.logs) arr.push({ name: 'Logs', url: appConfig.endpoints.logs, method: 'GET' })
+    return arr
+  }, [])
+
+  const { results, loading, run, runOne, history } = useEndpointStatus(checks)
+  const { intervalSec, setIntervalSec, setRemaining, remaining, setSummary, setRunner } = useEndpointsContext()
   const countdownRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -153,24 +177,20 @@ export function EndpointsTable() {
 
   const copy = (s: string) => void navigator.clipboard?.writeText(s)
 
+  // Publish summary and runner to context
+  useEffect(() => {
+    const total = results.length || checks.length
+    const ok = results.filter(r => r.ok).length
+    const worstMs = results.length ? Math.max(...results.map(r => r.ms ?? 0)) : null
+    const slow = results.filter(r => (r.ms ?? 0) >= 1500).length
+    setSummary({ total, ok, slow, worstMs })
+    setRunner(() => run)
+    return () => setRunner(undefined)
+  }, [results, checks.length, run, setRunner, setSummary])
+
   return (
     <TooltipProvider>
-      <div className="mb-2 flex items-center gap-2 text-xs">
-        <Button variant="outline" size="sm" disabled={loading} onClick={() => run()} className="h-7 px-2">
-          <RefreshCw className="h-3.5 w-3.5" />
-        </Button>
-        <div className="text-muted-foreground">Auto‑refresh:</div>
-        <div className="flex items-center gap-1">
-          {[null, 5, 15, 60].map((sec, i) => (
-            <Button key={String(sec ?? 'off')+i} variant={intervalSec===sec? 'default':'outline'} size="sm" className="h-7 px-2 text-xs" onClick={() => setIntervalSec(sec as any)}>
-              {sec ? `${sec}s` : 'Off'}
-            </Button>
-          ))}
-        </div>
-        {intervalSec ? (
-          <div className="text-muted-foreground">in {remaining}s</div>
-        ) : null}
-      </div>
+      {/* Header controls moved to CardAction via EndpointsHeaderControls */}
       <Table>
         <TableHeader>
           <TableRow>
@@ -197,7 +217,12 @@ export function EndpointsTable() {
                 <TableCell className="hidden lg:table-cell font-mono text-xs truncate" title={c.url || ''}>{c.url || '—'}</TableCell>
                 <TableCell className="hidden md:table-cell">{r?.code ?? '—'}</TableCell>
                 <TableCell>
-                  <Badge variant={latencyVariant(r?.ms)}>{r?.ms ? `${r.ms} ms` : '—'}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={latencyVariant(r?.ms)}>{r?.ms ? `${r.ms} ms` : '—'}</Badge>
+                    <div className="hidden md:block">
+                      {history[c.name] && history[c.name].length ? <Sparkline points={history[c.name]} /> : null}
+                    </div>
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="inline-flex items-center gap-2">
@@ -291,4 +316,3 @@ export function EndpointsTable() {
     </TooltipProvider>
   )
 }
-
