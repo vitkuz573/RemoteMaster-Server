@@ -18,6 +18,8 @@ import { getTranslations } from 'next-intl/server'
 import { TimeSync } from './time-sync'
 import { SentryTest } from './sentry-test'
 import { ConfigAdvisor } from './config-advisor'
+import { OverallStatus } from './overall-status'
+import { CurlSnippets } from './curl-snippets'
 
 export const metadata: Metadata = {
   title: `About ${appConfig.name}`,
@@ -151,6 +153,15 @@ export default async function AboutPage() {
             ) : null}
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Status summary</CardTitle>
+            <CardDescription>Aggregated status of key endpoints</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <OverallStatus />
+          </CardContent>
+        </Card>
       </section>
 
       <Separator />
@@ -214,6 +225,9 @@ export default async function AboutPage() {
             <KeyValue label="API" value={displayUrl(appConfig.endpoints.api)} link={appConfig.endpoints.api} />
             <KeyValue label="Status" value={displayUrl(appConfig.endpoints.status)} link={appConfig.endpoints.status} />
             <KeyValue label="Health" value={displayUrl(appConfig.endpoints.health)} link={appConfig.endpoints.health} />
+            <div className="pt-2">
+              <CurlSnippets />
+            </div>
           </CardContent>
         </Card>
         <Card>
