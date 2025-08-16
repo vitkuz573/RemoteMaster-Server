@@ -1,4 +1,5 @@
 const en = {
+  _namespace: 'common',
   build: 'Build',
   build_desc: 'Versioning and deployment metadata',
   support: 'Support',
@@ -22,4 +23,3 @@ const en = {
 }
 
 export default en
-

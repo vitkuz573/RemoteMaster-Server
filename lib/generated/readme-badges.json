@@ -1,0 +1,17 @@
+[
+  {
+    "alt": "CI",
+    "src": "https://img.shields.io/github/actions/workflow/status/vitkuz573/RemoteMaster-Server/ci.yml?branch=main",
+    "href": "https://github.com/vitkuz573/RemoteMaster-Server/actions/workflows/ci.yml"
+  },
+  {
+    "alt": "codecov",
+    "src": "https://img.shields.io/codecov/c/github/vitkuz573/RemoteMaster-Server/main",
+    "href": "https://app.codecov.io/gh/vitkuz573/RemoteMaster-Server"
+  },
+  {
+    "alt": "OpenSSF Scorecard",
+    "src": "https://api.securityscorecards.dev/projects/github.com/vitkuz573/RemoteMaster-Server/badge",
+    "href": "https://securityscorecards.dev/viewer/?uri=github.com/vitkuz573/RemoteMaster-Server"
+  }
+]

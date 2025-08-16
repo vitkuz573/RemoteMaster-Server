@@ -1,4 +1,5 @@
 import type { NextConfig, Header } from "next";
+import createNextIntlPlugin from 'next-intl/plugin';
 
 // Resolve allowed API origin for CSP connect-src (enterprise: do not wildcard in prod)
 const apiOrigin = (() => {
@@ -212,5 +213,6 @@ const nextConfig: NextConfig = {
   // No rewrites needed; device routes are explicit in app/device
 };
 
-// Export plain Next config: runtime Sentry init remains, sourcemaps upload handled in CI
-export default nextConfig
+// Export plain Next config wrapped with next-intl plugin
+const withNextIntl = createNextIntlPlugin();
+export default withNextIntl(nextConfig)

@@ -1,4 +1,5 @@
 const ru = {
+  _namespace: 'common',
   build: 'Сборка',
   build_desc: 'Версионирование и метаданные деплоя',
   support: 'Поддержка',
@@ -22,4 +23,3 @@ const ru = {
 }
 
 export default ru
-
