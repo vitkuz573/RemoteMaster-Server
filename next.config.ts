@@ -200,9 +200,11 @@ const nextConfig: NextConfig = {
     ]
     // In dev, also add report-only CSP to surface issues without blocking
     if (isDev || cspReportOnly) {
+      // For report-only, drop directives that browsers ignore with warnings
+      const ro = csp(true).replace(/\bupgrade-insecure-requests\b/g, '').replace(/;;+/g, ';').replace(/;\s*$/,'')
       base.push({
         source: '/:path*',
-        headers: [{ key: 'Content-Security-Policy-Report-Only', value: csp(true) }],
+        headers: [{ key: 'Content-Security-Policy-Report-Only', value: ro }],
       })
     }
     return base

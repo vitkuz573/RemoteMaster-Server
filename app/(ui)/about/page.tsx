@@ -271,12 +271,12 @@ function ProjectBadges() {
   const badges = [
     {
       alt: 'CI',
-      src: `https://github.com/${owner}/${repo}/actions/workflows/ci.yml/badge.svg`,
+      src: `https://img.shields.io/github/actions/workflow/status/${owner}/${repo}/ci.yml?branch=${branch}`,
       href: `https://github.com/${owner}/${repo}/actions/workflows/ci.yml`,
     },
     {
       alt: 'Codecov',
-      src: `https://codecov.io/gh/${owner}/${repo}/branch/${branch}/graph/badge.svg`,
+      src: `https://img.shields.io/codecov/c/github/${owner}/${repo}/${branch}`,
       href: `https://app.codecov.io/gh/${owner}/${repo}`,
     },
     {
