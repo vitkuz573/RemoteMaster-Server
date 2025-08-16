@@ -15,6 +15,7 @@ import { SupportBundleButton } from './support-bundle-button'
 import { ReadmeBadges } from './readme-badges'
 import { OperationalToggles } from './operational-toggles'
 import { getDict } from './i18n'
+import { ConfigAdvisor } from './config-advisor'
 
 export const metadata: Metadata = {
   title: `About ${appConfig.name}`,
@@ -68,6 +69,9 @@ export default function AboutPage() {
             <Badge variant="outline" className="uppercase">{appConfig.environment}</Badge>
           </h1>
           <p className="text-muted-foreground mt-1">{appConfig.description}</p>
+          <div className="mt-3">
+            <ConfigAdvisor />
+          </div>
         </div>
         <DiagnosticsButton
           data={{

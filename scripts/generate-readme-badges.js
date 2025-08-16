@@ -71,10 +71,40 @@ function main() {
   }
   const md = fs.readFileSync(readmePath, 'utf8');
   const raw = extractBadges(md);
-  const repoUrl = process.env.NEXT_PUBLIC_REPO_URL || '';
-  const branch = process.env.NEXT_PUBLIC_REPO_BRANCH || 'main';
-  let ownerRepo = {};
-  if (repoUrl) ownerRepo = parseOwnerRepo(repoUrl);
+  // Try to load .env.local for repo metadata if not present in env
+  try {
+    const envLocal = path.join(cwd, '.env.local');
+    if (fs.existsSync(envLocal)) {
+      const lines = fs.readFileSync(envLocal, 'utf8').split(/\r?\n/);
+      for (const line of lines) {
+        const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+        if (m && !process.env[m[1]]) process.env[m[1]] = m[2];
+      }
+    }
+  } catch {}
+
+  let repoUrl = process.env.NEXT_PUBLIC_REPO_URL || '';
+  let branch = process.env.NEXT_PUBLIC_REPO_BRANCH || 'main';
+  // Derive owner/repo from env or directly from badges
+  let ownerRepo = repoUrl ? parseOwnerRepo(repoUrl) : {};
+  if (!ownerRepo.owner || !ownerRepo.repo) {
+    for (const b of raw) {
+      try {
+        const src = (b.src || '') + ' ' + (b.href || '');
+        let m = src.match(/github\.com\/([^\/]+)\/([^\/]+)\/actions\/workflows\//);
+        if (m) { ownerRepo = { owner: m[1], repo: m[2] }; break; }
+        m = src.match(/codecov\.io\/gh\/([^\/]+)\/([^\/]+)/);
+        if (m) { ownerRepo = { owner: m[1], repo: m[2] }; break; }
+      } catch {}
+    }
+  }
+  // Derive branch from codecov badge if present
+  for (const b of raw) {
+    const src = b.src || '';
+    const m = src.match(/branch\/([^\/]+)\/graph\/badge\.svg/);
+    if (m) { branch = m[1]; break; }
+  }
+
   const data = transformBadges(raw, { branch, ...ownerRepo });
   const outDir = path.join(cwd, 'lib', 'generated');
   const outFile = path.join(outDir, 'readme-badges.json');
@@ -84,4 +114,3 @@ function main() {
 }
 
 main();
-
