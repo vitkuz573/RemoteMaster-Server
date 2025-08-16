@@ -231,7 +231,7 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2 xl:col-span-1 py-4">
+        <Card className="col-span-full py-4">
           <CardHeader>
             <CardTitle>{t('feature_flags')}</CardTitle>
             <CardDescription>{t('feature_flags_desc')}</CardDescription>
@@ -241,7 +241,7 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2 xl:col-span-1 py-4">
+        <Card className="col-span-full py-4">
           <CardHeader>
             <CardTitle>{t('operational_toggles')}</CardTitle>
             <CardDescription>{t('operational_toggles_desc')}</CardDescription>

@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
-import { Clipboard } from 'lucide-react'
+import { Clipboard, CheckCircle2, XCircle } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 type ToggleMeta = { title: string; description?: string }
 
@@ -70,7 +71,7 @@ export function OperationalToggles() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[40%]">Toggle</TableHead>
+            <TableHead className="w-[46%]">Toggle</TableHead>
             <TableHead className="hidden xl:table-cell">Key</TableHead>
             <TableHead className="hidden lg:table-cell">Value</TableHead>
             <TableHead className="text-center">Status</TableHead>
@@ -101,7 +102,11 @@ export function OperationalToggles() {
                 <TableCell className="hidden lg:table-cell font-mono text-xs text-muted-foreground">{t.raw}</TableCell>
                 <TableCell className="text-center">
                   <div className="inline-flex items-center gap-2">
-                    <Switch className="hidden xl:inline-flex" checked={t.bool} onCheckedChange={() => {}} disabled />
+                    {t.bool ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" aria-hidden />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-muted-foreground" aria-hidden />
+                    )}
                     <Badge variant={t.bool ? 'default' : 'secondary'} className={t.bool ? '' : 'opacity-70'}>
                       {t.bool ? 'On' : 'Off'}
                     </Badge>
@@ -109,22 +114,17 @@ export function OperationalToggles() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="inline-flex items-center gap-1">
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <Button aria-label="Copy true" title="Copy true" variant="outline" size="sm" className="h-7 px-2" onClick={() => copy(t.k, true)}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-label="Copy env" title="Copy env" variant="outline" size="sm" className="h-7 px-2">
                           <Clipboard className="h-3.5 w-3.5" />
                         </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Copy true</TooltipContent>
-                    </Tooltip>
-                    <Tooltip delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <Button aria-label="Copy false" title="Copy false" variant="outline" size="sm" className="h-7 px-2" onClick={() => copy(t.k, false)}>
-                          <Clipboard className="h-3.5 w-3.5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Copy false</TooltipContent>
-                    </Tooltip>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => copy(t.k, true)}>Copy true</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => copy(t.k, false)}>Copy false</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </TableCell>
               </TableRow>
