@@ -15,6 +15,8 @@ import { SupportBundleButton } from './support-bundle-button'
 import { ReadmeBadges } from './readme-badges'
 import { OperationalToggles } from './operational-toggles'
 import { getTranslations } from 'next-intl/server'
+import { TimeSync } from './time-sync'
+import { SentryTest } from './sentry-test'
 import { ConfigAdvisor } from './config-advisor'
 
 export const metadata: Metadata = {
@@ -156,6 +158,15 @@ export default async function AboutPage() {
       <section className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
+            <CardTitle>Time sync</CardTitle>
+            <CardDescription>Client vs server time offset</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TimeSync />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
             <CardTitle>{t('client_env')}</CardTitle>
             <CardDescription>{t('client_env_desc')}</CardDescription>
           </CardHeader>
@@ -239,6 +250,9 @@ export default async function AboutPage() {
           </CardHeader>
           <CardContent>
             <SupportBundleButton />
+            <div className="mt-4">
+              <SentryTest />
+            </div>
           </CardContent>
         </Card>
       </section>
