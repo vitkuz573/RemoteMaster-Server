@@ -24,6 +24,8 @@ const ru = {
   fail_label: 'Ошибка',
   export_full_diagnostics: 'Экспорт полной диагностики',
   open_issue_diagnostics: 'Создать issue с диагностикой',
+  refresh_every: 'Обновлять каждые',
+  off: 'выкл'
   open_btn: 'Открыть',
   copy_btn: 'Скопировать',
   build: 'Сборка',

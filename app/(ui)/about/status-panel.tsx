@@ -71,6 +71,13 @@ export function StatusPanel() {
   const okCount = results.filter(r => r.ok).length
   const t = useTranslations('common')
 
+  const [intervalSec, setIntervalSec] = useState<number | null>(null)
+  useEffect(() => {
+    if (!intervalSec) return
+    const id = setInterval(() => { void run() }, intervalSec * 1000)
+    return () => clearInterval(id)
+  }, [intervalSec])
+
   const download = () => {
     const blob = new Blob([JSON.stringify({ results, generatedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -93,6 +100,22 @@ export function StatusPanel() {
           {loading ? t('measuring') : t('recheck_btn')}
         </button>
         <Button size="sm" variant="outline" onClick={download}><Download className="size-3 mr-1"/>{t('export_json')}</Button>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span>{t('refresh_every')}</span>
+          <select
+            className="border rounded px-1 py-0.5 bg-background"
+            value={intervalSec ?? ''}
+            onChange={(e) => {
+              const v = e.target.value
+              setIntervalSec(v ? Number(v) : null)
+            }}
+          >
+            <option value="">{t('off')}</option>
+            <option value="10">10s</option>
+            <option value="30">30s</option>
+            <option value="60">60s</option>
+          </select>
+        </div>
       </div>
       <div className="space-y-2 text-sm">
         {results.map((r) => (

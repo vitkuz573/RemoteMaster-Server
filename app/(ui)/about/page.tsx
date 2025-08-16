@@ -24,6 +24,7 @@ import { EndpointActions } from './endpoint-actions'
 import { OpenIssueDiagnostics } from './open-issue-diagnostics'
 import { BuildInfoCompare } from './build-info-compare'
 import { FullDiagnostics } from './full-diagnostics'
+import { MdSummary } from './md-summary'
 import { OverallStatus } from './overall-status'
 import { CurlSnippets } from './curl-snippets'
 
@@ -127,6 +128,11 @@ export default async function AboutPage() {
             <KeyValue label="Website" value={displayUrl(appConfig.support.website)} link={appConfig.support.website} />
             <KeyValue label="Docs" value={displayUrl(appConfig.support.documentation)} link={appConfig.support.documentation} />
             <KeyValue label="Community" value={displayUrl(appConfig.support.community)} link={appConfig.support.community} />
+            {/* Summaries from repository files (if present) */}
+            {/* @ts-expect-error Server Component */}
+            <MdSummary file={'SECURITY.md'} title={'Security policy (summary)'} />
+            {/* @ts-expect-error Server Component */}
+            <MdSummary file={'SUPPORT.md'} title={'Support (summary)'} />
           </CardContent>
         </Card>
 
