@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import {useTranslations} from 'next-intl'
 import { appConfig } from '@/lib/app-config';
 import { useFooterStore } from '@/lib/stores';
 
@@ -19,6 +20,7 @@ interface FooterProps {
 export function Footer({ 
   className = ""
 }: FooterProps) {
+  const t = useTranslations('common')
   const { isFooterVisible, footerConfig } = useFooterStore();
   const { showBuildDate } = footerConfig;
 
@@ -171,7 +173,7 @@ export function Footer({
 
           {/* Center section - Links and Copyright */}
           <div className="hidden md:flex items-center gap-4">
-            <a href="/about" className="text-xs text-muted-foreground hover:text-primary transition-colors">About</a>
+            <a href="/about" className="text-xs text-muted-foreground hover:text-primary transition-colors">{t('about_nav', {fallback: 'About'})}</a>
             <span className="text-muted-foreground/40">•</span>
             <p className="text-xs text-muted-foreground">
               © {appConfig.copyrightStartYear}-{new Date().getFullYear()} {appConfig.developer}. All rights reserved.

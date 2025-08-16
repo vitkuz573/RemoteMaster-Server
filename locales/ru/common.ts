@@ -1,5 +1,6 @@
 const ru = {
   _namespace: 'common',
+  about_nav: 'О проекте',
   build: 'Сборка',
   build_desc: 'Версионирование и метаданные деплоя',
   support: 'Поддержка',

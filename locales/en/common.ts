@@ -1,5 +1,6 @@
 const en = {
   _namespace: 'common',
+  about_nav: 'About',
   build: 'Build',
   build_desc: 'Versioning and deployment metadata',
   support: 'Support',

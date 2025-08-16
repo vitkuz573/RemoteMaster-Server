@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import {useTranslations} from 'next-intl';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NotificationPanel } from '@/components/ui/notification-panel';
 import { ThemeSwitcher } from './theme-switcher';
@@ -34,6 +35,7 @@ export function Header({
   onToggleNotifications,
   onLogoutClick
 }: HeaderProps) {
+  const t = useTranslations('common');
   const { config } = useHeaderStore();
   const appState = useAppStore();
   const authState = useAuth();
@@ -83,7 +85,7 @@ export function Header({
         
         <div className="flex items-center space-x-4">
             <Button asChild variant="ghost" size="sm" className="h-9 px-2">
-              <Link href="/about">About</Link>
+              <Link href="/about">{t('about_nav', {fallback: 'About'})}</Link>
             </Button>
             <LanguageSwitcher />
             <ThemeSwitcher />
