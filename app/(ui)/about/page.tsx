@@ -115,10 +115,17 @@ export default async function AboutPage() {
             <div className="pt-2">
               <BuildInfoCompare />
             </div>
-            <div className="pt-2">
-              {/* @ts-expect-error Server Component */}
-              <PackageInfo />
-            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Versions</CardTitle>
+            <CardDescription>App, runtime, framework and tooling</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* @ts-expect-error Server Component */}
+            <PackageInfo />
           </CardContent>
         </Card>
 
