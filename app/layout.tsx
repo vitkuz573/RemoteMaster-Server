@@ -13,6 +13,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorReporter } from "@/components/error-reporter";
 import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 import { AppErrorBoundary } from "@/components/app-error-boundary";
+import { LocaleProvider } from "@/contexts/locale-context";
+import { getInitialLocale } from "@/lib/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,10 +34,12 @@ export const metadata: Metadata = {
 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const initialLocale = getInitialLocale()
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <LocaleProvider initialLocale={initialLocale}>
           <MSWProvider>
             <TooltipProvider>
               <AppErrorBoundary>
@@ -52,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ErrorReporter />
             <WebVitalsReporter />
           </MSWProvider>
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

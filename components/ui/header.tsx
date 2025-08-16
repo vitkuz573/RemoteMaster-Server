@@ -7,6 +7,7 @@ import { NotificationPanel } from '@/components/ui/notification-panel';
 import { ThemeSwitcher } from './theme-switcher';
 import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, User, Settings } from 'lucide-react';
 import { appConfig } from '@/lib/app-config';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { useHeaderStore } from '@/lib/stores';
 import { useAppStore } from '@/lib/stores';
 import { useAuth } from '@/hooks/use-auth';
@@ -84,6 +85,7 @@ export function Header({
             <Button asChild variant="ghost" size="sm" className="h-9 px-2">
               <Link href="/about">About</Link>
             </Button>
+            <LanguageSwitcher />
             <ThemeSwitcher />
           {config.showNotifications && (
             <NotificationPanel
