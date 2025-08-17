@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -43,7 +43,7 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
   const title = (titleOverride && titleOverride.trim().length > 0) ? titleOverride : buildIssueTitle(payload, template)
   const opts: BuildIssueOptions = { template, includeEnv, includeEndpoints, includeDiagnostics, includeSnapshot, includeFlags, includeToggles, extra, summary, steps, expected, actual, motivation, proposal, alternatives }
   const body = buildIssueBody(payload, opts)
-  const labelsArr = [template, ...labels.split(',').map((s) => s.trim()).filter(Boolean)]
+  const labelsArr = [template, ...selectedLabels]
   const url = buildIssueUrl(repo, { title, body, labels: labelsArr })
   const urlLen = url.length
   const urlStatus: 'ok' | 'warn' | 'bad' = urlLen < 4000 ? 'ok' : urlLen < 8000 ? 'warn' : 'bad'
