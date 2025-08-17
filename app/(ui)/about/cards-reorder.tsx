@@ -27,9 +27,20 @@ function saveHidden(scopeId: string, ids: string[]) {
   try { localStorage.setItem(`about:hidden:${scopeId}`, JSON.stringify(ids)) } catch {}
 }
 
-type SizesMap = Record<string, 'auto' | '1' | '2' | '3' | 'full'>
+type Preset = 'auto' | '1' | '2' | '3' | 'full'
+type SizeEntry = { base?: Preset; md?: Preset; lg?: Preset }
+type SizesMap = Record<string, SizeEntry>
 function loadSizes(scopeId: string): SizesMap {
-  try { return JSON.parse(localStorage.getItem(`about:size:${scopeId}`) || '{}') } catch { return {} }
+  try {
+    const raw = localStorage.getItem(`about:size:${scopeId}`)
+    const parsed = raw ? JSON.parse(raw) : {}
+    const out: SizesMap = {}
+    for (const [k, v] of Object.entries(parsed || {})) {
+      if (typeof v === 'string') out[k] = { base: v as Preset }
+      else out[k] = v as SizeEntry
+    }
+    return out
+  } catch { return {} }
 }
 function saveSizes(scopeId: string, m: SizesMap) {
   try { localStorage.setItem(`about:size:${scopeId}`, JSON.stringify(m)) } catch {}
@@ -50,9 +61,14 @@ function registry(scope: HTMLElement) {
 function applySizes(scope: HTMLElement, sizes: SizesMap) {
   getCards(scope).forEach((el) => {
     const id = el.getAttribute('data-card-id') || ''
-    const size = sizes[id] || 'auto'
-    if (size === 'auto') el.removeAttribute('data-card-user-size')
-    else el.setAttribute('data-card-user-size', size)
+    const entry = sizes[id] || {}
+    const apply = (attr: string, val?: Preset) => {
+      if (!val || val === 'auto') el.removeAttribute(attr)
+      else el.setAttribute(attr, val)
+    }
+    apply('data-card-user-size', entry.base)
+    apply('data-card-user-size-md', entry.md)
+    apply('data-card-user-size-lg', entry.lg)
   })
 }
 
@@ -111,18 +127,20 @@ export function CardsReorderToolbar() {
     const scopes = getScopes()
     const cleanups: Array<() => void> = []
     if (!enabled) return () => {}
+    let active: { scopeId: string; cardId: string } | null = null
     for (const scope of scopes) {
       const id = scope.getAttribute('data-cards-scope') || 'default'
       const cards = getCards(scope)
       cards.forEach((el) => {
         el.setAttribute('draggable', 'true')
         el.classList.add('cursor-move')
+        el.addEventListener('click', () => { active = { scopeId: id, cardId: el.getAttribute('data-card-id') || '' } })
       })
       const overlays: HTMLElement[] = []
       const allowed = (sid: string) => sid === 'about-top' ? ['auto','1','2','3','full'] : (sid === 'about-mid' ? ['auto','1','2','full'] : ['auto','full'])
       const sizesMap = loadSizes(id)
-      const setSizeQuick = (cardId: string, val: 'auto'|'1'|'2'|'3'|'full') => {
-        const next = { ...sizesMap, [cardId]: val }
+      const setSizeQuick = (cardId: string, val: Preset) => {
+        const next = { ...sizesMap, [cardId]: { ...(sizesMap[cardId] || {}), base: val } }
         saveSizes(id, next)
         applySizes(scope, next)
       }
@@ -146,12 +164,12 @@ export function CardsReorderToolbar() {
           return b
         }
         const minus = mkBtn('-', 'Narrow', () => {
-          const cur = (loadSizes(id)[cardId] || 'auto') as any
+          const cur = (loadSizes(id)[cardId]?.base || 'auto') as any
           const next = shift(allowed(id), cur, -1) as any
           setSizeQuick(cardId, next)
         })
         const plus = mkBtn('+', 'Widen', () => {
-          const cur = (loadSizes(id)[cardId] || 'auto') as any
+          const cur = (loadSizes(id)[cardId]?.base || 'auto') as any
           const next = shift(allowed(id), cur, +1) as any
           setSizeQuick(cardId, next)
         })
@@ -199,6 +217,37 @@ export function CardsReorderToolbar() {
         overlays.forEach((o) => o.remove())
       })
     }
+    const onKey = (e: KeyboardEvent) => {
+      if (!active) return
+      const scopesEls = getScopes()
+      const scopeEl = scopesEls.find((s) => (s.getAttribute('data-cards-scope') || 'default') === active!.scopeId)
+      if (!scopeEl) return
+      const id = active.scopeId
+      const sizesMap = loadSizes(id)
+      const allowed = (sid: string) => sid === 'about-top' ? ['auto','1','2','3','full'] : (sid === 'about-mid' ? ['auto','1','2','full'] : ['auto','full'])
+      const shift = (arr: string[], cur: string, dir: 1|-1) => {
+        const i = Math.max(0, arr.indexOf(cur))
+        const j = Math.min(arr.length-1, Math.max(0, i + dir))
+        return arr[j]
+      }
+      const cur = (sizesMap[active.cardId]?.base || 'auto') as any
+      if (e.key === 'ArrowLeft') {
+        const next = shift(allowed(id), cur, -1) as Preset
+        const nextMap = { ...sizesMap, [active.cardId]: { ...(sizesMap[active.cardId] || {}), base: next } }
+        saveSizes(id, nextMap); applySizes(scopeEl, nextMap)
+        e.preventDefault()
+      } else if (e.key === 'ArrowRight') {
+        const next = shift(allowed(id), cur, +1) as Preset
+        const nextMap = { ...sizesMap, [active.cardId]: { ...(sizesMap[active.cardId] || {}), base: next } }
+        saveSizes(id, nextMap); applySizes(scopeEl, nextMap)
+        e.preventDefault()
+      } else if (e.key.toLowerCase() === 'f') {
+        const nextMap = { ...sizesMap, [active.cardId]: { ...(sizesMap[active.cardId] || {}), base: 'full' as Preset } }
+        saveSizes(id, nextMap); applySizes(scopeEl, nextMap)
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('keydown', onKey)
     return () => { cleanups.forEach((fn) => fn()) }
   }, [enabled])
 
@@ -277,18 +326,41 @@ export function CardsReorderToolbar() {
                                   <Checkbox checked={!isHidden} onCheckedChange={(v) => toggle(it.id, Boolean(v))} />
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-muted-foreground">Size</span>
-                                  <Select value={scope.sizes[it.id] || 'auto'} onValueChange={(v) => setSize(it.id, v as any)}>
-                                    <SelectTrigger className="h-7 w-32 text-xs">
+                                  <span className="text-xs text-muted-foreground">Base</span>
+                                  <Select value={scope.sizes[it.id]?.base || 'auto'} onValueChange={(v) => setSizeBase(it.id, v as Preset)}>
+                                    <SelectTrigger className="h-7 w-24 text-xs">
                                       <SelectValue placeholder="Auto" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="auto">Auto</SelectItem>
-                                      <SelectItem value="1">1 col</SelectItem>
-                                      <SelectItem value="2">2 cols</SelectItem>
-                                      {scope.id === 'about-top' ? (<SelectItem value="3">3 cols</SelectItem>) : null}
-                                      <SelectItem value="full">Full row</SelectItem>
-                                      <SelectItem value="full">Full row</SelectItem>
+                                      { (scope.id === 'about-top' ? ['auto','1','2','3','full'] : (scope.id === 'about-mid' ? ['auto','1','2','full'] : ['auto','full'])).map((v) => (
+                                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                                      )) }
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="hidden md:flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">MD</span>
+                                  <Select value={scope.sizes[it.id]?.md || 'auto'} onValueChange={(v) => setSizeMd(it.id, v as Preset)}>
+                                    <SelectTrigger className="h-7 w-24 text-xs">
+                                      <SelectValue placeholder="Auto" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      { (scope.id === 'about-top' ? ['auto','1','2'] : (scope.id === 'about-mid' ? ['auto','1','2'] : ['auto'])).map((v) => (
+                                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                                      )) }
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="hidden lg:flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">LG</span>
+                                  <Select value={scope.sizes[it.id]?.lg || 'auto'} onValueChange={(v) => setSizeLg(it.id, v as Preset)}>
+                                    <SelectTrigger className="h-7 w-24 text-xs">
+                                      <SelectValue placeholder="Auto" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      { (scope.id === 'about-top' ? ['auto','1','2','3','full'] : (scope.id === 'about-mid' ? ['auto','1','2','full'] : ['auto','full'])).map((v) => (
+                                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                                      )) }
                                     </SelectContent>
                                   </Select>
                                 </div>
