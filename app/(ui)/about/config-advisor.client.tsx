@@ -39,18 +39,20 @@ export function ConfigAdvisorClient({ advices, signature }: { advices: Advice[];
 
   if (!visible) {
     return (
-      <button className="text-xs underline" onClick={()=>{ try { localStorage.removeItem(storageKey) } catch {}; setVisible(true) }}>
+      <Button variant="link" size="sm" className="h-auto p-0 text-xs"
+        onClick={()=>{ try { localStorage.removeItem(storageKey) } catch {}; setVisible(true) }}>
         {t('advisor_show')}
-      </button>
+      </Button>
     )
   }
   return (
     <div className="rounded-md border p-3 bg-muted/30">
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs font-medium">{t('advisor_title')}</div>
-        <button aria-label={t('advisor_dismiss')} className="text-xs text-muted-foreground hover:text-foreground" onClick={dismiss}>
+        <Button aria-label={t('advisor_dismiss')} variant="ghost" size="sm" className="h-6 px-1 text-xs text-muted-foreground"
+          onClick={dismiss}>
           <X className="size-3.5" />
-        </button>
+        </Button>
       </div>
       <div className="mb-2">
         <Button

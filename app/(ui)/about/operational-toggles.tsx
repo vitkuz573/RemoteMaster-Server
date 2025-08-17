@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Switch } from '@/components/ui/switch'
 import { Clipboard, CheckCircle2, XCircle } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 
 type ToggleMeta = { title: string; description?: string }
@@ -58,11 +59,11 @@ export function OperationalToggles() {
   return (
     <TooltipProvider>
       <div className="mb-2 flex items-center gap-2 text-xs">
-        <input
+        <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search"
-          className="h-7 w-32 rounded border px-2 text-xs bg-background"
+          className="h-7 w-32 text-xs"
         />
         <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setOnlyEnabled((v) => !v)}>
           {onlyEnabled ? 'Show all' : 'Only enabled'}

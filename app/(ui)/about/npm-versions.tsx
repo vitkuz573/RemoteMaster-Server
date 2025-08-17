@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 type PkgMap = Record<string, string>
 
@@ -227,11 +228,11 @@ export function NpmVersions() {
           >
             Copy all
           </Button>
-          <input
+          <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search"
-            className="h-7 w-32 rounded border px-2 text-xs bg-background"
+            className="h-7 w-32 text-xs"
           />
           <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={() => setOnlyOutdated((v) => !v)}>
             {onlyOutdated ? 'Show all' : 'Only outdated'}

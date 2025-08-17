@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { appConfig } from '@/lib/app-config'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 type Check = { name: string; url?: string; method?: 'GET'|'HEAD' }
 type Result = { name: string; ok: boolean; code?: number; ms?: number }
@@ -58,10 +59,9 @@ export function OverallStatus() {
       <Badge variant={variant as any}>
         {results.length === 0 ? 'unknown' : allOk ? `OK • ${okCount}/${checks.length}` : `Issues • ${okCount}/${checks.length}`}
       </Badge>
-      <button className="text-xs underline" onClick={run} disabled={loading}>
+      <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={run} disabled={loading}>
         {loading ? 'Checking…' : 'Re-check'}
-      </button>
+      </Button>
     </div>
   )
 }
-

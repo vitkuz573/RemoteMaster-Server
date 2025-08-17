@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { appConfig } from '@/lib/app-config'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CheckCircle2, AlertTriangle, XCircle, Timer, Download } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
@@ -103,25 +104,23 @@ export function StatusPanel() {
         <Badge variant={variant as any}>
           {results.length === 0 ? t('unknown') : allOk ? `${t('ok_label')} • ${okCount}/${checks.length}` : `Issues • ${okCount}/${checks.length}`}
         </Badge>
-        <button className="text-xs underline" onClick={run} disabled={loading}>
+        <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={run} disabled={loading}>
           {loading ? t('measuring') : t('recheck_btn')}
-        </button>
+        </Button>
         <Button size="sm" variant="outline" onClick={download}><Download className="size-3 mr-1"/>{t('export_json')}</Button>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <span>{t('refresh_every')}</span>
-          <select
-            className="border rounded px-1 py-0.5 bg-background"
-            value={intervalSec ?? ''}
-            onChange={(e) => {
-              const v = e.target.value
-              setIntervalSec(v ? Number(v) : null)
-            }}
-          >
-            <option value="">{t('off')}</option>
-            <option value="10">10s</option>
-            <option value="30">30s</option>
-            <option value="60">60s</option>
-          </select>
+          <Select value={intervalSec ? String(intervalSec) : ''} onValueChange={(v) => setIntervalSec(v ? Number(v) : null)}>
+            <SelectTrigger className="h-7 w-[80px] text-xs">
+              <SelectValue placeholder={t('off')} />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="">{t('off')}</SelectItem>
+              <SelectItem value="10">10s</SelectItem>
+              <SelectItem value="30">30s</SelectItem>
+              <SelectItem value="60">60s</SelectItem>
+            </SelectContent>
+          </Select>
           {intervalSec ? <span className="ml-2">{t('next_in', {sec: remaining})}</span> : null}
         </div>
       </div>
