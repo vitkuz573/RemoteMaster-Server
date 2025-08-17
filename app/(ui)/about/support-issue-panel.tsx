@@ -49,20 +49,25 @@ export function SupportIssuePanel({ repo, payload }: { repo: { type?: string | n
   const urlStatus: 'ok' | 'warn' | 'bad' = urlLen < 4000 ? 'ok' : urlLen < 8000 ? 'warn' : 'bad'
 
   const openAdaptive = async () => {
-    // Strict: only server-side creation. On failure, inform user, no URL/clipboard fallback.
-    try {
-      const r = await fetch('/api/issues', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body: `# ${title}\n\n${body}`, labels: labelsArr }) })
-      if (r.ok) {
-        const j = await r.json()
-        if (j?.url) { window.open(j.url, '_blank', 'noopener,noreferrer'); return }
-      } else {
-        const j = await r.json().catch(() => ({}))
-        throw new Error(j?.error || 'Issue creation is not available')
-      }
-    } catch (e: any) {
-      // eslint-disable-next-line no-alert
-      alert(`Cannot create issue on server: ${e?.message || 'Unknown error'}. Configure GITHUB_TOKEN or open an issue manually.`)
+    // Open prefilled issue form in browser (user-driven flow).
+    // Keep body compact enough to avoid URL limits: try full, then trimmed (no diagnostics/snapshot), then minimal header.
+    const tryOpen = (b: string) => {
+      const u = buildIssueUrl(repo, { title, body: b, labels: labelsArr })
+      if (u.length <= 7000) { window.open(u, '_blank', 'noopener,noreferrer'); return true }
+      return false
     }
+    // 1) Try full body
+    if (tryOpen(`# ${title}\n\n${body}`)) return
+    // 2) Try trimmed body (exclude heavy sections)
+    const trimmedOpts: BuildIssueOptions = { ...opts, includeDiagnostics: false, includeSnapshot: false }
+    const trimmedBody = buildIssueBody(diag, trimmedOpts)
+    if (tryOpen(`# ${title}\n\n${trimmedBody}`)) return
+    // 3) Minimal header-only body to guarantee short URL
+    const minimal = `# ${title}\n\n- [ ] Summary: ${summary || '<one-line description>'}\n\n> Additional details and logs will be provided after opening the issue.`
+    if (tryOpen(minimal)) return
+    // If we still fail (unlikely), inform user
+    // eslint-disable-next-line no-alert
+    alert('Issue body is too large to prefill via URL. Please shorten the content and try again.')
   }
 
   // Fetch repo labels once
