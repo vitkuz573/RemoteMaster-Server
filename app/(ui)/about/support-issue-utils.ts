@@ -23,7 +23,26 @@ export function buildIssueTitle(p: Payload, tmpl: IssueTemplate): string {
 
 import { env } from '@/lib/env'
 
-export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includeEndpoints?: boolean; includeDiagnostics?: boolean; extra?: string; template?: IssueTemplate }) {
+export type BuildIssueOptions = {
+  template?: IssueTemplate
+  includeEnv?: boolean
+  includeEndpoints?: boolean
+  includeDiagnostics?: boolean
+  includeFlags?: boolean
+  includeToggles?: boolean
+  includeSnapshot?: boolean
+  extra?: string
+  // Header fields
+  summary?: string
+  steps?: string // multiline
+  expected?: string
+  actual?: string
+  motivation?: string
+  proposal?: string
+  alternatives?: string
+}
+
+export function buildIssueBody(p: Payload, opts?: BuildIssueOptions) {
   const tmpl = opts?.template ?? 'support'
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
   const lang = typeof navigator !== 'undefined' ? navigator.language : ''
@@ -33,26 +52,28 @@ export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includ
   const endpoints = (p['endpoints'] || {}) as Record<string, string | undefined>
   const epListArr = Object.entries(endpoints).filter(([, v]) => typeof v === 'string' && v)
 
+  const stepsLines = (opts?.steps || '').trim().length
+    ? opts!.steps!.split(/\r?\n/).filter(Boolean).map((s, i) => `${i + 1}. ${s}`)
+    : ['1. <Step one>', '2. <Step two>']
   const headerLines = (
     tmpl === 'bug'
       ? [
-          '- [ ] Summary: <one-line description>',
-          '1. <Step one>',
-          '2. <Step two>',
-          '- [ ] Expected: <...>',
-          '- [ ] Actual: <...>',
+          `- [ ] Summary: ${opts?.summary || '<one-line description>'}`,
+          ...stepsLines,
+          `- [ ] Expected: ${opts?.expected || '<...>'}`,
+          `- [ ] Actual: ${opts?.actual || '<...>'}`,
           '- [ ] Attach screenshots/logs if possible',
         ]
       : tmpl === 'feature'
       ? [
-          '- [ ] Summary: <short description>',
-          '- [ ] Motivation: <why is this needed?>',
-          '- [ ] Proposal: <what should change?>',
-          '- [ ] Alternatives: <considered alternatives>',
+          `- [ ] Summary: ${opts?.summary || '<short description>'}`,
+          `- [ ] Motivation: ${opts?.motivation || '<why is this needed?>'}`,
+          `- [ ] Proposal: ${opts?.proposal || '<what should change?>'}`,
+          `- [ ] Alternatives: ${opts?.alternatives || '<considered alternatives>'}`,
         ]
       : [
-          '- [ ] Summary: <one-line description>',
-          '- [ ] Context: <where/how it happens>',
+          `- [ ] Summary: ${opts?.summary || '<one-line description>'}`,
+          `- [ ] Context: ${opts?.steps || '<where/how it happens>'}`,
           '- [ ] Attach screenshots/logs if possible',
         ]
   ).join('\n')
@@ -128,9 +149,9 @@ export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includ
   if (opts?.extra) parts.push('\n## Additional Context\n\n' + opts.extra)
   if (opts?.includeEnv !== false) parts.push('\n## Environment\n\n' + envTable)
   if (opts?.includeEndpoints !== false && endpointsTable) parts.push('\n## 🔗 Endpoints\n\n' + endpointsTable)
-  if (opts?.includeEndpoints !== false && lastTable) parts.push('\n## Endpoints Snapshot\n\n' + lastTable)
-  if (flagsTable) parts.push('\n## 🧩 Feature Flags\n\n' + flagsTable)
-  if (togglesTable) parts.push('\n## ⚙️ Operational Toggles\n\n' + togglesTable)
+  if (opts?.includeSnapshot !== false && lastTable) parts.push('\n## 📈 Endpoints Snapshot\n\n' + lastTable)
+  if (opts?.includeFlags) parts.push('\n## 🧩 Feature Flags\n\n' + (flagsTable || '_None_'))
+  if (opts?.includeToggles) parts.push('\n## ⚙️ Operational Toggles\n\n' + (togglesTable || '_None_'))
   if (opts?.includeDiagnostics !== false) parts.push('\n## 🧾 Diagnostics\n' + (diagTrimmed ? code('json', diagTrimmed) : '_No diagnostics payload_'))
   parts.push('\n> Attach screenshots or full logs if available.')
   return parts.filter(Boolean).join('\n')

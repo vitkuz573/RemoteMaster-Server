@@ -6,18 +6,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { buildIssueBody, buildIssueTitle, buildIssueUrl, mdToHtml, type IssueTemplate } from './support-issue-utils'
+import { buildIssueBody, buildIssueTitle, buildIssueUrl, mdToHtml, type IssueTemplate, type BuildIssueOptions } from './support-issue-utils'
 
 export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?: string | null } }) {
   const [template, setTemplate] = useState<IssueTemplate>('support')
   const [includeEnv, setIncludeEnv] = useState(true)
   const [includeEndpoints, setIncludeEndpoints] = useState(true)
   const [includeDiagnostics, setIncludeDiagnostics] = useState(true)
-  const [includeLayout, setIncludeLayout] = useState(true)
+  const [includeSnapshot, setIncludeSnapshot] = useState(true)
+  const [includeFlags, setIncludeFlags] = useState(true)
+  const [includeToggles, setIncludeToggles] = useState(true)
   const [labels, setLabels] = useState<string>('')
   const [titleOverride, setTitleOverride] = useState<string>('')
   const [extra, setExtra] = useState<string>('')
   const [open, setOpen] = useState(false)
+  const [summary, setSummary] = useState('')
+  const [steps, setSteps] = useState('')
+  const [expected, setExpected] = useState('')
+  const [actual, setActual] = useState('')
+  const [motivation, setMotivation] = useState('')
+  const [proposal, setProposal] = useState('')
+  const [alternatives, setAlternatives] = useState('')
 
   // Collect diagnostics payload from globals exposed in About
   const payload = useMemo<Record<string, unknown>>(() => {
@@ -29,9 +38,22 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
   }, [])
 
   const title = (titleOverride && titleOverride.trim().length > 0) ? titleOverride : buildIssueTitle(payload, template)
-  const body = buildIssueBody(payload, { template, includeEnv, includeEndpoints, includeDiagnostics, extra })
+  const opts: BuildIssueOptions = { template, includeEnv, includeEndpoints, includeDiagnostics, includeSnapshot, includeFlags, includeToggles, extra, summary, steps, expected, actual, motivation, proposal, alternatives }
+  const body = buildIssueBody(payload, opts)
   const labelsArr = [template, ...labels.split(',').map((s) => s.trim()).filter(Boolean)]
   const url = buildIssueUrl(repo, { title, body, labels: labelsArr })
+  const urlLen = url.length
+  const urlStatus: 'ok' | 'warn' | 'bad' = urlLen < 4000 ? 'ok' : urlLen < 8000 ? 'warn' : 'bad'
+
+  const openAdaptive = async () => {
+    if (urlStatus === 'bad') {
+      try { await navigator.clipboard?.writeText(`# ${title}\n\n${body}`) } catch {}
+      const minimal = buildIssueUrl(repo, { title, body: '_Body is long. Pasted from clipboard._', labels: labelsArr })
+      window.open(minimal, '_blank', 'noopener,noreferrer')
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+  }
 
   return (
     <div className="rounded-md border p-3 lg:p-4">
@@ -64,8 +86,68 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
           <Checkbox checked={includeDiagnostics} onCheckedChange={(v) => setIncludeDiagnostics(Boolean(v))} /> Diagnostics
         </label>
         <label className="flex items-center gap-2 text-xs">
-          <Checkbox checked={includeLayout} onCheckedChange={(v) => setIncludeLayout(Boolean(v))} disabled /> Layout
+          <Checkbox checked={includeSnapshot} onCheckedChange={(v) => setIncludeSnapshot(Boolean(v))} /> Snapshot
         </label>
+        <label className="flex items-center gap-2 text-xs">
+          <Checkbox checked={includeFlags} onCheckedChange={(v) => setIncludeFlags(Boolean(v))} /> Flags
+        </label>
+        <label className="flex items-center gap-2 text-xs">
+          <Checkbox checked={includeToggles} onCheckedChange={(v) => setIncludeToggles(Boolean(v))} /> Toggles
+        </label>
+        <div className="lg:col-span-3 grid gap-2">
+          {template === 'bug' && (
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="grid gap-1">
+                <span className="text-xs text-muted-foreground">Summary</span>
+                <input value={summary} onChange={(e) => setSummary(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+              </div>
+              <div className="grid gap-1">
+                <span className="text-xs text-muted-foreground">Steps (one per line)</span>
+                <textarea rows={3} value={steps} onChange={(e) => setSteps(e.target.value)} className="rounded border px-2 py-1 text-xs bg-background" />
+              </div>
+              <div className="grid gap-1">
+                <span className="text-xs text-muted-foreground">Expected</span>
+                <input value={expected} onChange={(e) => setExpected(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+              </div>
+              <div className="grid gap-1">
+                <span className="text-xs text-muted-foreground">Actual</span>
+                <input value={actual} onChange={(e) => setActual(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+              </div>
+            </div>
+          )}
+          {template === 'feature' && (
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="grid gap-1">
+                <span className="text-xs text-muted-foreground">Summary</span>
+                <input value={summary} onChange={(e) => setSummary(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+              </div>
+              <div className="grid gap-1">
+                <span className="text-xs text-muted-foreground">Motivation</span>
+                <input value={motivation} onChange={(e) => setMotivation(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+              </div>
+              <div className="grid gap-1">
+                <span className="text-xs text-muted-foreground">Proposal</span>
+                <input value={proposal} onChange={(e) => setProposal(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+              </div>
+              <div className="grid gap-1">
+                <span className="text-xs text-muted-foreground">Alternatives</span>
+                <input value={alternatives} onChange={(e) => setAlternatives(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+              </div>
+            </div>
+          )}
+          {template === 'support' && (
+            <div className="grid gap-2">
+              <div className="grid gap-1">
+                <span className="text-xs text-muted-foreground">Summary</span>
+                <input value={summary} onChange={(e) => setSummary(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+              </div>
+              <div className="grid gap-1">
+                <span className="text-xs text-muted-foreground">Context</span>
+                <textarea rows={3} value={steps} onChange={(e) => setSteps(e.target.value)} className="rounded border px-2 py-1 text-xs bg-background" />
+              </div>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Labels</span>
           <input value={labels} onChange={(e) => setLabels(e.target.value)} placeholder="comma,separated"
@@ -94,6 +176,9 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
               </Tabs>
             </DialogContent>
           </Dialog>
+          <div className={urlStatus === 'bad' ? 'text-destructive text-xs px-2' : urlStatus==='warn' ? 'text-amber-600 text-xs px-2' : 'text-muted-foreground text-xs px-2'} title={`URL length: ${urlLen}`}>
+            URL: {urlLen} {urlStatus==='bad' ? '(too long; fallback will copy body)' : urlStatus==='warn' ? '(long)' : ''}
+          </div>
           <Button variant="outline" size="sm" className="h-8" onClick={() => { navigator.clipboard?.writeText(title) }}>Copy title</Button>
           <Button variant="outline" size="sm" className="h-8" onClick={() => { navigator.clipboard?.writeText(`# ${title}\n\n${body}`) }}>Copy Markdown</Button>
           <Button variant="outline" size="sm" className="h-8" onClick={() => {
@@ -107,9 +192,7 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
             a.remove()
             URL.revokeObjectURL(url)
           }}>Download .md</Button>
-          <Button asChild className="h-8">
-            <a href={url} target="_blank" rel="noreferrer noopener">Open Issue</a>
-          </Button>
+          <Button className="h-8" onClick={openAdaptive}>Open Issue</Button>
         </div>
       </div>
       <div className="mt-2">
