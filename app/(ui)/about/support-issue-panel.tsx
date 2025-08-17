@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Badge } from '@/components/ui/badge'
 import { buildIssueBody, buildIssueTitle, buildIssueUrl, mdToHtml, type IssueTemplate, type BuildIssueOptions } from './support-issue-utils'
 
 export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?: string | null } }) {
@@ -16,7 +18,8 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
   const [includeSnapshot, setIncludeSnapshot] = useState(true)
   const [includeFlags, setIncludeFlags] = useState(true)
   const [includeToggles, setIncludeToggles] = useState(true)
-  const [labels, setLabels] = useState<string>('')
+  const [repoLabels, setRepoLabels] = useState<string[]>([])
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([])
   const [titleOverride, setTitleOverride] = useState<string>('')
   const [extra, setExtra] = useState<string>('')
   const [open, setOpen] = useState(false)
@@ -54,6 +57,16 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
       window.open(url, '_blank', 'noopener,noreferrer')
     }
   }
+
+  // Fetch repo labels once
+  useEffect(() => {
+    let alive = true
+    fetch('/api/repo-labels', { cache: 'no-store' })
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then((j: { labels: string[] }) => { if (alive) setRepoLabels(j.labels || []) })
+      .catch(() => { if (alive) setRepoLabels([]) })
+    return () => { alive = false }
+  }, [])
 
   return (
     <div className="rounded-md border p-3 lg:p-4">
@@ -152,8 +165,25 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Labels</span>
-          <input value={labels} onChange={(e) => setLabels(e.target.value)} placeholder="comma,separated"
-            className="h-8 w-40 rounded border px-2 text-xs bg-background" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8">Pick labels</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Repository labels</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {repoLabels.length ? repoLabels.map((l) => (
+                <DropdownMenuCheckboxItem key={l} checked={selectedLabels.includes(l)} onCheckedChange={(v) => {
+                  setSelectedLabels((prev) => v ? Array.from(new Set([...prev, l])) : prev.filter((x) => x !== l))
+                }}>{l}</DropdownMenuCheckboxItem>
+              )) : (<div className="px-2 py-1 text-xs text-muted-foreground">No labels</div>)}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <div className="flex flex-wrap gap-1">
+            {selectedLabels.map((l) => (
+              <Badge key={l} variant="secondary">{l}</Badge>
+            ))}
+          </div>
         </div>
         <div className="flex items-center gap-2 lg:justify-end lg:col-span-3">
           <Dialog open={open} onOpenChange={setOpen}>
