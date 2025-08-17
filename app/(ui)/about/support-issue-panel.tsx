@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge'
 import { buildIssueBody, buildIssueTitle, buildIssueUrl, type IssueTemplate, type BuildIssueOptions } from './support-issue-utils'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 type RepoLabel = { name: string; color?: string; description?: string }
 
@@ -90,8 +92,7 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
         </div>
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs text-muted-foreground">Title</span>
-          <input value={titleOverride} onChange={(e) => setTitleOverride(e.target.value)} placeholder={title}
-            className="h-8 w-full rounded border px-2 text-xs bg-background" />
+          <Input value={titleOverride} onChange={(e) => setTitleOverride(e.target.value)} placeholder={title} className="h-8 text-xs" />
         </div>
         <div className="lg:col-span-3 flex flex-wrap items-center gap-3">
           <label className="inline-flex items-center gap-2 text-xs">
@@ -118,19 +119,19 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
             <div className="grid gap-2 md:grid-cols-2">
               <div className="grid gap-1">
                 <span className="text-xs text-muted-foreground">Summary</span>
-                <input value={summary} onChange={(e) => setSummary(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+                <Input value={summary} onChange={(e) => setSummary(e.target.value)} className="h-8 text-xs" />
               </div>
               <div className="grid gap-1">
                 <span className="text-xs text-muted-foreground">Steps (one per line)</span>
-                <textarea rows={3} value={steps} onChange={(e) => setSteps(e.target.value)} className="rounded border px-2 py-1 text-xs bg-background" />
+                <Textarea rows={3} value={steps} onChange={(e) => setSteps(e.target.value)} className="text-xs" />
               </div>
               <div className="grid gap-1">
                 <span className="text-xs text-muted-foreground">Expected</span>
-                <input value={expected} onChange={(e) => setExpected(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+                <Input value={expected} onChange={(e) => setExpected(e.target.value)} className="h-8 text-xs" />
               </div>
               <div className="grid gap-1">
                 <span className="text-xs text-muted-foreground">Actual</span>
-                <input value={actual} onChange={(e) => setActual(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+                <Input value={actual} onChange={(e) => setActual(e.target.value)} className="h-8 text-xs" />
               </div>
             </div>
           )}
@@ -138,19 +139,19 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
             <div className="grid gap-2 md:grid-cols-2">
               <div className="grid gap-1">
                 <span className="text-xs text-muted-foreground">Summary</span>
-                <input value={summary} onChange={(e) => setSummary(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+                <Input value={summary} onChange={(e) => setSummary(e.target.value)} className="h-8 text-xs" />
               </div>
               <div className="grid gap-1">
                 <span className="text-xs text-muted-foreground">Motivation</span>
-                <input value={motivation} onChange={(e) => setMotivation(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+                <Input value={motivation} onChange={(e) => setMotivation(e.target.value)} className="h-8 text-xs" />
               </div>
               <div className="grid gap-1">
                 <span className="text-xs text-muted-foreground">Proposal</span>
-                <input value={proposal} onChange={(e) => setProposal(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+                <Input value={proposal} onChange={(e) => setProposal(e.target.value)} className="h-8 text-xs" />
               </div>
               <div className="grid gap-1">
                 <span className="text-xs text-muted-foreground">Alternatives</span>
-                <input value={alternatives} onChange={(e) => setAlternatives(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+                <Input value={alternatives} onChange={(e) => setAlternatives(e.target.value)} className="h-8 text-xs" />
               </div>
             </div>
           )}
@@ -158,11 +159,11 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
             <div className="grid gap-2">
               <div className="grid gap-1">
                 <span className="text-xs text-muted-foreground">Summary</span>
-                <input value={summary} onChange={(e) => setSummary(e.target.value)} className="h-8 rounded border px-2 text-xs bg-background" />
+                <Input value={summary} onChange={(e) => setSummary(e.target.value)} className="h-8 text-xs" />
               </div>
               <div className="grid gap-1">
                 <span className="text-xs text-muted-foreground">Context</span>
-                <textarea rows={3} value={steps} onChange={(e) => setSteps(e.target.value)} className="rounded border px-2 py-1 text-xs bg-background" />
+                <Textarea rows={3} value={steps} onChange={(e) => setSteps(e.target.value)} className="text-xs" />
               </div>
             </div>
           )}
@@ -275,8 +276,7 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
         </div>
       </div>
       <div className="mt-2">
-        <textarea value={extra} onChange={(e) => setExtra(e.target.value)} placeholder="Additional context (optional)" rows={3}
-          className="w-full rounded border px-2 py-1 text-xs bg-background" />
+        <Textarea value={extra} onChange={(e) => setExtra(e.target.value)} placeholder="Additional context (optional)" rows={3} className="text-xs" />
       </div>
     </div>
   )
