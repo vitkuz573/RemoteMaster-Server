@@ -8,7 +8,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { buildIssueBody, buildIssueTitle, buildIssueUrl, mdToHtml, type IssueTemplate, type BuildIssueOptions } from './support-issue-utils'
+import { buildIssueBody, buildIssueTitle, buildIssueUrl, type IssueTemplate, type BuildIssueOptions } from './support-issue-utils'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+
+type RepoLabel = { name: string; color?: string; description?: string }
 
 export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?: string | null } }) {
   const [template, setTemplate] = useState<IssueTemplate>('support')
@@ -18,7 +22,7 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
   const [includeSnapshot, setIncludeSnapshot] = useState(true)
   const [includeFlags, setIncludeFlags] = useState(true)
   const [includeToggles, setIncludeToggles] = useState(true)
-  const [repoLabels, setRepoLabels] = useState<string[]>([])
+  const [repoLabels, setRepoLabels] = useState<RepoLabel[]>([])
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
   const [titleOverride, setTitleOverride] = useState<string>('')
   const [extra, setExtra] = useState<string>('')
@@ -63,7 +67,7 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
     let alive = true
     fetch('/api/repo-labels', { cache: 'no-store' })
       .then((r) => r.ok ? r.json() : Promise.reject())
-      .then((j: { labels: string[] }) => { if (alive) setRepoLabels(j.labels || []) })
+      .then((j: { labels: RepoLabel[] }) => { if (alive) setRepoLabels(Array.isArray(j.labels) ? j.labels : []) })
       .catch(() => { if (alive) setRepoLabels([]) })
     return () => { alive = false }
   }, [])
@@ -173,16 +177,31 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
               <DropdownMenuLabel>Repository labels</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {repoLabels.length ? repoLabels.map((l) => (
-                <DropdownMenuCheckboxItem key={l} checked={selectedLabels.includes(l)} onCheckedChange={(v) => {
-                  setSelectedLabels((prev) => v ? Array.from(new Set([...prev, l])) : prev.filter((x) => x !== l))
-                }}>{l}</DropdownMenuCheckboxItem>
-              )) : (<div className="px-2 py-1 text-xs text-muted-foreground">No labels</div>)}
+                <DropdownMenuCheckboxItem key={l.name} checked={selectedLabels.includes(l.name)} onCheckedChange={(v) => {
+                  const name = l.name
+                  setSelectedLabels((prev) => v ? Array.from(new Set([...prev, name])) : prev.filter((x) => x !== name))
+                }}>
+                  <span className="inline-block w-3 h-3 rounded-sm mr-2 mt-[2px] align-middle flex-shrink-0" style={{ backgroundColor: l.color || '#9ca3af', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.15)' }} />
+                  <div className="min-w-0">
+                    <div className="truncate">{l.name}</div>
+                    {l.description ? (
+                      <div className="text-[10px] text-muted-foreground truncate" title={l.description}>{l.description}</div>
+                    ) : null}
+                  </div>
+                </DropdownMenuCheckboxItem>
+              )) : (<div className="px-2 py-1 text-xs text-muted-foreground">No labels (repo missing or private?)</div>)}
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="flex flex-wrap gap-1">
-            {selectedLabels.map((l) => (
-              <Badge key={l} variant="secondary">{l}</Badge>
-            ))}
+            {selectedLabels.map((name) => {
+              const meta = repoLabels.find((r) => r.name === name)
+              return (
+                <Badge key={name} variant="secondary" title={meta?.description || undefined}>
+                  {meta?.color && <span className="inline-block w-2.5 h-2.5 rounded-sm mr-1 align-middle" style={{ backgroundColor: meta.color, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.15)' }} />}
+                  {name}
+                </Badge>
+              )
+            })}
           </div>
         </div>
         <div className="flex items-center gap-2 lg:justify-end lg:col-span-3">
@@ -203,7 +222,35 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
                   <pre className="rounded-md border p-3 text-xs whitespace-pre-wrap break-words max-h-[60vh] overflow-auto"># {title}{"\n\n"}{body}</pre>
                 </TabsContent>
                 <TabsContent value="rendered">
-                  <div className="rounded-md border p-3 text-sm max-h-[60vh] overflow-auto" dangerouslySetInnerHTML={{ __html: mdToHtml(`# ${title}\n\n${body}`) }} />
+                  <div className="rounded-md border p-3 text-sm max-h-[60vh] overflow-auto">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({ node, ...props }) => <h1 className="text-base font-semibold my-3" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-sm font-semibold my-2" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-sm font-semibold my-2" {...props} />,
+                        p: ({ node, ...props }) => <p className="my-2 leading-relaxed" {...props} />,
+                        a: ({ node, ...props }) => <a className="underline" target="_blank" rel="noreferrer noopener" {...props} />,
+                        code: ({ inline, children, ...props }: any) => (
+                          inline ? (
+                            <code className="bg-muted rounded px-[3px] py-[1px]" {...props}>{children}</code>
+                          ) : (
+                            <pre className="bg-muted rounded p-3 overflow-auto my-2"><code {...props}>{children}</code></pre>
+                          )
+                        ),
+                        table: ({ node, ...props }) => <table className="w-full border-collapse my-2" {...props} />,
+                        th: ({ node, ...props }) => <th className="border px-2 py-1 text-xs text-left" {...props} />,
+                        td: ({ node, ...props }) => <td className="border px-2 py-1 text-xs" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-1" {...props} />,
+                        ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-1" {...props} />,
+                        li: ({ node, ...props }) => <li className="my-0.5" {...props} />,
+                        blockquote: ({ node, ...props }) => <blockquote className="border-l-2 pl-3 text-muted-foreground my-2" {...props} />,
+                        hr: ({ node, ...props }) => <hr className="border-muted my-2" {...props} />,
+                      }}
+                    >
+                      {`# ${title}\n\n${body}`}
+                    </ReactMarkdown>
+                  </div>
                 </TabsContent>
               </Tabs>
             </DialogContent>
