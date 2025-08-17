@@ -22,7 +22,6 @@ import { ConfigAdvisor } from './config-advisor'
 import { StatusPanel } from './status-panel'
 import { CurlSnippets as CurlBlock } from './curl-snippets'
 import { EndpointActions } from './endpoint-actions'
-import { OpenIssueDiagnostics } from './open-issue-diagnostics'
 import { BuildInfoCompare } from './build-info-compare'
 import { FullDiagnostics } from './full-diagnostics'
 import { MdSummary } from './md-summary'
@@ -307,15 +306,6 @@ export default async function AboutPage() {
           <CardContent>
             <div className="flex items-center gap-3 flex-wrap">
               <SupportBundleButton />
-              <OpenIssueDiagnostics repoUrl={appConfig.repository.url} payload={{
-                name: appConfig.name,
-                version: appConfig.version,
-                build: appConfig.buildInfo,
-                branch: appConfig.buildBranch,
-                date: appConfig.buildDate,
-                environment: appConfig.environment,
-                endpoints: appConfig.endpoints,
-              }} />
               <FullDiagnostics />
             </div>
             <div className="mt-4">
