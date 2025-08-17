@@ -187,17 +187,18 @@ export default async function AboutPage() {
               <CardDescription>Create a rich issue with diagnostics and snapshots</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Expose diagnostics payload to DOM for panel */}
-              <div data-about-diagnostics data-payload={JSON.stringify({
-                name: appConfig.name,
-                version: appConfig.version,
-                build: appConfig.buildInfo,
-                branch: appConfig.buildBranch,
-                date: appConfig.buildDate,
-                environment: appConfig.environment,
-                endpoints: appConfig.endpoints,
-              })} />
-              <SupportIssuePanel repo={{ type: appConfig.repository.type, url: appConfig.repository.url }} />
+              <SupportIssuePanel
+                repo={{ type: appConfig.repository.type, url: appConfig.repository.url }}
+                payload={{
+                  name: appConfig.name,
+                  version: appConfig.version,
+                  build: appConfig.buildInfo,
+                  branch: appConfig.buildBranch,
+                  date: appConfig.buildDate,
+                  environment: appConfig.environment,
+                  endpoints: appConfig.endpoints,
+                }}
+              />
             </CardContent>
           </Card>
         ) : null}

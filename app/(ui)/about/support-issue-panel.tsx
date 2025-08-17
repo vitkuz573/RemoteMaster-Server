@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 type RepoLabel = { name: string; color?: string; description?: string }
 
-export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?: string | null } }) {
+export function SupportIssuePanel({ repo, payload }: { repo: { type?: string | null; url?: string | null }; payload?: Record<string, unknown> }) {
   const [template, setTemplate] = useState<IssueTemplate>('support')
   const [includeEnv, setIncludeEnv] = useState(true)
   const [includeEndpoints, setIncludeEndpoints] = useState(true)
@@ -37,30 +37,12 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
   const [proposal, setProposal] = useState('')
   const [alternatives, setAlternatives] = useState('')
 
-  // Collect diagnostics payload from DOM (About page injects it above the panel)
-  const [payload, setPayload] = useState<Record<string, unknown>>({})
-  useEffect(() => {
-    let alive = true
-    const read = () => {
-      try {
-        const el = document.querySelector('[data-about-diagnostics]') as HTMLElement | null
-        if (el?.dataset.payload) {
-          const v = JSON.parse(el.dataset.payload)
-          if (alive) setPayload(v)
-        }
-      } catch {}
-    }
-    // Try immediately and retry a few times to account for streaming/hydration timing
-    read()
-    const t1 = setTimeout(read, 50)
-    const t2 = setTimeout(read, 250)
-    const t3 = setTimeout(read, 1000)
-    return () => { alive = false; clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, [])
+  // Prefer payload from props (server-provided); avoids DOM races
+  const diag = useMemo<Record<string, unknown>>(() => (payload && typeof payload === 'object' ? payload : {}), [payload])
 
-  const title = (titleOverride && titleOverride.trim().length > 0) ? titleOverride : buildIssueTitle(payload, template)
+  const title = (titleOverride && titleOverride.trim().length > 0) ? titleOverride : buildIssueTitle(diag, template)
   const opts: BuildIssueOptions = { template, includeEnv, includeEndpoints, includeDiagnostics, includeSnapshot, includeFlags, includeToggles, extra, summary, steps, expected, actual, motivation, proposal, alternatives }
-  const body = buildIssueBody(payload, opts)
+  const body = buildIssueBody(diag, opts)
   const labelsArr = [template, ...selectedLabels]
   const url = buildIssueUrl(repo, { title, body, labels: labelsArr })
   const urlLen = url.length
