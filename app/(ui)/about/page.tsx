@@ -202,21 +202,13 @@ export default async function AboutPage() {
             </CardContent>
           </Card>
         ) : null}
-        <Card data-card-id="overall-status" data-card-title="Operational checks">
-          <CardHeader>
-            <CardTitle>{t('operational_checks')}</CardTitle>
-            <CardDescription>{t('operational_checks_desc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <OverallStatus />
-          </CardContent>
-        </Card>
         <Card data-card-id="status-panel" data-card-title="Status panel">
           <CardHeader>
             <CardTitle>{t('status_summary_title')}</CardTitle>
             <CardDescription>{t('status_summary_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* StatusPanel already includes a summary badge */}
             <StatusPanel />
           </CardContent>
         </Card>
