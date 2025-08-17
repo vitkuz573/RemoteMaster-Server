@@ -9,6 +9,7 @@ import { DiagnosticsButton } from './diagnostics-button'
 import { EndpointChecks } from './endpoint-checks'
 import { WebVitalsWidget } from './web-vitals-widget'
 import { SupportIssueButton } from './support-issue-button'
+import { SupportIssuePanel } from './support-issue-panel'
 import { ClientEnvironment } from './client-environment'
 import { FeatureFlags } from './feature-flags'
 import { SupportBundleButton } from './support-bundle-button'
@@ -176,20 +177,19 @@ export default async function AboutPage() {
                 </li>
               ))}
             </ul>
-            {appConfig.repository.type === 'github' && appConfig.repository.url ? (
+            {appConfig.repository.url ? (
               <div className="pt-4">
-                <SupportIssueButton
-                  repoUrl={appConfig.repository.url}
-                  payload={{
-                    name: appConfig.name,
-                    version: appConfig.version,
-                    build: appConfig.buildInfo,
-                    branch: appConfig.buildBranch,
-                    date: appConfig.buildDate,
-                    environment: appConfig.environment,
-                    endpoints: appConfig.endpoints,
-                  }}
-                />
+                {/* Expose diagnostics payload to DOM for panel */}
+                <div data-about-diagnostics data-payload={JSON.stringify({
+                  name: appConfig.name,
+                  version: appConfig.version,
+                  build: appConfig.buildInfo,
+                  branch: appConfig.buildBranch,
+                  date: appConfig.buildDate,
+                  environment: appConfig.environment,
+                  endpoints: appConfig.endpoints,
+                })} />
+                <SupportIssuePanel repo={{ type: appConfig.repository.type, url: appConfig.repository.url }} />
               </div>
             ) : null}
           </CardContent>
