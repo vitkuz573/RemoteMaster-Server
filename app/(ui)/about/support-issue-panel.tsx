@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { buildIssueBody, buildIssueTitle, buildIssueUrl, type IssueTemplate } from './support-issue-utils'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { buildIssueBody, buildIssueTitle, buildIssueUrl, mdToHtml, type IssueTemplate } from './support-issue-utils'
 
 export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?: string | null } }) {
   const [template, setTemplate] = useState<IssueTemplate>('support')
@@ -79,10 +80,18 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
               <DialogHeader>
                 <DialogTitle>Issue preview</DialogTitle>
               </DialogHeader>
-              <div className="space-y-2">
-                <div className="text-sm font-medium">{title}</div>
-                <pre className="rounded-md border p-3 text-xs whitespace-pre-wrap break-words max-h-[60vh] overflow-auto">{body}</pre>
-              </div>
+              <Tabs defaultValue="md" className="w-full">
+                <TabsList>
+                  <TabsTrigger value="md">Markdown</TabsTrigger>
+                  <TabsTrigger value="rendered">Rendered</TabsTrigger>
+                </TabsList>
+                <TabsContent value="md">
+                  <pre className="rounded-md border p-3 text-xs whitespace-pre-wrap break-words max-h-[60vh] overflow-auto"># {title}{"\n\n"}{body}</pre>
+                </TabsContent>
+                <TabsContent value="rendered">
+                  <div className="rounded-md border p-3 text-sm max-h-[60vh] overflow-auto" dangerouslySetInnerHTML={{ __html: mdToHtml(`# ${title}\n\n${body}`) }} />
+                </TabsContent>
+              </Tabs>
             </DialogContent>
           </Dialog>
           <Button variant="outline" size="sm" className="h-8" onClick={() => { navigator.clipboard?.writeText(title) }}>Copy title</Button>

@@ -163,7 +163,7 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card data-card-id="links" data-card-title="Links">
+        <Card data-card-id="links" data-card-title="Links" className="col-span-full">
           <CardHeader>
             <CardTitle>{t('links')}</CardTitle>
             <CardDescription>{t('links_desc')}</CardDescription>

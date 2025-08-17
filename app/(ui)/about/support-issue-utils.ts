@@ -34,23 +34,24 @@ export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includ
   const headerLines = (
     tmpl === 'bug'
       ? [
-          '- Summary: <one-line description>',
-          '- Steps to Reproduce: <1..N>',
-          '- Expected Result: <...>',
-          '- Actual Result: <...>',
-          '- Screenshots/Logs: <attach if possible>',
+          '- [ ] Summary: <one-line description>',
+          '1. <Step one>',
+          '2. <Step two>',
+          '- [ ] Expected: <...>',
+          '- [ ] Actual: <...>',
+          '- [ ] Attach screenshots/logs if possible',
         ]
       : tmpl === 'feature'
       ? [
-          '- Summary: <short description>',
-          '- Motivation: <why is this needed?>',
-          '- Proposal: <what should change?>',
-          '- Alternatives: <considered alternatives>',
+          '- [ ] Summary: <short description>',
+          '- [ ] Motivation: <why is this needed?>',
+          '- [ ] Proposal: <what should change?>',
+          '- [ ] Alternatives: <considered alternatives>',
         ]
       : [
-          '- Summary: <one-line description>',
-          '- Context: <where/how it happens>',
-          '- Screenshots/Logs: <attach if possible>',
+          '- [ ] Summary: <one-line description>',
+          '- [ ] Context: <where/how it happens>',
+          '- [ ] Attach screenshots/logs if possible',
         ]
   ).join('\n')
 
@@ -123,6 +124,56 @@ export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includ
   if (opts?.includeDiagnostics !== false) parts.push('\n## Diagnostics\n' + code('json', diagTrimmed))
   parts.push('\n> Attach screenshots or full logs if available.')
   return parts.filter(Boolean).join('\n')
+}
+
+// Minimal Markdown -> HTML renderer for preview (headings, lists, code, tables, links, bold/italic, inline code)
+export function mdToHtml(md: string): string {
+  // Escape HTML, keep code fences separately
+  const fenceRe = /```([a-zA-Z0-9]*)\n[\s\S]*?```/g
+  const fences: string[] = []
+  md = md.replace(fenceRe, (m) => { fences.push(m); return `__CODE_BLOCK_${fences.length-1}__` })
+  let html = mdEsc(md)
+  // Headings
+  html = html.replace(/^######\s?(.*)$/gm, '<h6>$1</h6>')
+  html = html.replace(/^#####\s?(.*)$/gm, '<h5>$1</h5>')
+  html = html.replace(/^####\s?(.*)$/gm, '<h4>$1</h4>')
+  html = html.replace(/^###\s?(.*)$/gm, '<h3>$1</h3>')
+  html = html.replace(/^##\s?(.*)$/gm, '<h2>$1</h2>')
+  html = html.replace(/^#\s?(.*)$/gm, '<h1>$1</h1>')
+  // Task lists
+  html = html.replace(/^\- \[ \] (.*)$/gm, '<div class="task"><input type="checkbox" disabled> $1</div>')
+  html = html.replace(/^\- \[x\] (.*)$/gmi, '<div class="task"><input type="checkbox" checked disabled> $1</div>')
+  // Ordered lists
+  html = html.replace(/^(\d+)\.\s+(.*)$/gm, '<div class="ol">$1. $2</div>')
+  // Unordered lists
+  html = html.replace(/^\-\s+(.*)$/gm, '<div class="ul">• $1</div>')
+  // Bold/italic/inline code
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>')
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
+  // Links
+  html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer noopener">$1</a>')
+  // Tables (simple)
+  html = html.replace(/\n\|([^\n]+)\|\n\|([\s\|\-:]+)\|\n([\s\S]*?)\n(?=\n|$)/g, (m, head, sep, body) => {
+    const th = head.split('|').map((s: string) => s.trim()).filter(Boolean).map((c: string) => `<th>${c}</th>`).join('')
+    const rows = body.trim().split('\n').map((row: string) => `<tr>${row.split('|').filter(Boolean).map((c: string) => `<td>${c.trim()}</td>`).join('')}</tr>`).join('')
+    return `\n<table class="md-table"><thead><tr>${th}</tr></thead><tbody>${rows}</tbody></table>\n`
+  })
+  // Paragraphs
+  html = html.replace(/^(?!<(h\d|div|table|pre|ul|ol|li|blockquote|hr)).+$/gm, '<p>$&</p>')
+  // Restore code fences
+  html = html.replace(/__CODE_BLOCK_(\d+)__/g, (_m, i) => {
+    const block = fences[Number(i)]
+    const lang = (block.match(/```([a-zA-Z0-9]*)\n/) || [,''])[1]
+    const content = block.replace(/```[a-zA-Z0-9]*\n|```/g, '')
+    return `<pre class="code"><code class="lang-${lang}">${mdEsc(content)}</code></pre>`
+  })
+  return `<style>
+    .md h1{font-size:1.25rem;margin:.75rem 0}.md h2{font-size:1.1rem;margin:.6rem 0}.md h3{font-size:1rem;margin:.5rem 0}
+    .md p{margin:.4rem 0;line-height:1.4}.md code{background:var(--muted);padding:.1rem .25rem;border-radius:4px}
+    .md .md-table{width:100%;border-collapse:collapse;margin:.5rem 0}.md .md-table th,.md .md-table td{border:1px solid var(--border);padding:.25rem .4rem;font-size:.85em}
+    .md .task{margin:.2rem 0}.md .code{background:var(--muted);padding:.5rem;border-radius:6px;overflow:auto}
+  </style><div class="md">${html}</div>`
 }
 
 export function buildIssueUrl(repo: { type?: string | null; url?: string | null }, params: { title: string; body: string; labels?: string[] }) {
