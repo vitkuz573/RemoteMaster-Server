@@ -164,7 +164,7 @@ export default async function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card data-card-id="links" data-card-title="Links" className="col-span-full">
+        <Card data-card-id="links" data-card-title="Links">
           <CardHeader>
             <CardTitle>{t('links')}</CardTitle>
             <CardDescription>{t('links_desc')}</CardDescription>
@@ -202,10 +202,10 @@ export default async function AboutPage() {
             </CardContent>
           </Card>
         ) : null}
-        <Card data-card-id="overall-status" data-card-title="Overall status">
+        <Card data-card-id="overall-status" data-card-title="Operational checks">
           <CardHeader>
-            <CardTitle>Status summary</CardTitle>
-            <CardDescription>Aggregated status of key endpoints</CardDescription>
+            <CardTitle>{t('operational_checks')}</CardTitle>
+            <CardDescription>{t('operational_checks_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <OverallStatus />
