@@ -138,11 +138,27 @@ export function CardsReorderToolbar() {
       })
       const overlays: HTMLElement[] = []
       const allowed = (sid: string) => sid === 'about-top' ? ['auto','1','2','3','full'] : (sid === 'about-mid' ? ['auto','1','2','full'] : ['auto','full'])
-      const sizesMap = loadSizes(id)
+      const updateButtonsForCard = (scopeEl: HTMLElement, scopeId: string, cardId: string) => {
+        const cardEl = scopeEl.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(cardId)}"]`)
+        if (!cardEl) return
+        const minusBtn = cardEl.querySelector<HTMLButtonElement>('[data-size-minus]')
+        const plusBtn = cardEl.querySelector<HTMLButtonElement>('[data-size-plus]')
+        const fullBtn = cardEl.querySelector<HTMLButtonElement>('[data-size-full]')
+        const cur = (loadSizes(scopeId)[cardId]?.base || 'auto') as Preset
+        const opts = allowed(scopeId)
+        const idx = opts.indexOf(cur)
+        const isMin = idx <= 0
+        const isMax = idx === -1 || idx >= opts.length - 1
+        if (minusBtn) minusBtn.disabled = isMin
+        if (plusBtn) plusBtn.disabled = isMax
+        if (fullBtn) fullBtn.disabled = cur === 'full' || !opts.includes('full')
+      }
       const setSizeQuick = (cardId: string, val: Preset) => {
+        const sizesMap = loadSizes(id)
         const next = { ...sizesMap, [cardId]: { ...(sizesMap[cardId] || {}), base: val } }
         saveSizes(id, next)
         applySizes(scope, next)
+        updateButtonsForCard(scope, id, cardId)
       }
       const shift = (arr: string[], cur: string, dir: 1|-1) => {
         const i = Math.max(0, arr.indexOf(cur))
@@ -157,7 +173,7 @@ export function CardsReorderToolbar() {
         const mkBtn = (label: string, title: string, onClick: () => void) => {
           const b = document.createElement('button')
           b.type = 'button'
-          b.className = 'h-6 px-2 text-xs rounded border bg-background hover:bg-muted'
+          b.className = 'h-6 px-2 text-xs rounded border bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed'
           b.title = title
           b.textContent = label
           b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onClick() })
@@ -174,9 +190,14 @@ export function CardsReorderToolbar() {
           setSizeQuick(cardId, next)
         })
         const full = mkBtn('Full', 'Full row', () => setSizeQuick(cardId, 'full'))
+        minus.setAttribute('data-size-minus','')
+        plus.setAttribute('data-size-plus','')
+        full.setAttribute('data-size-full','')
         bar.appendChild(minus); bar.appendChild(plus); bar.appendChild(full)
         el.appendChild(bar)
         overlays.push(bar)
+        // initialize disabled state
+        updateButtonsForCard(scope, id, cardId)
       })
       let dragging: HTMLElement | null = null
       const onDragStart = (e: DragEvent) => {
@@ -235,15 +256,18 @@ export function CardsReorderToolbar() {
         const next = shift(allowed(id), cur, -1) as Preset
         const nextMap = { ...sizesMap, [active.cardId]: { ...(sizesMap[active.cardId] || {}), base: next } }
         saveSizes(id, nextMap); applySizes(scopeEl, nextMap)
+        updateButtonsForCard(scopeEl, id, active.cardId)
         e.preventDefault()
       } else if (e.key === 'ArrowRight') {
         const next = shift(allowed(id), cur, +1) as Preset
         const nextMap = { ...sizesMap, [active.cardId]: { ...(sizesMap[active.cardId] || {}), base: next } }
         saveSizes(id, nextMap); applySizes(scopeEl, nextMap)
+        updateButtonsForCard(scopeEl, id, active.cardId)
         e.preventDefault()
       } else if (e.key.toLowerCase() === 'f') {
         const nextMap = { ...sizesMap, [active.cardId]: { ...(sizesMap[active.cardId] || {}), base: 'full' as Preset } }
         saveSizes(id, nextMap); applySizes(scopeEl, nextMap)
+        updateButtonsForCard(scopeEl, id, active.cardId)
         e.preventDefault()
       }
     }
