@@ -100,12 +100,11 @@ export function FullDiagnostics() {
         timestamp: new Date().toISOString(),
       }
       if (openIssue && appConfig.repository.url) {
-        const pretty = '```json\n' + JSON.stringify(payload, null, 2) + '\n```'
-        const compact = '```json\n' + JSON.stringify(payload) + '\n```'
+        const pretty = '```json\n' + JSON.stringify(payload, null, 2) + '\n```' // keep formatting
         const build = (b: string) => `${appConfig.repository.url}/issues/new?title=${encodeURIComponent('[Support] Full diagnostics')}&body=${encodeURIComponent(b)}`
-        let url = build(compact)
+        let url = build(pretty)
         if (url.length > 7000) {
-          const notice = '_Body is long. Full diagnostics copied to clipboard — paste below and attach file if possible._\n\n' + pretty
+          const notice = '_Body is long. Full diagnostics copied to clipboard — paste below and attach file if possible._'
           try { void navigator.clipboard?.writeText(pretty) } catch {}
           url = build(notice)
         }
