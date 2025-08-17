@@ -37,13 +37,25 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
   const [proposal, setProposal] = useState('')
   const [alternatives, setAlternatives] = useState('')
 
-  // Collect diagnostics payload from globals exposed in About
-  const payload = useMemo<Record<string, unknown>>(() => {
-    try {
-      const el = document.querySelector('[data-about-diagnostics]') as HTMLElement | null
-      if (el?.dataset.payload) return JSON.parse(el.dataset.payload)
-    } catch {}
-    return {}
+  // Collect diagnostics payload from DOM (About page injects it above the panel)
+  const [payload, setPayload] = useState<Record<string, unknown>>({})
+  useEffect(() => {
+    let alive = true
+    const read = () => {
+      try {
+        const el = document.querySelector('[data-about-diagnostics]') as HTMLElement | null
+        if (el?.dataset.payload) {
+          const v = JSON.parse(el.dataset.payload)
+          if (alive) setPayload(v)
+        }
+      } catch {}
+    }
+    // Try immediately and retry a few times to account for streaming/hydration timing
+    read()
+    const t1 = setTimeout(read, 50)
+    const t2 = setTimeout(read, 250)
+    const t3 = setTimeout(read, 1000)
+    return () => { alive = false; clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [])
 
   const title = (titleOverride && titleOverride.trim().length > 0) ? titleOverride : buildIssueTitle(payload, template)
