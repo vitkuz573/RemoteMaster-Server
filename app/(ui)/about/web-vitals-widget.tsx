@@ -141,9 +141,10 @@ export function WebVitalsWidget() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[22%]">Metric</TableHead>
-                <TableHead className="w-[18%]">Current</TableHead>
-                <TableHead className="w-[18%]">Avg</TableHead>
-                <TableHead className="w-[18%]">Min/Max</TableHead>
+                <TableHead className="w-[14%]">Current</TableHead>
+                <TableHead className="w-[14%]">Avg</TableHead>
+                <TableHead className="w-[18%]">P75 / P95</TableHead>
+                <TableHead className="w-[18%]">Min / Max</TableHead>
                 <TableHead>Trend</TableHead>
               </TableRow>
             </TableHeader>
@@ -154,12 +155,21 @@ export function WebVitalsWidget() {
                 const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : undefined
                 const min = values.length ? Math.min(...values) : undefined
                 const max = values.length ? Math.max(...values) : undefined
+                const pct = (p: number) => {
+                  if (!values.length) return undefined
+                  const sorted = [...values].sort((a,b)=>a-b)
+                  const idx = Math.min(sorted.length - 1, Math.max(0, Math.round((p/100) * (sorted.length - 1))))
+                  return sorted[idx]
+                }
+                const p75 = pct(75)
+                const p95 = pct(95)
                 const cur = latest[k]?.value
                 return (
                   <TableRow key={k}>
                     <TableCell className="font-medium">{k}</TableCell>
                     <TableCell className="font-mono text-xs">{fmt(k, cur)}</TableCell>
                     <TableCell className="font-mono text-xs">{avg !== undefined ? fmt(k, k==='CLS'? Number(avg.toFixed(3)) : Math.round(avg)) : '—'}</TableCell>
+                    <TableCell className="font-mono text-xs">{p75 !== undefined && p95 !== undefined ? `${fmt(k, k==='CLS'? Number(p75.toFixed(3)) : Math.round(p75))} / ${fmt(k, k==='CLS'? Number(p95.toFixed(3)) : Math.round(p95))}` : '—'}</TableCell>
                     <TableCell className="font-mono text-xs">{min !== undefined && max !== undefined ? `${fmt(k, k==='CLS'? Number(min.toFixed(3)) : Math.round(min))} / ${fmt(k, k==='CLS'? Number(max.toFixed(3)) : Math.round(max))}` : '—'}</TableCell>
                     <TableCell><Sparkline data={values.slice(-30)} /></TableCell>
                   </TableRow>
