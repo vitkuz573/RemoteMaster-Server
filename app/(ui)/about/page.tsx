@@ -37,6 +37,7 @@ import { EndpointsCardProvider } from './endpoints-provider'
 import { EndpointsHeaderControls } from './endpoints-header-controls'
 import { CardAction } from '@/components/ui/card'
 import { CardsReorderToolbar } from './cards-reorder'
+// Tabs not used here anymore for Links
 
 export const metadata: Metadata = {
   title: `About ${appConfig.name}`,
@@ -169,43 +170,37 @@ export default async function AboutPage() {
             <CardDescription>{t('links_desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Tabs defaultValue="links">
-              <TabsList>
-                <TabsTrigger value="links">Links</TabsTrigger>
-                <TabsTrigger value="issue">Issue</TabsTrigger>
-              </TabsList>
-              <TabsContent value="links" className="space-y-2">
-                <ReadmeBadges />
-                <ul className="space-y-2 text-sm">
-                  {links.map((l) => (
-                    <li key={l.label}>
-                      <ExtLink href={l.href}>{l.label}</ExtLink>
-                    </li>
-                  ))}
-                </ul>
-              </TabsContent>
-              <TabsContent value="issue">
-                {appConfig.repository.url ? (
-                  <div>
-                    {/* Expose diagnostics payload to DOM for panel */}
-                    <div data-about-diagnostics data-payload={JSON.stringify({
-                      name: appConfig.name,
-                      version: appConfig.version,
-                      build: appConfig.buildInfo,
-                      branch: appConfig.buildBranch,
-                      date: appConfig.buildDate,
-                      environment: appConfig.environment,
-                      endpoints: appConfig.endpoints,
-                    })} />
-                    <SupportIssuePanel repo={{ type: appConfig.repository.type, url: appConfig.repository.url }} />
-                  </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground">Repository URL is not configured.</div>
-                )}
-              </TabsContent>
-            </Tabs>
+            <ReadmeBadges />
+            <ul className="space-y-2 text-sm">
+              {links.map((l) => (
+                <li key={l.label}>
+                  <ExtLink href={l.href}>{l.label}</ExtLink>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
+        {appConfig.repository.url ? (
+          <Card data-card-id="issue-builder" data-card-title="Issue Builder" className="col-span-full">
+            <CardHeader>
+              <CardTitle>Issue Builder</CardTitle>
+              <CardDescription>Create a rich issue with diagnostics and snapshots</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Expose diagnostics payload to DOM for panel */}
+              <div data-about-diagnostics data-payload={JSON.stringify({
+                name: appConfig.name,
+                version: appConfig.version,
+                build: appConfig.buildInfo,
+                branch: appConfig.buildBranch,
+                date: appConfig.buildDate,
+                environment: appConfig.environment,
+                endpoints: appConfig.endpoints,
+              })} />
+              <SupportIssuePanel repo={{ type: appConfig.repository.type, url: appConfig.repository.url }} />
+            </CardContent>
+          </Card>
+        ) : null}
         <Card data-card-id="overall-status" data-card-title="Overall status">
           <CardHeader>
             <CardTitle>Status summary</CardTitle>

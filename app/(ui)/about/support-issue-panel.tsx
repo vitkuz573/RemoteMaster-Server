@@ -95,7 +95,18 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
             </DialogContent>
           </Dialog>
           <Button variant="outline" size="sm" className="h-8" onClick={() => { navigator.clipboard?.writeText(title) }}>Copy title</Button>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => { navigator.clipboard?.writeText(body) }}>Copy body</Button>
+          <Button variant="outline" size="sm" className="h-8" onClick={() => { navigator.clipboard?.writeText(`# ${title}\n\n${body}`) }}>Copy Markdown</Button>
+          <Button variant="outline" size="sm" className="h-8" onClick={() => {
+            const blob = new Blob([`# ${title}\n\n${body}`], { type: 'text/markdown' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = 'issue.md'
+            document.body.appendChild(a)
+            a.click()
+            a.remove()
+            URL.revokeObjectURL(url)
+          }}>Download .md</Button>
           <Button asChild className="h-8">
             <a href={url} target="_blank" rel="noreferrer noopener">Open Issue</a>
           </Button>

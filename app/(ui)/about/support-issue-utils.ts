@@ -21,6 +21,8 @@ export function buildIssueTitle(p: Payload, tmpl: IssueTemplate): string {
   return `${prefix} ${bits.join(' ')} — <replace with 1-line summary>`
 }
 
+import { env } from '@/lib/env'
+
 export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includeEndpoints?: boolean; includeDiagnostics?: boolean; extra?: string; template?: IssueTemplate }) {
   const tmpl = opts?.template ?? 'support'
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
@@ -113,15 +115,23 @@ export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includ
   // Truncate diagnostics to keep URL size reasonable
   const diagJson = JSON.stringify(p, null, 2)
   const maxDiag = 4000
-  const diagTrimmed = diagJson.length > maxDiag ? diagJson.slice(0, maxDiag) + '\n…(truncated)…' : diagJson
+  const diagTrimmed = (diagJson === '{}' ? '' : (diagJson.length > maxDiag ? diagJson.slice(0, maxDiag) + '\n…(truncated)…' : diagJson))
+
+  // Feature flags / operational toggles tables (from env)
+  const ff = Object.entries(env as Record<string, any>).filter(([k]) => k.startsWith('NEXT_PUBLIC_FEATURE_'))
+  const toggles = Object.entries(env as Record<string, any>).filter(([k]) => k.startsWith('NEXT_PUBLIC_') && !k.startsWith('NEXT_PUBLIC_FEATURE_') && /ENABLE(D)?/i.test(k))
+  const flagsTable = ff.length ? table(['Flag','Value'], ff.map(([k,v]) => [k.replace('NEXT_PUBLIC_FEATURE_',''), String(v)])) : ''
+  const togglesTable = toggles.length ? table(['Toggle','Value'], toggles.map(([k,v]) => [k.replace('NEXT_PUBLIC_',''), String(v)])) : ''
 
   const parts: string[] = []
   parts.push('# Issue\n\n' + headerLines)
   if (opts?.extra) parts.push('\n## Additional Context\n\n' + opts.extra)
   if (opts?.includeEnv !== false) parts.push('\n## Environment\n\n' + envTable)
-  if (opts?.includeEndpoints !== false && endpointsTable) parts.push('\n## Endpoints\n\n' + endpointsTable)
+  if (opts?.includeEndpoints !== false && endpointsTable) parts.push('\n## 🔗 Endpoints\n\n' + endpointsTable)
   if (opts?.includeEndpoints !== false && lastTable) parts.push('\n## Endpoints Snapshot\n\n' + lastTable)
-  if (opts?.includeDiagnostics !== false) parts.push('\n## Diagnostics\n' + code('json', diagTrimmed))
+  if (flagsTable) parts.push('\n## 🧩 Feature Flags\n\n' + flagsTable)
+  if (togglesTable) parts.push('\n## ⚙️ Operational Toggles\n\n' + togglesTable)
+  if (opts?.includeDiagnostics !== false) parts.push('\n## 🧾 Diagnostics\n' + (diagTrimmed ? code('json', diagTrimmed) : '_No diagnostics payload_'))
   parts.push('\n> Attach screenshots or full logs if available.')
   return parts.filter(Boolean).join('\n')
 }
