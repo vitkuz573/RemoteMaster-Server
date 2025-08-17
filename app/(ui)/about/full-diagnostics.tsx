@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { appConfig } from '@/lib/app-config'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
+import { readWebVitalsHist, collectPerformanceSummary, collectStorageEstimate } from './diagnostics-utils'
 
 type Check = { name: string; url?: string; method?: 'GET'|'HEAD' }
 
@@ -94,9 +95,9 @@ export function FullDiagnostics() {
         buildInfo: build,
         configReport: lint,
         client: collectClientEnv(),
-        webVitals: readWebVitals(),
-        performance: collectPerformance(),
-        storage: await collectStorage(),
+        webVitals: readWebVitalsHist(),
+        performance: collectPerformanceSummary(),
+        storage: await collectStorageEstimate(),
         timestamp: new Date().toISOString(),
       }
       if (openIssue && appConfig.repository.url) {
@@ -129,48 +130,4 @@ export function FullDiagnostics() {
       <Button size="sm" variant="outline" onClick={() => run(true)} disabled={busy}>{t('open_issue_diagnostics')}</Button>
     </div>
   )
-}
-
-function readWebVitals() {
-  try { return JSON.parse(sessionStorage.getItem('about:webvitals:hist') || '{}') } catch { return {} }
-}
-
-function collectPerformance() {
-  const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
-  const paints = performance.getEntriesByType('paint') as PerformanceEntry[]
-  const res = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
-  const summary: any = {}
-  if (nav) {
-    summary.navigation = {
-      type: (nav as any).type,
-      startTime: nav.startTime,
-      domContentLoaded: nav.domContentLoadedEventEnd - nav.startTime,
-      loadEvent: nav.loadEventEnd - nav.startTime,
-      responseEnd: nav.responseEnd - nav.startTime,
-      transferSize: (nav as any).transferSize,
-      encodedBodySize: (nav as any).encodedBodySize,
-      decodedBodySize: (nav as any).decodedBodySize,
-    }
-  }
-  if (paints && paints.length) {
-    summary.paint = Object.fromEntries(paints.map((p: any) => [p.name, Math.round(p.startTime)]))
-  }
-  if (res && res.length) {
-    const byType: Record<string, number> = {}
-    for (const r of res.slice(-200)) {
-      const ext = (r.name.split('?')[0].split('.').pop() || 'other').toLowerCase()
-      byType[ext] = (byType[ext] || 0) + 1
-    }
-    summary.resources = { count: res.length, recentByExt: byType }
-  }
-  const mem = (performance as any).memory
-  if (mem) summary.memory = { jsHeapSizeLimit: mem.jsHeapSizeLimit, totalJSHeapSize: mem.totalJSHeapSize, usedJSHeapSize: mem.usedJSHeapSize }
-  return summary
-}
-
-async function collectStorage() {
-  try {
-    const est = await (navigator as any).storage?.estimate?.()
-    return { quota: est?.quota, usage: est?.usage }
-  } catch { return null }
 }

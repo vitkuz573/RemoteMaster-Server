@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { appConfig } from '@/lib/app-config'
+import { readWebVitalsHist, collectPerformanceSummary, collectStorageEstimate, readLayoutSnapshot, maskUrl } from './diagnostics-utils'
 
 type Check = { name: string; url?: string; method?: 'GET'|'HEAD' }
 
@@ -66,64 +67,6 @@ function collectClientEnv() {
   }
 }
 
-function readWebVitals() {
-  try { return JSON.parse(sessionStorage.getItem('about:webvitals:hist') || '{}') } catch { return {} }
-}
-
-function collectPerformance() {
-  const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
-  const paints = performance.getEntriesByType('paint') as PerformanceEntry[]
-  const res = performance.getEntriesByType('resource') as PerformanceResourceTiming[]
-  const summary: any = {}
-  if (nav) {
-    summary.navigation = {
-      type: (nav as any).type,
-      startTime: nav.startTime,
-      domContentLoaded: nav.domContentLoadedEventEnd - nav.startTime,
-      loadEvent: nav.loadEventEnd - nav.startTime,
-      responseEnd: nav.responseEnd - nav.startTime,
-      transferSize: (nav as any).transferSize,
-      encodedBodySize: (nav as any).encodedBodySize,
-      decodedBodySize: (nav as any).decodedBodySize,
-    }
-  }
-  if (paints && paints.length) {
-    summary.paint = Object.fromEntries(paints.map((p: any) => [p.name, Math.round(p.startTime)]))
-  }
-  if (res && res.length) {
-    const byType: Record<string, number> = {}
-    for (const r of res.slice(-200)) {
-      const ext = (r.name.split('?')[0].split('.').pop() || 'other').toLowerCase()
-      byType[ext] = (byType[ext] || 0) + 1
-    }
-    summary.resources = { count: res.length, recentByExt: byType }
-  }
-  const mem = (performance as any).memory
-  if (mem) summary.memory = { jsHeapSizeLimit: mem.jsHeapSizeLimit, totalJSHeapSize: mem.totalJSHeapSize, usedJSHeapSize: mem.usedJSHeapSize }
-  return summary
-}
-
-async function collectStorage() {
-  try {
-    const est = await (navigator as any).storage?.estimate?.()
-    return { quota: est?.quota, usage: est?.usage }
-  } catch { return null }
-}
-
-function readLayoutSnapshot() {
-  const scopes = Array.from(document.querySelectorAll<HTMLElement>('[data-cards-scope]')).map((el) => el.getAttribute('data-cards-scope') || 'default')
-  const out: Record<string, any> = {}
-  for (const id of scopes) {
-    try {
-      const order = JSON.parse(localStorage.getItem(`about:order:${id}`) || 'null')
-      const hidden = JSON.parse(localStorage.getItem(`about:hidden:${id}`) || '[]')
-      const sizes = JSON.parse(localStorage.getItem(`about:size:${id}`) || '{}')
-      out[id] = { order, hidden, sizes }
-    } catch {}
-  }
-  return out
-}
-
 function maskEmail(s?: string | null) {
   if (!s) return s
   const [user, domain] = s.split('@')
@@ -134,10 +77,6 @@ function maskEmail(s?: string | null) {
 function maskPhone(s?: string | null) {
   if (!s) return s
   return s.replace(/\d(?=\d{2})/g, '•')
-}
-function maskUrl(u?: string | null) {
-  if (!u) return u
-  try { const x = new URL(u); return `${x.origin}${x.pathname}` } catch { return u }
 }
 
 export function SupportBundlePanel() {
@@ -172,7 +111,7 @@ export function SupportBundlePanel() {
       includeTime ? runTimeSync() : Promise.resolve(undefined),
       includeBuild ? getBuildInfo() : Promise.resolve(undefined),
       includeLint ? getConfigLint() : Promise.resolve(undefined),
-      includeStorage ? collectStorage() : Promise.resolve(undefined),
+      includeStorage ? collectStorageEstimate() : Promise.resolve(undefined),
     ])
     const payload: any = {
       app: {
@@ -189,8 +128,8 @@ export function SupportBundlePanel() {
       buildInfo: build,
       configReport: lint,
       client: includeClient ? collectClientEnv() : undefined,
-      webVitals: includeVitals ? readWebVitals() : undefined,
-      performance: includePerf ? collectPerformance() : undefined,
+      webVitals: includeVitals ? readWebVitalsHist() : undefined,
+      performance: includePerf ? collectPerformanceSummary() : undefined,
       storage,
       layout: includeLayout ? readLayoutSnapshot() : undefined,
       timestamp: new Date().toISOString(),
@@ -317,4 +256,3 @@ export function SupportBundlePanel() {
     </div>
   )
 }
-
