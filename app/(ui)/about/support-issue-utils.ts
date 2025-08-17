@@ -4,8 +4,13 @@ export type IssueTemplate = 'support' | 'bug' | 'feature'
 export type Payload = Record<string, unknown>
 
 const mdEsc = (s: string) => s.replace(/[<>]/g, (m) => ({ '<': '&lt;', '>': '&gt;' }[m] as string))
-const details = (title: string, content: string) => `<details><summary>${mdEsc(title)}</summary>\n\n${content}\n\n</details>`
 const code = (lang: string, content: string) => `\n\n\x60\x60\x60${lang}\n${content}\n\x60\x60\x60\n\n`
+const table = (headers: string[], rows: string[][]) => {
+  const h = `| ${headers.join(' | ')} |`
+  const sep = `| ${headers.map(() => '---').join(' | ')} |`
+  const body = rows.map((r) => `| ${r.map((c) => (c || '—').replace(/\n/g, ' ')).join(' | ')} |`).join('\n')
+  return `${h}\n${sep}\n${body}`
+}
 
 export function buildIssueTitle(p: Payload, tmpl: IssueTemplate): string {
   const name = typeof p['name'] === 'string' ? p['name'] : 'App'
@@ -24,10 +29,7 @@ export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includ
   const viewport = typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : ''
 
   const endpoints = (p['endpoints'] || {}) as Record<string, string | undefined>
-  const epList = Object.entries(endpoints)
-    .filter(([, v]) => typeof v === 'string' && v)
-    .map(([k, v]) => `- ${k}: ${v}`)
-    .join('\n')
+  const epListArr = Object.entries(endpoints).filter(([, v]) => typeof v === 'string' && v)
 
   const headerLines = (
     tmpl === 'bug'
@@ -52,15 +54,20 @@ export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includ
         ]
   ).join('\n')
 
-  const envBlock = `- Name: ${p['name'] ?? '—'}\n`+
-    `- Version: v${p['version'] ?? '—'}\n`+
-    `- Build: ${p['build'] ?? p['buildInfo'] ?? '—'}\n`+
-    `- Branch: ${p['branch'] ?? p['buildBranch'] ?? '—'}\n`+
-    `- Date: ${p['date'] ?? p['buildDate'] ?? '—'}\n`+
-    `- Environment: ${p['environment'] ?? '—'}\n`+
-    `- Client: ${ua || '—'}\n`+
-    `- Locale/Timezone: ${lang || '—'} / ${tz || '—'}\n`+
-    `- Viewport: ${viewport || '—'}\n`
+  const envTable = table(
+    ['Key', 'Value'],
+    [
+      ['Name', String(p['name'] ?? '—')],
+      ['Version', `v${p['version'] ?? '—'}`],
+      ['Build', String(p['build'] ?? p['buildInfo'] ?? '—')],
+      ['Branch', String(p['branch'] ?? p['buildBranch'] ?? '—')],
+      ['Date', String(p['date'] ?? p['buildDate'] ?? '—')],
+      ['Environment', String(p['environment'] ?? '—')],
+      ['Client', ua || '—'],
+      ['Locale/Timezone', `${lang || '—'} / ${tz || '—'}`],
+      ['Viewport', viewport || '—'],
+    ]
+  )
 
   // Layout snapshot from localStorage
   const scopes = Array.from(document.querySelectorAll<HTMLElement>('[data-cards-scope]'))
@@ -89,15 +96,33 @@ export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includ
     }
   } catch {}
 
-  const endpointsSnapshot = last.length ? code('json', JSON.stringify(last, null, 2)) : ''
+  const endpointsTable = epListArr.length
+    ? table(
+        ['Name', 'URL'],
+        epListArr.map(([k, v]) => [k, String(v)])
+      )
+    : ''
+  const lastTable = last.length
+    ? table(
+        ['Name', 'Method', 'Code', 'Latency (ms)', 'When'],
+        last.map((r) => [String(r?.name||'—'), String(r?.method||'—'), String(r?.code ?? '—'), String(r?.ms ?? '—'), r?.ts ? new Date(r.ts).toISOString() : '—'])
+      )
+    : ''
 
-  const parts: string[] = [headerLines]
-  if (opts?.extra) parts.push(opts.extra)
-  if (opts?.includeEnv !== false) parts.push(details('Environment', envBlock))
-  if (opts?.includeEndpoints !== false && epList) parts.push(details('Endpoints', epList))
-  if (opts?.includeEndpoints !== false && endpointsSnapshot) parts.push(details('Endpoints snapshot', endpointsSnapshot))
-  if (opts?.includeDiagnostics !== false) parts.push(details('Diagnostics payload', code('json', JSON.stringify(p, null, 2))))
-  return parts.filter(Boolean).join('\n\n')
+  // Truncate diagnostics to keep URL size reasonable
+  const diagJson = JSON.stringify(p, null, 2)
+  const maxDiag = 4000
+  const diagTrimmed = diagJson.length > maxDiag ? diagJson.slice(0, maxDiag) + '\n…(truncated)…' : diagJson
+
+  const parts: string[] = []
+  parts.push('# Issue\n\n' + headerLines)
+  if (opts?.extra) parts.push('\n## Additional Context\n\n' + opts.extra)
+  if (opts?.includeEnv !== false) parts.push('\n## Environment\n\n' + envTable)
+  if (opts?.includeEndpoints !== false && endpointsTable) parts.push('\n## Endpoints\n\n' + endpointsTable)
+  if (opts?.includeEndpoints !== false && lastTable) parts.push('\n## Endpoints Snapshot\n\n' + lastTable)
+  if (opts?.includeDiagnostics !== false) parts.push('\n## Diagnostics\n' + code('json', diagTrimmed))
+  parts.push('\n> Attach screenshots or full logs if available.')
+  return parts.filter(Boolean).join('\n')
 }
 
 export function buildIssueUrl(repo: { type?: string | null; url?: string | null }, params: { title: string; body: string; labels?: string[] }) {
