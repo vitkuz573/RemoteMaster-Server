@@ -76,24 +76,26 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
           <input value={titleOverride} onChange={(e) => setTitleOverride(e.target.value)} placeholder={title}
             className="h-8 w-full rounded border px-2 text-xs bg-background" />
         </div>
-        <label className="flex items-center gap-2 text-xs">
-          <Checkbox checked={includeEnv} onCheckedChange={(v) => setIncludeEnv(Boolean(v))} /> Env
-        </label>
-        <label className="flex items-center gap-2 text-xs">
-          <Checkbox checked={includeEndpoints} onCheckedChange={(v) => setIncludeEndpoints(Boolean(v))} /> Endpoints
-        </label>
-        <label className="flex items-center gap-2 text-xs">
-          <Checkbox checked={includeDiagnostics} onCheckedChange={(v) => setIncludeDiagnostics(Boolean(v))} /> Diagnostics
-        </label>
-        <label className="flex items-center gap-2 text-xs">
-          <Checkbox checked={includeSnapshot} onCheckedChange={(v) => setIncludeSnapshot(Boolean(v))} /> Snapshot
-        </label>
-        <label className="flex items-center gap-2 text-xs">
-          <Checkbox checked={includeFlags} onCheckedChange={(v) => setIncludeFlags(Boolean(v))} /> Flags
-        </label>
-        <label className="flex items-center gap-2 text-xs">
-          <Checkbox checked={includeToggles} onCheckedChange={(v) => setIncludeToggles(Boolean(v))} /> Toggles
-        </label>
+        <div className="lg:col-span-3 flex flex-wrap items-center gap-3">
+          <label className="inline-flex items-center gap-2 text-xs">
+            <Checkbox checked={includeEnv} onCheckedChange={(v) => setIncludeEnv(Boolean(v))} /> Env
+          </label>
+          <label className="inline-flex items-center gap-2 text-xs">
+            <Checkbox checked={includeEndpoints} onCheckedChange={(v) => setIncludeEndpoints(Boolean(v))} /> Endpoints
+          </label>
+          <label className="inline-flex items-center gap-2 text-xs">
+            <Checkbox checked={includeSnapshot} onCheckedChange={(v) => setIncludeSnapshot(Boolean(v))} /> Snapshot
+          </label>
+          <label className="inline-flex items-center gap-2 text-xs">
+            <Checkbox checked={includeFlags} onCheckedChange={(v) => setIncludeFlags(Boolean(v))} /> Flags
+          </label>
+          <label className="inline-flex items-center gap-2 text-xs">
+            <Checkbox checked={includeToggles} onCheckedChange={(v) => setIncludeToggles(Boolean(v))} /> Toggles
+          </label>
+          <label className="inline-flex items-center gap-2 text-xs">
+            <Checkbox checked={includeDiagnostics} onCheckedChange={(v) => setIncludeDiagnostics(Boolean(v))} /> Diagnostics
+          </label>
+        </div>
         <div className="lg:col-span-3 grid gap-2">
           {template === 'bug' && (
             <div className="grid gap-2 md:grid-cols-2">
