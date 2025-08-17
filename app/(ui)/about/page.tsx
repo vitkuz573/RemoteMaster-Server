@@ -169,29 +169,41 @@ export default async function AboutPage() {
             <CardDescription>{t('links_desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <ReadmeBadges />
-            <ul className="space-y-2 text-sm">
-              {links.map((l) => (
-                <li key={l.label}>
-                  <ExtLink href={l.href}>{l.label}</ExtLink>
-                </li>
-              ))}
-            </ul>
-            {appConfig.repository.url ? (
-              <div className="pt-4">
-                {/* Expose diagnostics payload to DOM for panel */}
-                <div data-about-diagnostics data-payload={JSON.stringify({
-                  name: appConfig.name,
-                  version: appConfig.version,
-                  build: appConfig.buildInfo,
-                  branch: appConfig.buildBranch,
-                  date: appConfig.buildDate,
-                  environment: appConfig.environment,
-                  endpoints: appConfig.endpoints,
-                })} />
-                <SupportIssuePanel repo={{ type: appConfig.repository.type, url: appConfig.repository.url }} />
-              </div>
-            ) : null}
+            <Tabs defaultValue="links">
+              <TabsList>
+                <TabsTrigger value="links">Links</TabsTrigger>
+                <TabsTrigger value="issue">Issue</TabsTrigger>
+              </TabsList>
+              <TabsContent value="links" className="space-y-2">
+                <ReadmeBadges />
+                <ul className="space-y-2 text-sm">
+                  {links.map((l) => (
+                    <li key={l.label}>
+                      <ExtLink href={l.href}>{l.label}</ExtLink>
+                    </li>
+                  ))}
+                </ul>
+              </TabsContent>
+              <TabsContent value="issue">
+                {appConfig.repository.url ? (
+                  <div>
+                    {/* Expose diagnostics payload to DOM for panel */}
+                    <div data-about-diagnostics data-payload={JSON.stringify({
+                      name: appConfig.name,
+                      version: appConfig.version,
+                      build: appConfig.buildInfo,
+                      branch: appConfig.buildBranch,
+                      date: appConfig.buildDate,
+                      environment: appConfig.environment,
+                      endpoints: appConfig.endpoints,
+                    })} />
+                    <SupportIssuePanel repo={{ type: appConfig.repository.type, url: appConfig.repository.url }} />
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">Repository URL is not configured.</div>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
         <Card data-card-id="overall-status" data-card-title="Overall status">
