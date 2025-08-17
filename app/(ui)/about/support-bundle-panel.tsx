@@ -204,23 +204,17 @@ export function SupportBundlePanel() {
     setBusy(true)
     try {
       const md = await summaryMd()
-      // Prefer server-side issue creation via API
       try {
         const payload = await buildPayload()
         const pretty = '```json\n' + JSON.stringify(payload, null, 2) + '\n```'
         const r = await fetch('/api/issues', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: '[Support] Bundle', body: md + '\n\n' + pretty, labels: ['support'] }) })
         if (r.ok) { const j = await r.json(); if (j?.url) { window.open(j.url, '_blank', 'noopener,noreferrer'); return } }
-      } catch {}
-      const build = (b: string) => `${appConfig.repository.url}/issues/new?title=${encodeURIComponent('[Support] Bundle')}&body=${encodeURIComponent(b)}`
-      let url = build(md)
-      if (url.length > 7000) {
-        const payload = await buildPayload()
-        const pretty = '```json\n' + JSON.stringify(payload, null, 2) + '\n```'
-        const notice = '_Body is long. Summary and full JSON copied to clipboard — paste below and attach file if possible._\n\n' + md
-        try { await navigator.clipboard?.writeText(pretty) } catch {}
-        url = build(notice)
+        const j = await r.json().catch(() => ({}))
+        throw new Error(j?.error || 'Issue creation is not available')
+      } catch (e: any) {
+        // eslint-disable-next-line no-alert
+        alert(`Cannot create issue on server: ${e?.message || 'Unknown error'}. Configure GITHUB_TOKEN or use download buttons.`)
       }
-      window.open(url, '_blank', 'noopener,noreferrer')
     } finally { setBusy(false) }
   }
 

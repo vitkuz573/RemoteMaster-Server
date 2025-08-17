@@ -6,7 +6,7 @@ type Label = { name: string; color?: string; description?: string }
 
 async function fetchGithub(owner: string, repo: string): Promise<Label[]> {
   try {
-    const octo = getOctokit()
+    const octo = getOctokit(false)
     if (octo) {
       const res = await octo.issues.listLabelsForRepo({ owner, repo, per_page: 100 })
       return (res.data || []).map((l: any) => ({

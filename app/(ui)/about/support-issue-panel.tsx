@@ -49,20 +49,19 @@ export function SupportIssuePanel({ repo, payload }: { repo: { type?: string | n
   const urlStatus: 'ok' | 'warn' | 'bad' = urlLen < 4000 ? 'ok' : urlLen < 8000 ? 'warn' : 'bad'
 
   const openAdaptive = async () => {
-    // Try server-side issue creation via API (GitHub SDK). Fallback to URL/open with clipboard.
+    // Strict: only server-side creation. On failure, inform user, no URL/clipboard fallback.
     try {
       const r = await fetch('/api/issues', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body: `# ${title}\n\n${body}`, labels: labelsArr }) })
       if (r.ok) {
         const j = await r.json()
         if (j?.url) { window.open(j.url, '_blank', 'noopener,noreferrer'); return }
+      } else {
+        const j = await r.json().catch(() => ({}))
+        throw new Error(j?.error || 'Issue creation is not available')
       }
-    } catch {}
-    if (urlStatus === 'bad') {
-      try { await navigator.clipboard?.writeText(`# ${title}\n\n${body}`) } catch {}
-      const minimal = buildIssueUrl(repo, { title, body: '_Body is long. Pasted from clipboard._', labels: labelsArr })
-      window.open(minimal, '_blank', 'noopener,noreferrer')
-    } else {
-      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (e: any) {
+      // eslint-disable-next-line no-alert
+      alert(`Cannot create issue on server: ${e?.message || 'Unknown error'}. Configure GITHUB_TOKEN or open an issue manually.`)
     }
   }
 

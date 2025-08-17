@@ -16,13 +16,13 @@ export function parseGithubRepo(url?: string): { owner: string; repo: string } |
   }
 }
 
-export function getOctokit(): Octokit | null {
-  // Use server-side token if present; fall back to unauthenticated client (public rate limits)
+export function getOctokit(requireAuth = false): Octokit | null {
+  // For write operations (issues), require a token; for read operations, allow unauthenticated
   const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || null
+  if (requireAuth && !token) return null
   try {
     return new Octokit(token ? { auth: token } : {})
   } catch {
     return null
   }
 }
-

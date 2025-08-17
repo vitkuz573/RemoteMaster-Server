@@ -107,16 +107,14 @@ export function FullDiagnostics() {
           if (r.ok) {
             const j = await r.json()
             if (j?.url) { window.open(j.url, '_blank', 'noopener,noreferrer'); return }
+          } else {
+            const j = await r.json().catch(() => ({}))
+            throw new Error(j?.error || 'Issue creation is not available')
           }
-        } catch {}
-        const build = (b: string) => `${appConfig.repository.url}/issues/new?title=${encodeURIComponent('[Support] Full diagnostics')}&body=${encodeURIComponent(b)}`
-        let url = build(pretty)
-        if (url.length > 7000) {
-          const notice = '_Body is long. Full diagnostics copied to clipboard — paste below and attach file if possible._'
-          try { void navigator.clipboard?.writeText(pretty) } catch {}
-          url = build(notice)
+        } catch (e: any) {
+          // eslint-disable-next-line no-alert
+          alert(`Cannot create issue on server: ${e?.message || 'Unknown error'}. Configure GITHUB_TOKEN or use download buttons.`)
         }
-        window.open(url, '_blank', 'noopener,noreferrer')
       } else {
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
