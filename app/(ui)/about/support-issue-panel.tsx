@@ -250,9 +250,7 @@ export function SupportIssuePanel({ repo, payload }: { repo: { type?: string | n
               </Tabs>
             </DialogContent>
           </Dialog>
-          <div className={urlStatus === 'bad' ? 'text-destructive text-xs px-2' : urlStatus==='warn' ? 'text-amber-600 text-xs px-2' : 'text-muted-foreground text-xs px-2'} title={`URL length: ${urlLen}`}>
-            URL: {urlLen} {urlStatus==='bad' ? '(too long; fallback will copy body)' : urlStatus==='warn' ? '(long)' : ''}
-          </div>
+          {/* Removed URL length indicator; fallback handled silently */}
           <Button variant="outline" size="sm" className="h-8" onClick={() => { navigator.clipboard?.writeText(title) }}>Copy title</Button>
           <Button variant="outline" size="sm" className="h-8" onClick={() => { navigator.clipboard?.writeText(`# ${title}\n\n${body}`) }}>Copy Markdown</Button>
           <Button variant="outline" size="sm" className="h-8" onClick={() => {
