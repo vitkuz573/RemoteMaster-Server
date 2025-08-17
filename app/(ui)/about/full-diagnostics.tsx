@@ -100,8 +100,15 @@ export function FullDiagnostics() {
         timestamp: new Date().toISOString(),
       }
       if (openIssue && appConfig.repository.url) {
-        const body = '```json\n' + JSON.stringify(payload, null, 2) + '\n```'
-        const url = `${appConfig.repository.url}/issues/new?title=${encodeURIComponent('[Support] Full diagnostics')}&body=${encodeURIComponent(body)}`
+        const pretty = '```json\n' + JSON.stringify(payload, null, 2) + '\n```'
+        const compact = '```json\n' + JSON.stringify(payload) + '\n```'
+        const build = (b: string) => `${appConfig.repository.url}/issues/new?title=${encodeURIComponent('[Support] Full diagnostics')}&body=${encodeURIComponent(b)}`
+        let url = build(compact)
+        if (url.length > 7000) {
+          const notice = '_Body is long. Full diagnostics copied to clipboard — paste below and attach file if possible._\n\n' + pretty
+          try { void navigator.clipboard?.writeText(pretty) } catch {}
+          url = build(notice)
+        }
         window.open(url, '_blank', 'noopener,noreferrer')
       } else {
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
