@@ -110,12 +110,12 @@ export function StatusPanel() {
         <Button size="sm" variant="outline" onClick={download}><Download className="size-3 mr-1"/>{t('export_json')}</Button>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <span>{t('refresh_every')}</span>
-          <Select value={intervalSec ? String(intervalSec) : ''} onValueChange={(v) => setIntervalSec(v ? Number(v) : null)}>
+          <Select value={intervalSec ? String(intervalSec) : 'off'} onValueChange={(v) => setIntervalSec(v === 'off' ? null : Number(v))}>
             <SelectTrigger className="h-7 w-[80px] text-xs">
               <SelectValue placeholder={t('off')} />
             </SelectTrigger>
             <SelectContent align="end">
-              <SelectItem value="">{t('off')}</SelectItem>
+              <SelectItem value="off">{t('off')}</SelectItem>
               <SelectItem value="10">10s</SelectItem>
               <SelectItem value="30">30s</SelectItem>
               <SelectItem value="60">60s</SelectItem>
