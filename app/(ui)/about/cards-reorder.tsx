@@ -118,6 +118,48 @@ export function CardsReorderToolbar() {
         el.setAttribute('draggable', 'true')
         el.classList.add('cursor-move')
       })
+      const overlays: HTMLElement[] = []
+      const allowed = (sid: string) => sid === 'about-top' ? ['auto','1','2','3','full'] : (sid === 'about-mid' ? ['auto','1','2','full'] : ['auto','full'])
+      const sizesMap = loadSizes(id)
+      const setSizeQuick = (cardId: string, val: 'auto'|'1'|'2'|'3'|'full') => {
+        const next = { ...sizesMap, [cardId]: val }
+        saveSizes(id, next)
+        applySizes(scope, next)
+      }
+      const shift = (arr: string[], cur: string, dir: 1|-1) => {
+        const i = Math.max(0, arr.indexOf(cur))
+        const j = Math.min(arr.length-1, Math.max(0, i + dir))
+        return arr[j]
+      }
+      cards.forEach((el) => {
+        el.classList.add('relative')
+        const cardId = el.getAttribute('data-card-id') || ''
+        const bar = document.createElement('div')
+        bar.className = 'absolute top-2 right-2 z-10 flex items-center gap-1'
+        const mkBtn = (label: string, title: string, onClick: () => void) => {
+          const b = document.createElement('button')
+          b.type = 'button'
+          b.className = 'h-6 px-2 text-xs rounded border bg-background hover:bg-muted'
+          b.title = title
+          b.textContent = label
+          b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onClick() })
+          return b
+        }
+        const minus = mkBtn('-', 'Narrow', () => {
+          const cur = (loadSizes(id)[cardId] || 'auto') as any
+          const next = shift(allowed(id), cur, -1) as any
+          setSizeQuick(cardId, next)
+        })
+        const plus = mkBtn('+', 'Widen', () => {
+          const cur = (loadSizes(id)[cardId] || 'auto') as any
+          const next = shift(allowed(id), cur, +1) as any
+          setSizeQuick(cardId, next)
+        })
+        const full = mkBtn('Full', 'Full row', () => setSizeQuick(cardId, 'full'))
+        bar.appendChild(minus); bar.appendChild(plus); bar.appendChild(full)
+        el.appendChild(bar)
+        overlays.push(bar)
+      })
       let dragging: HTMLElement | null = null
       const onDragStart = (e: DragEvent) => {
         const target = (e.target as HTMLElement)?.closest('[data-card-id]') as HTMLElement | null
@@ -152,7 +194,9 @@ export function CardsReorderToolbar() {
         cards2.forEach((el) => {
           el.removeAttribute('draggable')
           el.classList.remove('cursor-move')
+          el.classList.remove('relative')
         })
+        overlays.forEach((o) => o.remove())
       })
     }
     return () => { cleanups.forEach((fn) => fn()) }
@@ -242,7 +286,8 @@ export function CardsReorderToolbar() {
                                       <SelectItem value="auto">Auto</SelectItem>
                                       <SelectItem value="1">1 col</SelectItem>
                                       <SelectItem value="2">2 cols</SelectItem>
-                                      <SelectItem value="3">3 cols</SelectItem>
+                                      {scope.id === 'about-top' ? (<SelectItem value="3">3 cols</SelectItem>) : null}
+                                      <SelectItem value="full">Full row</SelectItem>
                                       <SelectItem value="full">Full row</SelectItem>
                                     </SelectContent>
                                   </Select>

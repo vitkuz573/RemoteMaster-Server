@@ -133,3 +133,16 @@
 [data-card-user-size="2"] { grid-column: span 2 / span 2; }
 [data-card-user-size="3"] { grid-column: span 3 / span 3; }
 [data-card-user-size="full"] { grid-column: 1 / -1; }
+
+@media (min-width: 768px) {
+  [data-card-user-size-md="1"] { grid-column: span 1 / span 1; }
+  [data-card-user-size-md="2"] { grid-column: span 2 / span 2; }
+  [data-card-user-size-md="3"] { grid-column: span 3 / span 3; }
+  [data-card-user-size-md="full"] { grid-column: 1 / -1; }
+}
+@media (min-width: 1024px) {
+  [data-card-user-size-lg="1"] { grid-column: span 1 / span 1; }
+  [data-card-user-size-lg="2"] { grid-column: span 2 / span 2; }
+  [data-card-user-size-lg="3"] { grid-column: span 3 / span 3; }
+  [data-card-user-size-lg="full"] { grid-column: 1 / -1; }
+}
