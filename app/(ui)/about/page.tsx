@@ -13,6 +13,7 @@ import { SupportIssuePanel } from './support-issue-panel'
 import { ClientEnvironment } from './client-environment'
 import { FeatureFlags } from './feature-flags'
 import { SupportBundleButton } from './support-bundle-button'
+import { SupportBundlePanel } from './support-bundle-panel'
 import { ReadmeBadges } from './readme-badges'
 import { OperationalToggles } from './operational-toggles'
 import { getTranslations } from 'next-intl/server'
@@ -304,9 +305,8 @@ export default async function AboutPage() {
             <CardDescription>{t('support_bundle_desc')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-3 flex-wrap">
-              <SupportBundleButton />
-              <FullDiagnostics />
+            <div className="grid gap-3">
+              <SupportBundlePanel />
             </div>
             <div className="mt-4">
               <SentryTest />
