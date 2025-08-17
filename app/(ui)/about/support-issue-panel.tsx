@@ -167,7 +167,7 @@ export function SupportIssuePanel({ repo }: { repo: { type?: string | null; url?
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="lg:col-span-3 flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Labels</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
