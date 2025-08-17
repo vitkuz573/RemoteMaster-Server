@@ -77,6 +77,13 @@ function useEndpointStatus(checks: Check[]) {
         arr = [...arr, r.ms ?? 0].slice(-20)
         next[r.name] = arr
         try { sessionStorage.setItem(key, JSON.stringify(arr)) } catch {}
+
+        // Store last snapshot for issue templates
+        try {
+          const lastKey = `about:endpoint:last:${r.name}`
+          const payload = { name: r.name, url: r.url, method: r.method, ok: r.ok, code: r.code, ms: r.ms, ts: Date.now() }
+          sessionStorage.setItem(lastKey, JSON.stringify(payload))
+        } catch {}
       }
       setHistory(next)
     } finally {
@@ -110,6 +117,12 @@ function useEndpointStatus(checks: Check[]) {
       const ok = expectOk ?? res.ok
       const updated: Result = { name: c.name, url: c.url, method: c.method ?? 'GET', ok, code: res.status, ms, headers: filterHeaders(res.headers), snippet }
       setResults((prev) => prev.map((r) => r.name === name ? updated : r))
+      // persist last
+      try {
+        const lastKey = `about:endpoint:last:${updated.name}`
+        const payload = { name: updated.name, url: updated.url, method: updated.method, ok: updated.ok, code: updated.code, ms: updated.ms, ts: Date.now() }
+        sessionStorage.setItem(lastKey, JSON.stringify(payload))
+      } catch {}
     } catch (e) {
       const ms = Math.round(performance.now() - start)
       setResults((prev) => prev.map((r) => r.name === name ? ({ ...r, ok: false, ms, error: e instanceof Error ? e.message : String(e) }) : r))

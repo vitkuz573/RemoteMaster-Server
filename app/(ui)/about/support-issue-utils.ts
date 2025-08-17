@@ -62,10 +62,40 @@ export function buildIssueBody(p: Payload, opts?: { includeEnv?: boolean; includ
     `- Locale/Timezone: ${lang || '—'} / ${tz || '—'}\n`+
     `- Viewport: ${viewport || '—'}\n`
 
+  // Layout snapshot from localStorage
+  const scopes = Array.from(document.querySelectorAll<HTMLElement>('[data-cards-scope]'))
+  const layout: Record<string, any> = {}
+  for (const s of scopes) {
+    const id = s.getAttribute('data-cards-scope') || 'default'
+    try {
+      const order = JSON.parse(localStorage.getItem(`about:order:${id}`) || 'null')
+      const hidden = JSON.parse(localStorage.getItem(`about:hidden:${id}`) || '[]')
+      const sizes = JSON.parse(localStorage.getItem(`about:size:${id}`) || '{}')
+      layout[id] = { order, hidden, sizes }
+    } catch {}
+  }
+
+  // Feature flags and operational toggles from env
+  const envVars: Record<string, any> = (globalThis as any).__NEXT_DATA__ ? {} : {}
+  // No direct access to env here reliably; panel will include them via payload if needed
+
+  // Endpoint snapshots from sessionStorage
+  const last: any[] = []
+  try {
+    for (const k in sessionStorage) {
+      if (k.startsWith('about:endpoint:last:')) {
+        try { last.push(JSON.parse(sessionStorage.getItem(k) || 'null')) } catch {}
+      }
+    }
+  } catch {}
+
+  const endpointsSnapshot = last.length ? code('json', JSON.stringify(last, null, 2)) : ''
+
   const parts: string[] = [headerLines]
   if (opts?.extra) parts.push(opts.extra)
   if (opts?.includeEnv !== false) parts.push(details('Environment', envBlock))
   if (opts?.includeEndpoints !== false && epList) parts.push(details('Endpoints', epList))
+  if (opts?.includeEndpoints !== false && endpointsSnapshot) parts.push(details('Endpoints snapshot', endpointsSnapshot))
   if (opts?.includeDiagnostics !== false) parts.push(details('Diagnostics payload', code('json', JSON.stringify(p, null, 2))))
   return parts.filter(Boolean).join('\n\n')
 }
@@ -93,4 +123,3 @@ export function buildIssueUrl(repo: { type?: string | null; url?: string | null 
   if (params.labels?.length) sp.set('labels', params.labels.join(','))
   return `${url}/issues/new?${sp.toString()}`
 }
-
