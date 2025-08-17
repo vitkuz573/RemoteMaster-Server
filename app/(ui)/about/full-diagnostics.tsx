@@ -102,6 +102,13 @@ export function FullDiagnostics() {
       }
       if (openIssue && appConfig.repository.url) {
         const pretty = '```json\n' + JSON.stringify(payload, null, 2) + '\n```' // keep formatting
+        try {
+          const r = await fetch('/api/issues', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: '[Support] Full diagnostics', body: pretty, labels: ['support'] }) })
+          if (r.ok) {
+            const j = await r.json()
+            if (j?.url) { window.open(j.url, '_blank', 'noopener,noreferrer'); return }
+          }
+        } catch {}
         const build = (b: string) => `${appConfig.repository.url}/issues/new?title=${encodeURIComponent('[Support] Full diagnostics')}&body=${encodeURIComponent(b)}`
         let url = build(pretty)
         if (url.length > 7000) {

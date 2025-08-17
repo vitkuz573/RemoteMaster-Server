@@ -204,9 +204,15 @@ export function SupportBundlePanel() {
     setBusy(true)
     try {
       const md = await summaryMd()
-      const body = md
+      // Prefer server-side issue creation via API
+      try {
+        const payload = await buildPayload()
+        const pretty = '```json\n' + JSON.stringify(payload, null, 2) + '\n```'
+        const r = await fetch('/api/issues', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: '[Support] Bundle', body: md + '\n\n' + pretty, labels: ['support'] }) })
+        if (r.ok) { const j = await r.json(); if (j?.url) { window.open(j.url, '_blank', 'noopener,noreferrer'); return } }
+      } catch {}
       const build = (b: string) => `${appConfig.repository.url}/issues/new?title=${encodeURIComponent('[Support] Bundle')}&body=${encodeURIComponent(b)}`
-      let url = build(body)
+      let url = build(md)
       if (url.length > 7000) {
         const payload = await buildPayload()
         const pretty = '```json\n' + JSON.stringify(payload, null, 2) + '\n```'

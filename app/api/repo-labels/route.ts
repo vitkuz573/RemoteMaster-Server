@@ -1,21 +1,33 @@
 import { NextResponse } from 'next/server'
 import { appConfig } from '@/lib/app-config'
+import { getOctokit, parseGithubRepo } from '@/lib/github-client'
 
 type Label = { name: string; color?: string; description?: string }
 
 async function fetchGithub(owner: string, repo: string): Promise<Label[]> {
+  try {
+    const octo = getOctokit()
+    if (octo) {
+      const res = await octo.issues.listLabelsForRepo({ owner, repo, per_page: 100 })
+      return (res.data || []).map((l: any) => ({
+        name: String(l?.name ?? ''),
+        color: l?.color ? `#${String(l.color).replace(/^#/, '')}` : undefined,
+        description: typeof l?.description === 'string' ? l.description : undefined,
+      })).filter((l) => !!l.name)
+    }
+  } catch {
+    // fall back to fetch below
+  }
   const url = `https://api.github.com/repos/${owner}/${repo}/labels?per_page=100`
   const res = await fetch(url, { headers: { 'Accept': 'application/vnd.github+json' }, next: { revalidate: 300 } })
   if (!res.ok) return []
   const json = (await res.json()) as any[]
   if (!Array.isArray(json)) return []
-  return json
-    .map((l) => ({
-      name: String(l?.name ?? ''),
-      color: l?.color ? `#${String(l.color).replace(/^#/, '')}` : undefined,
-      description: typeof l?.description === 'string' ? l.description : undefined,
-    }))
-    .filter((l) => !!l.name)
+  return json.map((l) => ({
+    name: String(l?.name ?? ''),
+    color: l?.color ? `#${String(l.color).replace(/^#/, '')}` : undefined,
+    description: typeof l?.description === 'string' ? l.description : undefined,
+  })).filter((l) => !!l.name)
 }
 
 async function fetchGitlab(owner: string, repo: string): Promise<Label[]> {
