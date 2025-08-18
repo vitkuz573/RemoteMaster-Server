@@ -219,7 +219,7 @@ jobs:
       - name: Test with coverage
         run: npm run test:coverage -- --reporter=dot
       - name: Upload coverage to Codecov (Node 20 only)
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: always() && matrix.node-version == '20.x'
         with:
           files: ./coverage/lcov.info
