@@ -14,7 +14,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Ensure SHA pinned
         uses: zgosalvez/github-actions-ensure-sha-pinned@v3.0.14
         with:
